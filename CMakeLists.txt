@@ -16,5 +16,13 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")
 endif()
 
+include_directories(vendor)
+include_directories(vendor/glfw/include)
+include_directories(vendor/glad/include)
+add_subdirectory(vendor)
+
+find_package(OpenGL REQUIRED)
+
 add_executable(editor komaru/editor/main.cpp)
+target_link_libraries(editor PRIVATE imgui glfw OpenGL::GL glad)
 
