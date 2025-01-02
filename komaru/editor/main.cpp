@@ -1,9 +1,11 @@
 #include <cmath>
 #include <glad/glad.h>
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui/imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <GLFW/glfw3.h>
+#include <print>
 
 
 const float EPS = 1e-5;
@@ -20,10 +22,39 @@ public:
     }
 
     void Update(float dt) {
+        static bool is_button_pressed = false;
+
         ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiCond_Once);
         ImGui::SetNextWindowPos(win_pos_, ImGuiCond_Once);
 
+
         ImGui::Begin("Test window");
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        // auto cursor_pos = ImGui::GetCursorPos();
+        ImVec2 window_pos = ImGui::GetWindowPos();       // Top-left corner of the window
+        ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
+        ImVec2 content_pos = window_pos + window_padding;
+        draw_list->PushClipRectFullScreen();
+        draw_list->AddCircleFilled({content_pos.x + 200.f, content_pos.y + 100.f}, 50.f, IM_COL32(255, 0, 0, 255), 362);
+        ImGui::SetCursorPos(ImGui::GetCursorPos() + ImVec2{-50.f, 50.f});
+        if(ImGui::Button("Press and Hold")) {
+            std::println("Button changed state to pressed");
+            is_button_pressed = true;
+        }
+        // Check if the button remains active
+        if (ImGui::IsItemActive() && ImGui::IsMouseDown(0))
+        {
+            std::println("Button changed state to pressed");
+            is_button_pressed = true; // Keep the button pressed if holding down
+        }
+        else if (!ImGui::IsMouseDown(0))
+        {
+            std::println("Button changed state to released");
+            is_button_pressed = false; // Reset when the mouse is released
+        }
+        (void)is_button_pressed;
+        draw_list->PopClipRect();
+
 
         auto dir = GetDir();
         if(!IsZeroLen(dir)) {
@@ -35,6 +66,10 @@ public:
 
         ImGui::SetWindowPos(win_pos_, ImGuiCond_Always);
 
+        ImGui::End();
+
+        ImGui::SetNextWindowPos(win_pos_ + ImVec2{300.f, 200.f}, ImGuiCond_Once);
+        ImGui::Begin("Test window 2");
         ImGui::End();
     }
 
@@ -114,6 +149,7 @@ int main() {
         // Draw interface
         app.Update(1.f);
         app.Draw();
+        // ImGui::ShowDemoWindow();
 
         // Rendering
         ImGui::Render();
