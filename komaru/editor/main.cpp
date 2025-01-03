@@ -1,12 +1,10 @@
 #include <cmath>
 #include <glad/glad.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include <imgui/imgui.h>
-#include <imgui/backends/imgui_impl_glfw.h>
-#include <imgui/backends/imgui_impl_opengl3.h>
 #include <GLFW/glfw3.h>
 #include <print>
 
+#include <editor/gui.hpp>
+#include <editor/block.hpp>
 
 const float EPS = 1e-5;
 
@@ -16,61 +14,13 @@ bool IsZeroLen(ImVec2 v) {
 
 class TestApp {
 public:
-    TestApp(GLFWwindow* window) : window_(window) {}
+    TestApp(GLFWwindow* window) : window_(window), block_("Test Block") {}
 
     void Draw() {
     }
 
     void Update(float dt) {
-        static bool is_button_pressed = false;
-
-        ImGui::SetNextWindowSize(ImVec2(200, 200), ImGuiCond_Once);
-        ImGui::SetNextWindowPos(win_pos_, ImGuiCond_Once);
-
-
-        ImGui::Begin("Test window");
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        // auto cursor_pos = ImGui::GetCursorPos();
-        ImVec2 window_pos = ImGui::GetWindowPos();       // Top-left corner of the window
-        ImVec2 window_padding = ImGui::GetStyle().WindowPadding;
-        ImVec2 content_pos = window_pos + window_padding;
-        draw_list->PushClipRectFullScreen();
-        draw_list->AddCircleFilled({content_pos.x + 200.f, content_pos.y + 100.f}, 50.f, IM_COL32(255, 0, 0, 255), 362);
-        ImGui::SetCursorPos(ImGui::GetCursorPos() + ImVec2{-50.f, 50.f});
-        if(ImGui::Button("Press and Hold")) {
-            std::println("Button changed state to pressed");
-            is_button_pressed = true;
-        }
-        // Check if the button remains active
-        if (ImGui::IsItemActive() && ImGui::IsMouseDown(0))
-        {
-            std::println("Button changed state to pressed");
-            is_button_pressed = true; // Keep the button pressed if holding down
-        }
-        else if (!ImGui::IsMouseDown(0))
-        {
-            std::println("Button changed state to released");
-            is_button_pressed = false; // Reset when the mouse is released
-        }
-        (void)is_button_pressed;
-        draw_list->PopClipRect();
-
-
-        auto dir = GetDir();
-        if(!IsZeroLen(dir)) {
-            win_pos_.x += dir.x * speed_ * dt;
-            win_pos_.y += dir.y * speed_ * dt;
-        } else {
-            win_pos_ = ImGui::GetWindowPos();
-        }
-
-        ImGui::SetWindowPos(win_pos_, ImGuiCond_Always);
-
-        ImGui::End();
-
-        ImGui::SetNextWindowPos(win_pos_ + ImVec2{300.f, 200.f}, ImGuiCond_Once);
-        ImGui::Begin("Test window 2");
-        ImGui::End();
+        block_.UpdateAndDraw(dt);
     }
 
 private:
@@ -98,8 +48,7 @@ private:
 
 private:
     GLFWwindow* window_;
-    ImVec2 win_pos_{100, 100};
-    float speed_{1.f};
+    Block block_;
 };
 
 int main() {
@@ -147,8 +96,8 @@ int main() {
         ImGui::NewFrame();
 
         // Draw interface
-        app.Update(1.f);
         app.Draw();
+        app.Update(1.f);
         // ImGui::ShowDemoWindow();
 
         // Rendering

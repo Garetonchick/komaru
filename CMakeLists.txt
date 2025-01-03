@@ -23,6 +23,12 @@ add_subdirectory(vendor)
 
 find_package(OpenGL REQUIRED)
 
-add_executable(editor komaru/editor/main.cpp)
-target_link_libraries(editor PRIVATE imgui glfw OpenGL::GL glad)
+file(GLOB EDITOR_SOURCES komaru/editor/*.cpp komaru/editor/*.hpp)
+file(GLOB UTIL_SOURCES komaru/util/*.cpp komaru/util/*.hpp)
+
+include_directories(komaru)
+add_library(util STATIC ${UTIL_SOURCES})
+add_executable(editor ${EDITOR_SOURCES})
+
+target_link_libraries(editor PRIVATE util imgui glfw OpenGL::GL glad)
 
