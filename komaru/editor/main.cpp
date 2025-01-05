@@ -5,6 +5,7 @@
 
 #include <editor/gui.hpp>
 #include <editor/block.hpp>
+#include <editor/grid.hpp>
 
 const float EPS = 1e-5;
 
@@ -12,15 +13,15 @@ bool IsZeroLen(ImVec2 v) {
     return (v.x * v.x + v.y * v.y) < EPS * EPS;
 }
 
-class TestApp {
+class TestApp : public GuiElement {
 public:
-    TestApp(GLFWwindow* window) : window_(window), block_("Test Block") {}
+    TestApp(GLFWwindow* window)
+        : window_(window)
+        , grid_(window)
+    {}
 
-    void Draw() {
-    }
-
-    void Update(float dt) {
-        block_.UpdateAndDraw(dt);
+    void UpdateAndDraw(float dt) {
+        grid_.UpdateAndDraw(dt);
     }
 
 private:
@@ -48,7 +49,7 @@ private:
 
 private:
     GLFWwindow* window_;
-    Block block_;
+    Grid grid_;
 };
 
 int main() {
@@ -95,9 +96,8 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // Draw interface
-        app.Draw();
-        app.Update(1.f);
+        // Update and draw interface
+        app.UpdateAndDraw(1.f);
         // ImGui::ShowDemoWindow();
 
         // Rendering
