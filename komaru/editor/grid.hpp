@@ -22,7 +22,4 @@ private:
     GLFWwindow* window_; // TODO: abstract away
     TopDownCamera camera_;
     std::vector<Block> blocks_;
-    // float scale_{1.f};
-    // float vertical_start_{6.f};
-    // float horizontal_start_{8.f};
 };

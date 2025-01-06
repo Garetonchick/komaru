@@ -38,10 +38,6 @@ void Grid::OnMouseScroll(GLFWwindow* window, double xoffset, double yoffset) {
 
     camera_.SetScale(new_scale);
     camera_.Move(camera_step);
-
-    // for(auto& block : blocks_) {
-    //     block.OnScaling(scale_ratio, xpos, ypos);
-    // }
 }
 
 void Grid::UpdateAndDraw(float dt) {

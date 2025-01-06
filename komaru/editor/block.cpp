@@ -10,9 +10,8 @@ Block::Block(std::string name, const TopDownCamera* camera, ImVec2 pos, ImVec2 s
     , global_pos_(pos)
     , global_size_(size)
     , initial_pivot_(pivot)
-    , local_size_(size)
-    , local_pos_(pos)
-    , camera_(camera) {
+    , camera_(camera)
+    , window_manager_(pos, size) {
 }
 
 void Block::UpdateAndDraw(float dt) {
@@ -39,28 +38,15 @@ void Block::BeforeWindow() {
 void Block::Update(float dt) {
     (void)dt;
 
-    static bool was_smth = false;
+    auto pos_move = window_manager_.PropogateMove();
+    auto size_move = window_manager_.PropogateResize();
+    global_pos_ += pos_move / camera_->GetScale();
+    global_size_ += size_move / camera_->GetScale();
 
-    auto local_step = ImGui::GetWindowPos() - local_pos_;
-    auto size_mul = ImGui::GetWindowSize() / local_size_;
-    if(!IsNearZero(local_step) && !was_smth) {
-        global_pos_ += local_step / camera_->GetScale();
-    }
-    if(Length(size_mul - ImVec2{1.f, 1.f}) > 1e-2 && !was_smth) {
-        global_size_ *= size_mul;
-    }
-
-    local_pos_ = camera_->Global2Camera(global_pos_);
-    local_size_ = global_size_ * camera_->GetScale();
-
-    if(!VecEq(local_pos_, ImGui::GetWindowPos()) || !VecEq(local_size_, ImGui::GetWindowSize())) {
-        was_smth = true;
-    } else {
-        was_smth = false;
-    }
-
-    ImGui::SetWindowPos(local_pos_, ImGuiCond_Always);
-    ImGui::SetWindowSize(local_size_);
+    auto new_pos = camera_->Global2Camera(global_pos_);
+    auto new_size = global_size_ * camera_->GetScale();
+    window_manager_.SetPos(new_pos);
+    window_manager_.SetSize(new_size);
 }
 
 void Block::Draw() {
@@ -69,9 +55,11 @@ void Block::Draw() {
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     const float kBaseCircleRadius = 10.f;
     float circle_r = kBaseCircleRadius * camera_->GetScale();
+    ImVec2 local_pos = window_manager_.GetPos();
+    ImVec2 local_size = window_manager_.GetSize();
     ImVec2 circle_center = {
-        local_pos_.x + local_size_.x,
-        local_pos_.y + local_size_.y * 0.5f
+        local_pos.x + local_size.x,
+        local_pos.y + local_size.y * 0.5f
     };
 
     ImU32 color = IM_COL32(255, 255, 255, 255);

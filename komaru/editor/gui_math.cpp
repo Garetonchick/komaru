@@ -21,3 +21,19 @@ bool VecEq(ImVec2 a, ImVec2 b) {
 bool FloatEq(float a, float b) {
     return std::abs(a - b) < kEps;
 }
+
+ImVec2 Truncate(ImVec2 v) {
+    return {std::truncf(v.x), std::truncf(v.y)};
+}
+
+ImVec2 Round(ImVec2 v) {
+    return {std::roundf(v.x), std::roundf(v.y)};
+}
+
+ImVec2 Floor(ImVec2 v) {
+    return {std::floorf(v.x), std::floorf(v.y)};
+}
+
+ImVec2 Ceil(ImVec2 v) {
+    return {std::ceilf(v.x), std::ceilf(v.y)};
+}

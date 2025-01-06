@@ -2,6 +2,7 @@
 
 #include <editor/gui.hpp>
 #include <editor/top_down_camera.hpp>
+#include <editor/imgui_window_manager.hpp>
 #include <editor/gui_element.hpp>
 
 #include <string>
@@ -17,6 +18,7 @@ public:
     );
 
     void UpdateAndDraw(float dt) override;
+
 private:
     void BeforeWindow();
     void Update(float dt);
@@ -26,8 +28,9 @@ private:
     ImVec2 global_pos_;
     ImVec2 global_size_;
     ImVec2 initial_pivot_;
+    ImVec2 last_pos_{0.f, 0.f};
     bool disable_resize_{false};
-    ImVec2 local_size_{0.f, 0.f};
-    ImVec2 local_pos_{0.f, 0.f};
+    int scaled_{0};
     const TopDownCamera* camera_;
+    ImguiWindowManager window_manager_;
 };
