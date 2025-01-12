@@ -1,6 +1,6 @@
 #include "block.hpp"
 
-#include <editor/imgui_window_guard.hpp>
+#include <editor/kimgui/imgui_window_guard.hpp>
 #include <editor/gui_math.hpp>
 
 #include <print>
@@ -23,7 +23,7 @@ void Block::UpdateAndDraw(float dt) {
             flags |= ImGuiWindowFlags_NoResize;
         }
 
-        ImGuiWindowGuard window_guard(name_.c_str(), nullptr, flags);
+        ImGui::WindowGuard window_guard(name_.c_str(), nullptr, flags);
 
         Update(dt);
         Draw();

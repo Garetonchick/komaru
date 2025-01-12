@@ -1,11 +1,10 @@
-#include <cmath>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <print>
 
 #include <editor/gui.hpp>
-#include <editor/block.hpp>
-#include <editor/grid.hpp>
+#include <editor/node_editor.hpp>
+#include <editor/os_window.hpp>
 
 const float EPS = 1e-5;
 
@@ -13,44 +12,48 @@ bool IsZeroLen(ImVec2 v) {
     return (v.x * v.x + v.y * v.y) < EPS * EPS;
 }
 
+namespace komaru::editor {
+
 class TestApp : public GuiElement {
 public:
     TestApp(GLFWwindow* window)
         : window_(window)
-        , grid_(window)
+        , node_editor_("Node Editor", {0, 0}, window_.GetSize())
     {}
 
-    void UpdateAndDraw(float dt) {
-        grid_.UpdateAndDraw(dt);
+    void UpdateAndDraw(float dt) override {
+        node_editor_.UpdateAndDraw(dt);
     }
 
 private:
-    ImVec2 GetDir() {
-        ImVec2 dir;
-        if (glfwGetKey(window_, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-           dir.x += 1.0;
-        }
-        if (glfwGetKey(window_, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            dir.x -= 1.0;
-        }
-        if (glfwGetKey(window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
-            dir.y += 1.0;
-        }
-        if (glfwGetKey(window_, GLFW_KEY_UP) == GLFW_PRESS) {
-            dir.y -= 1.0;
-        }
-        float len = sqrt(dir.x * dir.x + dir.y * dir.y);
-        if(len > EPS) {
-            dir.x /= len;
-            dir.y /= len;
-        }
-        return dir;
-    }
+    // ImVec2 GetDir() {
+    //     ImVec2 dir;
+    //     if (glfwGetKey(window_, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+    //        dir.x += 1.0;
+    //     }
+    //     if (glfwGetKey(window_, GLFW_KEY_LEFT) == GLFW_PRESS) {
+    //         dir.x -= 1.0;
+    //     }
+    //     if (glfwGetKey(window_, GLFW_KEY_DOWN) == GLFW_PRESS) {
+    //         dir.y += 1.0;
+    //     }
+    //     if (glfwGetKey(window_, GLFW_KEY_UP) == GLFW_PRESS) {
+    //         dir.y -= 1.0;
+    //     }
+    //     float len = sqrt(dir.x * dir.x + dir.y * dir.y);
+    //     if(len > EPS) {
+    //         dir.x /= len;
+    //         dir.y /= len;
+    //     }
+    //     return dir;
+    // }
 
 private:
-    GLFWwindow* window_;
-    Grid grid_;
+    OSWindow window_;
+    NodeEditor node_editor_;
 };
+
+}
 
 int main() {
     // Initialize GLFW
@@ -81,7 +84,7 @@ int main() {
     // Set up Dear ImGui style
     ImGui::StyleColorsDark();
 
-    TestApp app(window);
+    komaru::editor::TestApp app(window);
 
     // Initialize ImGui for GLFW and OpenGL3
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -97,7 +100,7 @@ int main() {
         ImGui::NewFrame();
 
         // Update and draw interface
-        app.UpdateAndDraw(1.f);
+        app.UpdateAndDraw(1.f / 60.f);
         // ImGui::ShowDemoWindow();
 
         // Rendering
