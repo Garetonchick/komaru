@@ -6,6 +6,8 @@
 #include <editor/node_editor.hpp>
 #include <editor/os_window.hpp>
 
+#include <imnodes/imnodes.h>
+
 const float EPS = 1e-5;
 
 bool IsZeroLen(ImVec2 v) {
@@ -78,6 +80,7 @@ int main() {
     // Initialize ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImNodes::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     (void)io;
 
@@ -118,6 +121,7 @@ int main() {
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+    ImNodes::DestroyContext();
     ImGui::DestroyContext();
 
     glfwDestroyWindow(window);

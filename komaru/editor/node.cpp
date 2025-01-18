@@ -3,6 +3,8 @@
 #include <editor/kimgui/imgui_id_allocator.hpp>
 #include <editor/kimgui/imgui_id_guard.hpp>
 
+#include <imgui/imgui_internal.h>
+
 namespace komaru::editor {
 
 Node::Node(std::string title, ImVec2 pos)
@@ -34,17 +36,30 @@ void Node::UpdateAndDraw(float) {
     ImGui::SetCursorScreenPos(ImVec2{ul.x + 10.f, ImGui::GetCursorScreenPos().y});
     ImGui::SmallButton("lol");
 
-
     draw_list->ChannelsSetCurrent(0);
-    ImGui::SetCursorScreenPos(ul);
-    ImGui::InvisibleButton("body", size_);
+    // ImGui::SetCursorScreenPos(ul);
+    // ImGui::InvisibleButton("body", size_);
 
-    if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-        pos_ += io.MouseDelta;
+    // if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+    //     pos_ += io.MouseDelta;
+    // }
+
+    ImRect rect(ul, ul + size_);
+
+    if(rect.Contains(ImGui::GetMousePos())) {
+        node_color = IM_COL32(0, 255, 0, 255);
     }
 
-    if(ImGui::IsItemHovered()) {
-        node_color = IM_COL32(0, 255, 0, 255);
+    if(rect.Contains(ImGui::GetMousePos()) && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+        maybe_selected_ = true;
+    }
+
+    if(!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+        maybe_selected_ = false;
+    }
+
+    if(rect.Contains(ImGui::GetMousePos()) && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+        pos_ += io.MouseDelta;
     }
 
     draw_list->AddQuadFilled(
@@ -56,6 +71,10 @@ void Node::UpdateAndDraw(float) {
     );
 
     draw_list->ChannelsMerge();
+}
+
+bool Node::IsMaybeSelected() const {
+    return maybe_selected_;
 }
 
 }

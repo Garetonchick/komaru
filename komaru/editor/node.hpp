@@ -12,6 +12,8 @@ public:
 
     void UpdateAndDraw(float dt) override;
 
+    bool IsMaybeSelected() const;
+
 private:
     static constexpr ImU32 kNodeColor = IM_COL32(42, 87, 100, 255);
 
@@ -20,6 +22,7 @@ private:
     ImVec2 pos_;
     ImVec2 size_;
     float v_{0.f};
+    bool maybe_selected_{false};
 };
 
 }
