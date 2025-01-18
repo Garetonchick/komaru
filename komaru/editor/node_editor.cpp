@@ -11,9 +11,9 @@ NodeEditor::NodeEditor(
     std::string name, ImVec2 pos, ImVec2 size
 ) : name_(std::move(name)), pos_(std::move(pos)), size_(std::move(size)) {
     // Dummy nodes
-    nodes_.emplace_back("int", ImVec2{100, 100});
-    nodes_.emplace_back("int", ImVec2{500, 200});
-    nodes_.emplace_back("int x int", ImVec2{300, 100});
+    nodes_.emplace_back("INT", ImVec2{100, 100});
+    nodes_.emplace_back("INT", ImVec2{500, 200});
+    nodes_.emplace_back("INT x INT", ImVec2{300, 100});
 }
 
 void NodeEditor::UpdateAndDraw(float dt) {
@@ -30,6 +30,13 @@ void NodeEditor::UpdateAndDraw(float dt) {
     ImNodes::MiniMap();
 
     ImNodes::EndNodeEditor();
+
+    if( ImNodes::IsEditorHovered() && ImGui::GetIO().MouseWheel != 0 )
+    {
+        float zoom = ImNodes::EditorContextGetZoom() + ImGui::GetIO().MouseWheel * 0.1f;
+        ImNodes::EditorContextSetZoom( zoom, ImGui::GetMousePos() );
+    }
+
     ImGui::End();
 }
 

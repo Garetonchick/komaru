@@ -18,6 +18,7 @@ void Node::UpdateAndDraw(float) {
     ImNodes::BeginNode(id_);
 
     ImNodes::BeginNodeTitleBar();
+    ImGui::SetWindowFontScale(2.f);
     ImGui::TextUnformatted(type_.c_str());
     ImNodes::EndNodeTitleBar();
 
