@@ -25,7 +25,6 @@ private:
 
     TopDownCamera camera_;
     std::vector<Node> nodes_;
-    std::vector<size_t> nodes_order_;
 };
 
 }
