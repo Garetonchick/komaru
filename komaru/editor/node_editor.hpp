@@ -2,6 +2,7 @@
 #include <editor/gui_element.hpp>
 #include <editor/top_down_camera.hpp>
 #include <editor/node.hpp>
+#include <editor/link.hpp>
 
 #include <string>
 #include <vector>
@@ -25,6 +26,7 @@ private:
 
     TopDownCamera camera_;
     std::vector<Node> nodes_;
+    std::vector<Link> links_;
 };
 
 }

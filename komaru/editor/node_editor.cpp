@@ -3,20 +3,25 @@
 #include <editor/kimgui/imgui_window_guard.hpp>
 #include <editor/kimgui/imgui_child_guard.hpp>
 
-#include <iostream>
-
 namespace komaru::editor {
 
 NodeEditor::NodeEditor(
     std::string name, ImVec2 pos, ImVec2 size
 ) : name_(std::move(name)), pos_(std::move(pos)), size_(std::move(size)) {
     // Dummy nodes
-    nodes_.emplace_back("INT", ImVec2{100, 100});
-    nodes_.emplace_back("INT", ImVec2{500, 200});
-    nodes_.emplace_back("INT x INT", ImVec2{300, 100});
+    nodes_.emplace_back("START", ImVec2{100, 300}, NodeType::Start);
+    nodes_.emplace_back("INT x INT", ImVec2{250, 400});
+    nodes_.emplace_back("INT", ImVec2{500, 400});
+    nodes_.emplace_back("TERMINAL", ImVec2{650, 300}, NodeType::Terminal);
+    links_.emplace_back(nodes_[0], nodes_[1]);
+    links_.emplace_back(nodes_[1], nodes_[2], "+");
+    links_.emplace_back(nodes_[2], nodes_[3]);
 }
 
 void NodeEditor::UpdateAndDraw(float dt) {
+    ImNodes::PushStyleVar(ImNodesStyleVar_NodeCornerRounding, 50.f);
+    ImNodes::PushStyleVar(ImNodesStyleVar_LinkLabelTextScale, 4.f);
+
     ImGui::SetNextWindowPos(pos_);
     ImGui::SetNextWindowSize(size_, ImGuiCond_Once);
 
@@ -25,6 +30,10 @@ void NodeEditor::UpdateAndDraw(float dt) {
 
     for(auto& node : nodes_) {
         node.UpdateAndDraw(dt);
+    }
+
+    for(auto& link : links_) {
+        link.UpdateAndDraw(dt);
     }
 
     ImNodes::MiniMap();
@@ -38,6 +47,8 @@ void NodeEditor::UpdateAndDraw(float dt) {
     }
 
     ImGui::End();
+
+    ImNodes::PopStyleVar(2);
 }
 
 }
