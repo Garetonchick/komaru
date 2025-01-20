@@ -18,6 +18,7 @@ public:
 
     void UpdateAndDraw(float dt) override;
 
+    int GetID() const;
     int GetInPinID() const;
     int GetOutPinID() const;
 

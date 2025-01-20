@@ -20,6 +20,12 @@ public:
     void UpdateAndDraw(float dt) override;
 
 private:
+    Node* GetNodeByID(int id);
+    Node* GetNodeByInID(int in_id);
+    Node* GetNodeByOutID(int out_id);
+    bool DestroyLinkByID(int link_id);
+
+private:
     std::string name_;
     ImVec2 pos_;
     ImVec2 size_;

@@ -41,6 +41,10 @@ void Node::UpdateAndDraw(float) {
     ImNodes::EndNode();
 }
 
+int Node::GetID() const {
+    return id_;
+}
+
 int Node::GetInPinID() const {
     return in_id_;
 }
