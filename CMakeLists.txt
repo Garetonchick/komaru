@@ -32,9 +32,11 @@ file(GLOB EDITOR_SOURCES
     ${IMNODE_SOURCES}
 )
 file(GLOB UTIL_SOURCES komaru/util/*.cpp komaru/util/*.hpp)
+file(GLOB LANG_SOURCES komaru/lang/*.cpp komaru/lang/*.hpp)
 
 include_directories(komaru)
 add_library(util STATIC ${UTIL_SOURCES})
+add_library(lang STATIC ${LANG_SOURCES})
 add_executable(editor ${EDITOR_SOURCES})
 add_executable(test-node-graph-editor test/imgui_node_graph_test.cpp)
 set(IMNODE_EXAMPLE_SOURCES
@@ -67,7 +69,7 @@ add_executable(imnodes-save-load
 
 find_package(SDL2 REQUIRED)
 
-target_link_libraries(editor PRIVATE util imgui glfw OpenGL::GL glad)
+target_link_libraries(editor PRIVATE util lang imgui glfw OpenGL::GL glad)
 target_link_libraries(test-node-graph-editor PRIVATE imgui glfw OpenGL::GL glad)
 
 target_link_libraries(imnodes-hello PRIVATE OpenGL::GL SDL2::SDL2)
@@ -79,3 +81,26 @@ target_include_directories(imnodes-hello PUBLIC vendor/imgui vendor/imgui/backen
 target_include_directories(imnodes-multi-editor PUBLIC vendor/imgui vendor/imgui/backends vendor/imnodes)
 target_include_directories(imnodes-color-node-editor PUBLIC vendor/imgui vendor/imgui/backends vendor/imnodes)
 target_include_directories(imnodes-save-load PUBLIC vendor/imgui vendor/imgui/backends vendor/imnodes)
+
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/b514bdc898e2951020cbdca1304b75f5950d1f59.zip
+)
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
+add_executable(tests
+  test/lang/test_type_registry.cpp
+)
+
+target_link_libraries(
+  tests
+  GTest::gtest_main
+  util
+  lang
+)
+
+include(GoogleTest)
+gtest_discover_tests(tests)

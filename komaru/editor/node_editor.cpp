@@ -16,9 +16,9 @@ NodeEditor::NodeEditor(
     nodes_.emplace_back("INT x INT", ImVec2{250, 400});
     nodes_.emplace_back("INT", ImVec2{500, 400});
     nodes_.emplace_back("TERMINAL", ImVec2{650, 300}, NodeType::Terminal);
-    // links_.emplace_back(nodes_[0], nodes_[1]);
-    // links_.emplace_back(nodes_[1], nodes_[2], "+");
-    // links_.emplace_back(nodes_[2], nodes_[3]);
+    links_.emplace_back(nodes_[0], nodes_[1]);
+    links_.emplace_back(nodes_[1], nodes_[2], "+");
+    links_.emplace_back(nodes_[2], nodes_[3]);
 }
 
 void NodeEditor::UpdateAndDraw(float dt) {
