@@ -33,10 +33,12 @@ file(GLOB EDITOR_SOURCES
 )
 file(GLOB UTIL_SOURCES komaru/util/*.cpp komaru/util/*.hpp)
 file(GLOB LANG_SOURCES komaru/lang/*.cpp komaru/lang/*.hpp)
+file(GLOB TRANSLATE_SOURCES komaru/translate/*.cpp komaru/translate/*.hpp)
 
 include_directories(komaru)
 add_library(util STATIC ${UTIL_SOURCES})
 add_library(lang STATIC ${LANG_SOURCES})
+add_library(translate STATIC ${TRANSLATE_SOURCES})
 add_executable(editor ${EDITOR_SOURCES})
 add_executable(test-node-graph-editor test/imgui_node_graph_test.cpp)
 set(IMNODE_EXAMPLE_SOURCES
@@ -69,7 +71,7 @@ add_executable(imnodes-save-load
 
 find_package(SDL2 REQUIRED)
 
-target_link_libraries(editor PRIVATE util lang imgui glfw OpenGL::GL glad)
+target_link_libraries(editor PRIVATE util lang translate imgui glfw OpenGL::GL glad)
 target_link_libraries(test-node-graph-editor PRIVATE imgui glfw OpenGL::GL glad)
 
 target_link_libraries(imnodes-hello PRIVATE OpenGL::GL SDL2::SDL2)
@@ -93,6 +95,7 @@ enable_testing()
 
 add_executable(tests
   test/lang/test_type_registry.cpp
+  test/translate/test_cpp_translator.cpp
 )
 
 target_link_libraries(
@@ -100,6 +103,7 @@ target_link_libraries(
   GTest::gtest_main
   util
   lang
+  translate
 )
 
 include(GoogleTest)

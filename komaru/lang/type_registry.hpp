@@ -11,17 +11,13 @@ public:
     TypeRegistry() = default;
     ~TypeRegistry() = default;
 
-    const Type& RegisterType(std::string name, BuiltinType type);
-    const Type& RegisterType(
-        std::string name,
-        BuiltinType base_type,
-        std::vector<const Type*> inner_types
-    );
+    const Type* RegisterAtomType(TypeTag type);
+    const Type* RegisterTupleType(std::vector<const Type*> inner_types);
 
     // TODO: rework interface
     // For now simplistic golang-like interface
     size_t GetNumTypes() const;
-    const Type& GetType(size_t idx) const;
+    const Type* GetType(size_t idx) const;
 
 private:
     std::deque<Type> types_;
