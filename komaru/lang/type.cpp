@@ -5,13 +5,20 @@
 
 namespace komaru::lang {
 
+std::deque<Type::Variant> Type::storage_;
+std::unordered_map<TypeTag, Type::Variant*> Type::atom_types_index_;
+std::unordered_map<TupleType::ID, Type::Variant*> Type::tuple_types_index_;
+
 AtomType::AtomType(TypeTag tag)
     : tag_(tag) {
     switch (tag) {
+        case TypeTag::Source:
+        case TypeTag::Target:
         case TypeTag::Int:
         case TypeTag::Bool:
         case TypeTag::Char:
         case TypeTag::Float:
+        case TypeTag::Singleton:
             return;
         default:
             throw std::logic_error(std::format(
@@ -22,6 +29,12 @@ AtomType::AtomType(TypeTag tag)
 
 std::string_view AtomType::GetName() const {
     switch (tag_) {
+        case TypeTag::Singleton:
+            return "S";
+        case TypeTag::Source:
+            return "Source";
+        case TypeTag::Target:
+            return "Sink";
         case TypeTag::Int:
             return "Int";
         case TypeTag::Bool:
@@ -40,7 +53,7 @@ TypeTag AtomType::GetTag() const {
     return tag_;
 }
 
-bool AtomType::IsSameAs(const AtomType& o) const {
+bool AtomType::operator==(AtomType o) const {
     return tag_ == o.tag_;
 }
 
@@ -52,28 +65,28 @@ TypeTag TupleType::GetTag() const {
     return TypeTag::Tuple;
 }
 
-bool TupleType::IsSameAs(const TupleType& o) const {
+bool TupleType::operator==(const TupleType& o) const {
     if(inner_types_.size() != o.inner_types_.size()) {
         return false;
     }
     for(size_t i = 0; i < inner_types_.size(); ++i) {
-        if(!TypeIdentical(inner_types_[i], o.inner_types_[i])) {
+        if(inner_types_[i] != o.inner_types_[i]) {
             return false;
         }
     }
     return true;
 }
 
-const std::vector<const Type*>& TupleType::GetTupleTypes() const {
+const std::vector<Type>& TupleType::GetTupleTypes() const {
     return inner_types_;
 }
 
-TupleType::TupleType(std::vector<const Type*> inner_types)
+TupleType::TupleType(std::vector<Type> inner_types)
     : inner_types_(std::move(inner_types)) {
     name_ = "(";
 
     for(size_t i = 0; i < inner_types_.size(); ++i) {
-        name_ += GetTypeName(inner_types_[i]);
+        name_ += inner_types_[i].GetName();
         if(i + 1 != inner_types_.size()) {
             name_ += ", ";
         }
@@ -82,27 +95,88 @@ TupleType::TupleType(std::vector<const Type*> inner_types)
     name_ += ")";
 }
 
-
-std::string_view GetTypeName(const Type* type) {
-    return std::visit([](const TypeLike auto& ut) -> std::string_view {
-        return ut.GetName();
-    }, *type);
+TupleType::ID TupleType::GetID() const {
+    return GetIDFromTypes(inner_types_);
 }
 
-TypeTag GetTypeTag(const Type* type) {
-    return std::visit([](const TypeLike auto& ut) -> TypeTag {
-        return ut.GetTag();
-    }, *type);
-}
+TupleType::ID TupleType::GetIDFromTypes(const std::vector<Type>& types) {
+    TupleType::ID id;
 
-bool TypeIdentical(const Type* t1, const Type* t2) {
-    if(GetTypeTag(t1) != GetTypeTag(t2)) {
-        return false;
+    for(size_t i = 0; i < types.size(); ++i) {
+        id += std::to_string(types[i].GetID());
+        if(i + 1 != types.size()) {
+            id += "_";
+        }
     }
 
-    return std::visit([t2]<TypeLike T>(const T& ut) -> bool {
-        return std::get<T>(*t2).IsSameAs(ut);
-    }, *t1);
+    return id;
+}
+
+Type::Type(Variant* type) : type_(type) {
+}
+
+const Type::Variant* Type::GetVariantPointer() const {
+    return type_;
+}
+
+// TODO: Support concurrency for Type constructors
+
+Type Type::FromTag(TypeTag tag) {
+    auto it = atom_types_index_.find(tag);
+    if(it != atom_types_index_.end()) {
+        return Type(it->second);
+    }
+
+    Variant* new_type = &storage_.emplace_back(AtomType(tag));
+    atom_types_index_.emplace(tag, new_type);
+
+    return Type(new_type);
+}
+
+Type Type::Tuple(std::vector<Type> types) {
+    auto id = TupleType::GetIDFromTypes(types);
+    auto it = tuple_types_index_.find(id);
+    if(it != tuple_types_index_.end()) {
+        return Type(it->second);
+    }
+
+    Variant* new_type = &storage_.emplace_back(TupleType(std::move(types)));
+    tuple_types_index_.emplace(std::move(id), new_type);
+
+    return Type(new_type);
+}
+
+Type Type::TupleFromTags(std::vector<TypeTag> tags) {
+    std::vector<Type> types;
+    types.reserve(tags.size());
+
+    for(TypeTag tag : tags) {
+        types.emplace_back(FromTag(tag));
+    }
+
+    return Tuple(std::move(types));
+}
+
+std::string_view Type::GetName() const {
+    return this->Visit([](const TypeLike auto& t) -> std::string_view {
+        return t.GetName();
+    });
+}
+
+TypeTag Type::GetTag() const {
+    return this->Visit([](const TypeLike auto& t) -> TypeTag {
+        return t.GetTag();
+    });
+}
+
+std::uintptr_t Type::GetID() const {
+    return reinterpret_cast<std::uintptr_t>(type_);
+}
+
+bool Type::operator==(Type o) const {
+    // Because each type in storage is unique and never changes it's location
+    // we can just compare pointers
+    return type_ == o.type_;
 }
 
 }

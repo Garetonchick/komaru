@@ -94,7 +94,9 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(tests
-  test/lang/test_type_registry.cpp
+  test/lang/test_types.cpp
+  test/lang/test_morphisms.cpp
+  test/lang/test_values.cpp
   test/translate/test_cpp_translator.cpp
 )
 
