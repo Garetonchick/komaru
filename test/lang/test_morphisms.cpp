@@ -27,7 +27,7 @@ TEST(Morphisms, Compound) {
         MorphismTag::Id, Type::FromTag(TypeTag::Source), Type::FromTag(TypeTag::Singleton)
     );
     auto value_morphism = Morphism::WithValue(
-        "some_value", Value::NewTupleRaw(9, 42)
+        "some_value", Value::TupleFromAtoms(9, 42)
     );
     auto plus_morphism = Morphism::Builtin(
         MorphismTag::Plus, ti2, ti
@@ -44,6 +44,7 @@ TEST(Morphisms, Compound) {
     ASSERT_EQ(program_morphism->GetSource(), Type::FromTag(TypeTag::Source));
     ASSERT_EQ(program_morphism->GetTarget(), Type::FromTag(TypeTag::Target));
     ASSERT_EQ(program_morphism->GetTag(), MorphismTag::Compound);
+
     program_morphism->Visit(Overloaded{
         [&](const CompoundMorphism& morphism){
             const auto& submorphisms = morphism.GetMorphisms();

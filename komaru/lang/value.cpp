@@ -33,19 +33,19 @@ Type TupleValue::DetermineType(const std::vector<Value>& values) {
     return Type::Tuple(std::move(types));
 }
 
-Value Value::NewTuple(std::vector<Value> values) {
+Value Value::Tuple(std::vector<Value> values) {
     return TupleValue(std::move(values));
 }
 
-Value Value::NewInt(int32_t value) {
+Value Value::Int(int32_t value) {
     return AtomValue(value);
 }
 
-Value Value::NewBool(bool value) {
+Value Value::Bool(bool value) {
     return AtomValue(value);
 }
 
-Value Value::NewChar(char value) {
+Value Value::Char(char value) {
     return AtomValue(value);
 }
 

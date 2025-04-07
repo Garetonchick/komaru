@@ -56,20 +56,20 @@ private:
 class Value : public util::DeriveVariant<Value> {
     using Variant = std::variant<AtomValue, TupleValue>;
 public:
-    static Value NewInt(int32_t value);
-    static Value NewBool(bool value);
-    static Value NewChar(char value);
+    static Value Int(int32_t value);
+    static Value Bool(bool value);
+    static Value Char(char value);
 
-    static Value NewTuple(std::vector<Value> values);
+    static Value Tuple(std::vector<Value> values);
 
     template<typename T>
-    static Value NewAtom(T value) {
+    static Value Atom(T value) {
         return Value(AtomValue(value));
     }
 
     template<typename... Args>
-    static Value NewTupleRaw(Args&&... args) {
-        return NewTuple({Value::NewAtom(args)...});
+    static Value TupleFromAtoms(Args&&... args) {
+        return Tuple({Value::Atom(args)...});
     }
 
     Type GetType() const;

@@ -9,12 +9,12 @@ class CppProgram : public IProgram {
 public:
     CppProgram(std::string source_code);
 
-    const std::string& GetProgramSourceCode() override;
-    std::string GetProgramExt() override;
+    const std::string& GetSourceCode() const override;
+    const char* GetExt() const override;
     std::vector<std::string> GetBuildCommand(
         const std::string& filename,
         const std::string& outname
-    ) override;
+    ) const override;
 
 private:
     std::string source_code_;

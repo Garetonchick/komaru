@@ -33,7 +33,7 @@ BuiltinMorphism::BuiltinMorphism(MorphismTag tag, Type source, Type target)
     , target_type_(target) {
 }
 
-std::string_view BuiltinMorphism::GetName() const {
+const std::string& BuiltinMorphism::GetName() const {
     return name_;
 }
 
@@ -53,7 +53,7 @@ CompoundMorphism::CompoundMorphism(std::string name, std::vector<MorphismPtr> mo
     : name_(std::move(name)), morphisms_(std::move(morphisms)) {
 }
 
-std::string_view CompoundMorphism::GetName() const {
+const std::string& CompoundMorphism::GetName() const {
     return name_;
 }
 
@@ -78,7 +78,7 @@ ValueMorphism::ValueMorphism(std::string name, Value value)
     , value_(std::move(value)) {
 }
 
-std::string_view ValueMorphism::GetName() const {
+const std::string& ValueMorphism::GetName() const {
     return name_;
 }
 
@@ -92,6 +92,10 @@ Type ValueMorphism::GetTarget() const {
 
 MorphismTag ValueMorphism::GetTag() const {
     return MorphismTag::Value;
+}
+
+const Value& ValueMorphism::GetValue() const {
+    return value_;
 }
 
 MorphismPtr Morphism::Builtin(MorphismTag tag, Type source, Type target) {
@@ -115,8 +119,8 @@ MorphismPtr Morphism::WithValue(std::string name, Value value) {
     );
 }
 
-std::string_view Morphism::GetName() const {
-    return Visit([](const auto& morphism) {
+const std::string& Morphism::GetName() const {
+    return Visit([](const auto& morphism) -> const std::string& {
         return morphism.GetName();
     });
 }

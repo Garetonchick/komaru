@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <ranges>
 
 namespace komaru::util {
 
@@ -21,5 +22,9 @@ bool VecEq(const std::vector<T>& a, const std::vector<T>& b) {
 
     return true;
 }
+
+auto Enumerate(std::ranges::input_range auto&& r) {
+    return std::views::zip(std::views::iota(static_cast<size_t>(0)), std::forward<decltype(r)>(r));
+};
 
 }

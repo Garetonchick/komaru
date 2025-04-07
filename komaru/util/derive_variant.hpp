@@ -12,7 +12,7 @@ public:
     DeriveVariant() = default;
 
     template<typename F>
-    auto Visit(F&& func) const {
+    constexpr decltype(auto) Visit(F&& func) const {
         return std::visit(std::forward<F>(func), *static_cast<const T*>(this)->GetVariantPointer());
     }
 

@@ -6,12 +6,12 @@ namespace komaru::translate {
 struct IProgram {
     virtual ~IProgram() = default;
 
-    virtual const std::string& GetProgramSourceCode() = 0;
-    virtual std::string GetProgramExt() = 0;
+    virtual const std::string& GetSourceCode() const = 0;
+    virtual const char* GetExt() const = 0;
     virtual std::vector<std::string> GetBuildCommand(
         const std::string& filename,
         const std::string& outname
-    ) = 0;
+    ) const = 0;
 };
 
 }

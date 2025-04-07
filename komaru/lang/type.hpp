@@ -72,15 +72,41 @@ private:
     std::vector<Type> inner_types_;
 };
 
+class GenericType {
+public:
+    explicit GenericType(std::string name);
+
+    std::string_view GetName() const;
+    TypeTag GetTag() const;
+    const std::string& GetID() const;
+
+    bool operator==(const GenericType& o) const;
+
+private:
+    std::string name_;
+};
+
 static_assert(TypeLike<AtomType>);
 static_assert(TypeLike<TupleType>);
+static_assert(TypeLike<GenericType>);
 
 class Type : public util::DeriveVariant<Type> {
-    using Variant = std::variant<AtomType, TupleType>;
+    using Variant = std::variant<AtomType, TupleType, GenericType>;
 public:
     static Type FromTag(TypeTag tag);
     static Type Tuple(std::vector<Type> types);
     static Type TupleFromTags(std::vector<TypeTag> tags);
+
+    static Type Generic(std::string name);
+    static Type Auto();
+
+    static Type Int();
+    static Type Float();
+    static Type Char();
+    static Type Bool();
+    static Type Singleton();
+    static Type Source();
+    static Type Target();
 
     std::string_view GetName() const;
     TypeTag GetTag() const;
@@ -101,6 +127,7 @@ private:
     static std::deque<Variant> storage_;
     static std::unordered_map<TypeTag, Variant*> atom_types_index_;
     static std::unordered_map<TupleType::ID, Variant*> tuple_types_index_;
+    static std::unordered_map<std::string, Variant*> generic_types_index_;
 };
 
 static_assert(TypeLike<Type>);

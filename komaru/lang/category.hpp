@@ -10,13 +10,13 @@ public:
     struct Link;
 
     struct Node {
-        const Type* type;
-        std::vector<Link> links;
+        Type type;
+        std::vector<const Link> links;
     };
 
     struct Link {
-        const Morphism* morphism;
-        Node* dst;
+        MorphismPtr morphism;
+        const Node* dst; // Watch out for dangling pointers
     };
 
     using DAG = std::vector<Node>;
@@ -25,7 +25,7 @@ public:
     explicit Category(DAG dag);
 
     // A joke of an interface :(
-    DAG& GetDAG();
+    const DAG& GetDAG() const;
 
 private:
     bool Validate(); // validate dag

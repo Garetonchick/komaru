@@ -7,18 +7,18 @@ namespace komaru::translate {
 CppProgram::CppProgram(std::string source_code) : source_code_(std::move(source_code)) {
 }
 
-const std::string& CppProgram::GetProgramSourceCode() {
+const std::string& CppProgram::GetSourceCode() const {
     return source_code_;
 }
 
-std::string CppProgram::GetProgramExt() {
-    return "cpp";
+const char* CppProgram::GetExt() const {
+    return ".cpp";
 }
 
 std::vector<std::string> CppProgram::GetBuildCommand(
     const std::string& filename,
     const std::string& outname
-) {
+) const {
     return std::vector<std::string>{
         "$CXX",
         filename,

@@ -8,6 +8,7 @@ namespace komaru::lang {
 std::deque<Type::Variant> Type::storage_;
 std::unordered_map<TypeTag, Type::Variant*> Type::atom_types_index_;
 std::unordered_map<TupleType::ID, Type::Variant*> Type::tuple_types_index_;
+std::unordered_map<std::string, Type::Variant*> Type::generic_types_index_;
 
 AtomType::AtomType(TypeTag tag)
     : tag_(tag) {
@@ -112,6 +113,25 @@ TupleType::ID TupleType::GetIDFromTypes(const std::vector<Type>& types) {
     return id;
 }
 
+GenericType::GenericType(std::string name) : name_(std::move(name)) {
+}
+
+std::string_view GenericType::GetName() const {
+    return name_;
+}
+
+TypeTag GenericType::GetTag() const {
+    return TypeTag::Generic;
+}
+
+const std::string& GenericType::GetID() const {
+    return name_;
+}
+
+bool GenericType::operator==(const GenericType& o) const {
+    return name_ == o.name_;
+}
+
 Type::Type(Variant* type) : type_(type) {
 }
 
@@ -155,6 +175,51 @@ Type Type::TupleFromTags(std::vector<TypeTag> tags) {
     }
 
     return Tuple(std::move(types));
+}
+
+Type Type::Generic(std::string name) {
+    auto it = generic_types_index_.find(name);
+
+    if(it != generic_types_index_.end()) {
+        return Type(it->second);
+    }
+
+    Variant* new_type = &storage_.emplace_back(GenericType(name));
+    generic_types_index_.emplace(std::move(name), new_type);
+
+    return Type(new_type);
+}
+
+Type Type::Auto() {
+    return Generic("");
+}
+
+Type Type::Int() {
+    return FromTag(TypeTag::Int);
+}
+
+Type Type::Float() {
+    return FromTag(TypeTag::Float);
+}
+
+Type Type::Char() {
+    return FromTag(TypeTag::Char);
+}
+
+Type Type::Bool() {
+    return FromTag(TypeTag::Bool);
+}
+
+Type Type::Singleton() {
+    return FromTag(TypeTag::Singleton);
+}
+
+Type Type::Source() {
+    return FromTag(TypeTag::Source);
+}
+
+Type Type::Target() {
+    return FromTag(TypeTag::Target);
 }
 
 std::string_view Type::GetName() const {

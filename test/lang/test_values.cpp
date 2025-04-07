@@ -7,9 +7,9 @@ using namespace komaru::lang;
 using namespace komaru::util;
 
 TEST(Values, Basic) {
-    Value ival = Value::NewInt(42);
-    Value cval = Value::NewChar('m');
-    Value bval = Value::NewBool(true);
+    Value ival = Value::Int(42);
+    Value cval = Value::Char('m');
+    Value bval = Value::Bool(true);
     std::vector<Type> types = {
         Type::FromTag(TypeTag::Int),
         Type::FromTag(TypeTag::Char),

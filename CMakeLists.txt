@@ -33,7 +33,7 @@ file(GLOB EDITOR_SOURCES
 )
 file(GLOB UTIL_SOURCES komaru/util/*.cpp komaru/util/*.hpp)
 file(GLOB LANG_SOURCES komaru/lang/*.cpp komaru/lang/*.hpp)
-file(GLOB TRANSLATE_SOURCES komaru/translate/*.cpp komaru/translate/*.hpp)
+file(GLOB_RECURSE TRANSLATE_SOURCES komaru/translate/*.cpp komaru/translate/*.hpp)
 
 include_directories(komaru)
 add_library(util STATIC ${UTIL_SOURCES})
@@ -103,9 +103,9 @@ add_executable(tests
 target_link_libraries(
   tests
   GTest::gtest_main
-  util
-  lang
   translate
+  lang
+  util
 )
 
 include(GoogleTest)

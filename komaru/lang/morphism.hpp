@@ -24,7 +24,7 @@ class BuiltinMorphism {
 public:
     BuiltinMorphism(MorphismTag tag, Type source, Type target);
 
-    std::string_view GetName() const;
+    const std::string& GetName() const;
     Type GetSource() const;
     Type GetTarget() const;
     MorphismTag GetTag() const;
@@ -41,7 +41,7 @@ class CompoundMorphism {
 public:
     CompoundMorphism(std::string name, std::vector<MorphismPtr> morphisms);
 
-    std::string_view GetName() const;
+    const std::string& GetName() const;
     Type GetSource() const;
     Type GetTarget() const;
     MorphismTag GetTag() const;
@@ -58,10 +58,11 @@ class ValueMorphism {
 public:
     ValueMorphism(std::string name, Value value);
 
-    std::string_view GetName() const;
+    const std::string& GetName() const;
     Type GetSource() const;
     Type GetTarget() const;
     MorphismTag GetTag() const;
+    const Value& GetValue() const;
 
 private:
     std::string name_;
@@ -80,7 +81,7 @@ public:
     static MorphismPtr Compound(std::string name, std::vector<MorphismPtr> morphisms);
     static MorphismPtr WithValue(std::string name, Value value);
 
-    std::string_view GetName() const;
+    const std::string& GetName() const;
     Type GetSource() const;
     Type GetTarget() const;
     MorphismTag GetTag() const;
