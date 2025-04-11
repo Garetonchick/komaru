@@ -1,6 +1,7 @@
 #include "morphism.hpp"
 
 #include <cassert>
+#include <format>
 
 namespace komaru::lang {
 
@@ -15,12 +16,24 @@ static std::string_view TagToName(MorphismTag tag) {
             return "-";
         case MorphismTag::Multiply:
             return "*";
+        case MorphismTag::Less:
+            return "<";
+        case MorphismTag::LessEq:
+            return "<=";
+        case MorphismTag::Greater:
+            return ">";
+        case MorphismTag::GreaterEq:
+            return ">=";
         case MorphismTag::DebugInt:
             return "debug_int";
         case MorphismTag::Compound:
             return "ERROR (Compound)";
         case MorphismTag::Value:
             return "ERROR (Value)";
+        case MorphismTag::Position:
+            return "ERROR (Position)";
+        case MorphismTag::Binded:
+            return "ERROR (Binded)";
     }
 
     throw std::logic_error("unknown morphism tag");
@@ -98,6 +111,60 @@ const Value& ValueMorphism::GetValue() const {
     return value_;
 }
 
+PositionMorphism::PositionMorphism(size_t pos)
+    : pos_(pos), name_(std::format("${}", pos_)) {}
+
+const std::string& PositionMorphism::GetName() const {
+    return name_;
+}
+
+Type PositionMorphism::GetSource() const {
+    return Type::Auto();
+}
+
+Type PositionMorphism::GetTarget() const {
+    return Type::Auto();
+}
+
+MorphismTag PositionMorphism::GetTag() const {
+    return MorphismTag::Position;
+}
+
+size_t PositionMorphism::GetPosition() const {
+    return pos_;
+}
+
+bool PositionMorphism::IsNonePosition() const {
+    return pos_ == std::numeric_limits<size_t>::max();
+}
+
+BindedMorphism::BindedMorphism(MorphismPtr morphism, std::map<size_t, Value> mapping)
+    : morphism_(std::move(morphism)), mapping_(std::move(mapping)) {}
+
+const std::string& BindedMorphism::GetName() const {
+    return morphism_->GetName();
+}
+
+Type BindedMorphism::GetSource() const {
+    return morphism_->GetSource();
+}
+
+Type BindedMorphism::GetTarget() const {
+    return morphism_->GetTarget();
+}
+
+MorphismTag BindedMorphism::GetTag() const {
+    return MorphismTag::Binded;
+}
+
+const MorphismPtr& BindedMorphism::GetUnderlyingMorphism() const {
+    return morphism_;
+}
+
+const std::map<size_t, Value>& BindedMorphism::GetMapping() const {
+    return mapping_;
+}
+
 MorphismPtr Morphism::Builtin(MorphismTag tag, Type source, Type target) {
     return std::make_shared<Morphism>(
         PrivateDummy{}, BuiltinMorphism(tag, source, target)
@@ -117,6 +184,16 @@ MorphismPtr Morphism::WithValue(std::string name, Value value) {
     return std::make_shared<Morphism>(
         PrivateDummy{}, ValueMorphism(name, value)
     );
+}
+
+MorphismPtr Morphism::Position(size_t pos) {
+    return std::make_shared<Morphism>(
+        PrivateDummy{}, PositionMorphism(pos)
+    );
+}
+
+MorphismPtr Morphism::NonePosition() {
+    return Position(std::numeric_limits<size_t>::max());
 }
 
 const std::string& Morphism::GetName() const {
@@ -157,6 +234,12 @@ bool Morphism::ValidateCompound(const std::vector<MorphismPtr>& morphisms) {
 
 const Morphism::Variant* Morphism::GetVariantPointer() const {
     return &morphism_;
+}
+
+MorphismPtr BindMorphism(MorphismPtr morphism, std::map<size_t, Value> mapping) {
+    return std::make_shared<Morphism>(
+        Morphism::PrivateDummy{}, BindedMorphism(std::move(morphism), std::move(mapping))
+    );
 }
 
 }

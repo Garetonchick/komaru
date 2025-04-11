@@ -222,6 +222,10 @@ Type Type::Target() {
     return FromTag(TypeTag::Target);
 }
 
+Type Type::Pow(size_t n) const {
+    return Tuple(std::vector<Type>(n, *this));
+}
+
 std::string_view Type::GetName() const {
     return this->Visit([](const TypeLike auto& t) -> std::string_view {
         return t.GetName();
@@ -242,6 +246,28 @@ bool Type::operator==(Type o) const {
     // Because each type in storage is unique and never changes it's location
     // we can just compare pointers
     return type_ == o.type_;
+}
+
+Type operator*(Type t1, Type t2) {
+    bool tup1 = t1.Holds<TupleType>();
+    bool tup2 = t2.Holds<TupleType>();
+    if(!tup1 && !tup2) {
+        return Type::Tuple({t1, t2});
+    }
+    std::vector<Type> types;
+
+    if(tup1) {
+        types.insert_range(types.end(), t1.GetVariant<TupleType>().GetTupleTypes());
+    } else {
+        types.push_back(t1);
+    }
+    if(tup2) {
+        types.insert_range(types.end(), t2.GetVariant<TupleType>().GetTupleTypes());
+    } else {
+        types.push_back(t2);
+    }
+
+    return Type::Tuple(types);
 }
 
 }

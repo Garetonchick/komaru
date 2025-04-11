@@ -6,21 +6,15 @@
 
 namespace komaru::translate::cpp {
 
-bool CppProgramBuilder::HasFunction(const std::string& name) const {
-    return name2func_.contains(name);
-}
-
 void CppProgramBuilder::AddHeader(const std::string& header_name) {
     headers_.insert(header_name);
 }
 
-bool CppProgramBuilder::AddFunction(std::string mname, CppFunction func) {
-    order_.push_back(mname);
-    auto [_, inserted] = name2func_.emplace(std::move(mname), func);
-    return inserted;
+void CppProgramBuilder::AddFunction(CppFunction func) {
+    funcs_.emplace_back(std::move(func));
 }
 
-std::unique_ptr<IProgram> CppProgramBuilder::ExtractProgram() const && {
+std::unique_ptr<IProgram> CppProgramBuilder::ExtractProgram() {
     std::string source_code;
 
     for(const auto& header : headers_) {
@@ -29,23 +23,26 @@ std::unique_ptr<IProgram> CppProgramBuilder::ExtractProgram() const && {
 
     source_code += "\n\n";
 
-    for(const auto& name : order_) {
-        const auto& f = name2func_.at(name);
-
-        source_code += f.decl;
+    for(const auto& func : funcs_) {
+        source_code += func.decl;
         source_code += "\n";
     }
 
     source_code += "\n\n";
 
-    for(const auto& name : order_) {
-        const auto& f = name2func_.at(name);
-
-        source_code += f.impl;
+    for(const auto& func : funcs_) {
+        source_code += func.impl;
         source_code += "\n\n";
     }
 
+    Reset();
+
     return std::make_unique<CppProgram>(std::move(source_code));
+}
+
+void CppProgramBuilder::Reset() {
+    this->~CppProgramBuilder();
+    new (this) CppProgramBuilder();
 }
 
 }

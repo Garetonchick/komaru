@@ -72,7 +72,6 @@ ProgramExecResult ExecProgram(const IProgram& program) {
 
     if(build_result.Fail()) {
         auto err = std::format("STDOUT:\n{}\nSTDERR:\n{}", build_result.Stdout(), build_result.Stderr());
-        std::println("Compile error:\n{}", err);
         return ProgramExecResult::CompileErrorResult(build_result.Code(), std::move(err));
     }
 

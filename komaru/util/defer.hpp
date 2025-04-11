@@ -4,7 +4,8 @@
 template<typename F>
 class Defer {
 public:
-    Defer(auto&& func) : func_(std::forward<decltype(func)>(func)) {}
+    template<typename U>
+    Defer(U&& func) : func_(std::forward<U>(func)) {}
 
     ~Defer() {
         func_();
@@ -12,3 +13,6 @@ public:
 private:
     F func_;
 };
+
+template<typename U>
+Defer(U&& func) -> Defer<U>;

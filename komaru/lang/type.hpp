@@ -11,6 +11,7 @@
 
 namespace komaru::lang {
 
+// TODO: Type tags should only be used for the builtin types
 enum class TypeTag {
     Singleton,
     Source,
@@ -108,9 +109,11 @@ public:
     static Type Source();
     static Type Target();
 
+
     std::string_view GetName() const;
     TypeTag GetTag() const;
     std::uintptr_t GetID() const;
+    Type Pow(size_t n) const;
 
     bool operator==(Type o) const;
 
@@ -129,6 +132,8 @@ private:
     static std::unordered_map<TupleType::ID, Variant*> tuple_types_index_;
     static std::unordered_map<std::string, Variant*> generic_types_index_;
 };
+
+Type operator*(Type t1, Type t2);
 
 static_assert(TypeLike<Type>);
 

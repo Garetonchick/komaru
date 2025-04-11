@@ -12,16 +12,17 @@ namespace komaru::translate::cpp {
 
 class CppProgramBuilder {
 public:
-    bool HasFunction(const std::string& name) const;
+    CppProgramBuilder() = default;
 
     void AddHeader(const std::string& header_name);
-    bool AddFunction(std::string mname, CppFunction func);
+    void AddFunction(CppFunction func);
 
-    std::unique_ptr<IProgram> ExtractProgram() const &&;
+    std::unique_ptr<IProgram> ExtractProgram();
+    void Reset();
 
 private:
     std::unordered_set<std::string> headers_;
-    std::unordered_map<std::string, CppFunction> name2func_;
+    std::vector<CppFunction> funcs_;
     std::vector<std::string> order_;
 };
 

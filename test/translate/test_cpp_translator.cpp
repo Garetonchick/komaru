@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <lang/category.hpp>
+#include <lang/cat_program.hpp>
 #include <translate/cpp/cpp_translator.hpp>
 #include <translate/exec_program.hpp>
 
@@ -9,46 +9,122 @@
 using namespace komaru::lang;
 using namespace komaru::translate;
 
+/*
+*   9      $0
+*   ┌─>Int──┐              +
+* S─┤       ├>|Int x Int|─────>Int
+*   └─>Int──┘
+*   42     $1
+*/
+
 TEST(CppTranslator, APlusB) {
-    auto ti = Type::FromTag(TypeTag::Int);
-    auto ti2 = Type::TupleFromTags({TypeTag::Int, TypeTag::Int});
-    auto start_morphism = Morphism::Builtin(
-        MorphismTag::Id, Type::FromTag(TypeTag::Source), Type::FromTag(TypeTag::Singleton)
+    auto nine = Morphism::WithValue(
+        "", Value::Atom(9)
     );
-    auto value_morphism = Morphism::WithValue(
-        "some_value", Value::TupleFromAtoms(9, 42)
+    auto forty_two = Morphism::WithValue(
+        "", Value::Atom(42)
     );
-    auto plus_morphism = Morphism::Builtin(
-        MorphismTag::Plus, ti2, ti
+    auto pos0 = Morphism::Position(0);
+    auto pos1 = Morphism::Position(1);
+    auto plus = Morphism::Builtin(
+        MorphismTag::Plus, Type::Int().Pow(2), Type::Int()
     );
-    auto end_morphism = Morphism::Builtin(
-        MorphismTag::Id, Type::FromTag(TypeTag::Int), Type::FromTag(TypeTag::Target)
-    );
-    std::vector<MorphismPtr> program_morphisms = {
-        start_morphism, value_morphism, plus_morphism, end_morphism
-    };
-    auto program_morphism = Morphism::Compound("Main", program_morphisms);
 
-    Category::DAG dag = {
-        Category::Node{
-            program_morphism->GetSource(),
-            {}
-        },
-        Category::Node{
-            program_morphism->GetTarget(),
-            {}
-        },
-    };
+    auto builder = CatProgramBuilder();
 
-    dag[1].links.push_back(Category::Link{program_morphism, &dag[0]});
+    auto [start_node, start_pin] = builder.NewNodeWithPin(Type::Singleton(), "main");
+    auto [num0_node, num0_pin] = builder.NewNodeWithPin(Type::Int());
+    auto [num1_node, num1_pin] = builder.NewNodeWithPin(Type::Int());
+    auto [pair_node, pair_pin] = builder.NewNodeWithPin(Type::Int().Pow(2));
+    auto& res_node = builder.NewNode(Type::Int());
 
-    Category category(std::move(dag));
+    builder
+        .Connect(start_pin, num0_node, nine)
+        .Connect(start_pin, num1_node, forty_two)
+        .Connect(num0_pin, pair_node, pos0)
+        .Connect(num1_pin, pair_node, pos1)
+        .Connect(pair_pin, res_node, plus);
+
+    auto cat_program = builder.Extract();
 
     std::unique_ptr<ITranslator> translator = std::make_unique<cpp::CppTranslator>();
-    auto program = translator->Translate(category);
+    auto maybe_program = translator->Translate(cat_program);
+
+    ASSERT_TRUE(maybe_program.has_value());
+    auto program = std::move(maybe_program.value());
+
+    std::println("aplusb.cpp\n{}\n", program->GetSourceCode());
 
     auto exec_res = ExecProgram(*program);
 
     ASSERT_TRUE(exec_res.Success());
     ASSERT_EQ(exec_res.Output(), "51\n");
+}
+
+/*
+*                 $0
+*         ┌───────────────────┐
+*         │                 $ │     *15
+*   5     │ <4 ┌────|False│───┴>Int────>Int
+* S───>Int├───>│Bool|     │ $       +10
+*         │    └────|True │───┬>Int────>Int
+*         │       $0          │
+*         └───────────────────┘
+*/
+
+TEST(CppTranslator, If) {
+    auto val = Morphism::WithValue("", Value::Atom(5));
+    auto less4 = BindMorphism(
+        Morphism::Builtin(MorphismTag::Less, Type::Int().Pow(2), Type::Bool()),
+        {{1, Value::Atom(4)}}
+    );
+    auto pos0 = Morphism::Position(0);
+    auto none_pos = Morphism::NonePosition();
+    auto mul15 = BindMorphism(
+        Morphism::Builtin(MorphismTag::Multiply, Type::Int().Pow(2), Type::Int()),
+        {{1, Value::Atom(15)}}
+    );
+    auto add10 = BindMorphism(
+        Morphism::Builtin(MorphismTag::Plus, Type::Int().Pow(2), Type::Int()),
+        {{1, Value::Atom(10)}}
+    );
+
+    auto builder = CatProgramBuilder();
+
+    auto [start_node, start_pin] = builder.NewNodeWithPin(Type::Singleton(), "main");
+    auto [val_node, val_pin] = builder.NewNodeWithPin(Type::Int());
+    auto& cond_node = builder.NewNode(Type::Bool());
+    auto [branch0_node, branch0_pin] = builder.NewNodeWithPin(Type::Int());
+    auto [branch1_node, branch1_pin] = builder.NewNodeWithPin(Type::Int());
+    auto& res0_node = builder.NewNode(Type::Int());
+    auto& res1_node = builder.NewNode(Type::Int());
+
+    auto& false_pin = cond_node.AddOutPin(Pattern::FromValue(Value::Atom(false)));
+    auto& true_pin = cond_node.AddOutPin(Pattern::FromValue(Value::Atom(true)));
+
+    builder
+        .Connect(start_pin, val_node, val)
+        .Connect(val_pin, cond_node, less4)
+        .Connect(val_pin, branch0_node, pos0)
+        .Connect(val_pin, branch1_node, pos0)
+        .Connect(false_pin, branch0_node, none_pos)
+        .Connect(true_pin, branch1_node, none_pos)
+        .Connect(branch0_pin, res0_node, mul15)
+        .Connect(branch1_pin, res1_node, add10);
+
+    auto cat_program = builder.Extract();
+
+    std::unique_ptr<ITranslator> translator = std::make_unique<cpp::CppTranslator>();
+    auto maybe_program = translator->Translate(cat_program);
+
+    ASSERT_TRUE(maybe_program.has_value());
+
+    auto program = std::move(maybe_program.value());
+
+    std::println("if.cpp\n{}\n", program->GetSourceCode());
+
+    auto exec_res = ExecProgram(*program);
+
+    ASSERT_TRUE(exec_res.Success());
+    ASSERT_EQ(exec_res.Output(), "75\n");
 }
