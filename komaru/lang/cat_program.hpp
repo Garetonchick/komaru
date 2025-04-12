@@ -2,6 +2,7 @@
 #include <lang/type.hpp>
 #include <lang/morphism.hpp>
 #include <lang/pattern.hpp>
+#include <lang/guard.hpp>
 #include <util/non_copyable.hpp>
 
 namespace komaru::lang {
@@ -51,11 +52,14 @@ public:
         friend class CatProgram;
         friend class ::komaru::lang::CatProgramBuilder;
     public:
+        using Brancher = std::variant<Pattern, Guard>;
+    public:
         const Node& GetNode() const;
-        const Pattern& GetPattern() const;
+        const Brancher& GetBrancher() const;
         const std::deque<Arrow>& Arrows() const;
 
         void SetPattern(Pattern pattern);
+        void SetGuard(Guard guard);
 
     private:
         explicit OutPin(Node& node);
@@ -64,7 +68,7 @@ public:
 
     private:
         Node& node_; // associated node
-        Pattern pattern_{Pattern::Any()}; // TODO: Add guards and make it std::variant<Pattern, Guard>
+        Brancher brancher_{Pattern::Any()}; // TODO: Add guards and make it std::variant<Pattern, Guard>
         std::deque<Arrow> arrows_;
     };
 
@@ -79,10 +83,11 @@ public:
 
         OutPin& AddOutPin();
         OutPin& AddOutPin(Pattern pattern);
+        OutPin& AddOutPin(Guard guard);
         Node& SetName(std::string name);
 
     private:
-        Node(Type type, std::string name = "");
+        explicit Node(Type type, std::string name = "");
 
     private:
         Type type_;

@@ -72,7 +72,7 @@ TEST(CppTranslator, APlusB) {
 *         └───────────────────┘
 */
 
-TEST(CppTranslator, If) {
+TEST(CppTranslator, If101) {
     auto val = Morphism::WithValue("", Value::Atom(5));
     auto less4 = BindMorphism(
         Morphism::Builtin(MorphismTag::Less, Type::Int().Pow(2), Type::Bool()),
@@ -121,7 +121,61 @@ TEST(CppTranslator, If) {
 
     auto program = std::move(maybe_program.value());
 
-    std::println("if.cpp\n{}\n", program->GetSourceCode());
+    std::println("if101.cpp\n{}\n", program->GetSourceCode());
+
+    auto exec_res = ExecProgram(*program);
+
+    ASSERT_TRUE(exec_res.Success());
+    ASSERT_EQ(exec_res.Output(), "75\n");
+}
+
+/*
+*               +10
+*   5  ┌───|<4|────>Int
+* S───>│Int|  | *15
+*      └───|* |────>Int
+*/
+
+TEST(CppTranslator, Guards101) {
+    auto val = Morphism::WithValue("", Value::Atom(5));
+    auto less4_guard = Guard(BindMorphism(
+        Morphism::Builtin(MorphismTag::Less, Type::Int().Pow(2), Type::Bool()),
+        {{1, Value::Atom(4)}}
+    ));
+    auto mul15 = BindMorphism(
+        Morphism::Builtin(MorphismTag::Multiply, Type::Int().Pow(2), Type::Int()),
+        {{1, Value::Atom(15)}}
+    );
+    auto add10 = BindMorphism(
+        Morphism::Builtin(MorphismTag::Plus, Type::Int().Pow(2), Type::Int()),
+        {{1, Value::Atom(10)}}
+    );
+
+    auto builder = CatProgramBuilder();
+
+    auto [start_node, start_pin] = builder.NewNodeWithPin(Type::Singleton(), "main");
+    auto& val_node = builder.NewNode(Type::Int());
+    auto& res0_node = builder.NewNode(Type::Int());
+    auto& res1_node = builder.NewNode(Type::Int());
+
+    auto& less4_pin = val_node.AddOutPin(less4_guard);
+    auto& any_pin = val_node.AddOutPin(Pattern::Any());
+
+    builder
+        .Connect(start_pin, val_node, val)
+        .Connect(less4_pin, res0_node, add10)
+        .Connect(any_pin, res1_node, mul15);
+
+    auto cat_program = builder.Extract();
+
+    std::unique_ptr<ITranslator> translator = std::make_unique<cpp::CppTranslator>();
+    auto maybe_program = translator->Translate(cat_program);
+
+    ASSERT_TRUE(maybe_program.has_value());
+
+    auto program = std::move(maybe_program.value());
+
+    std::println("guards101.cpp\n{}\n", program->GetSourceCode());
 
     auto exec_res = ExecProgram(*program);
 

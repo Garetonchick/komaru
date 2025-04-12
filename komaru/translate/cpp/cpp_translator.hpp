@@ -28,6 +28,8 @@ private:
     std::string MakeExprForIntersectionNode(const CPNode* node);
     std::string MakeExprForArrow(const CPArrow* arrow);
 
+    std::string MakeExprForBrancher(const CPOutPin::Brancher& brancher, const std::string& arg_name);
+    std::string MakeExprForGuard(const lang::Guard& guard, const std::string& arg_name);
     std::string MakeExprForPattern(const lang::Pattern& pattern, const std::string& arg_name);
     std::string MakeExprForPattern(const lang::AnyPattern& pattern, const std::string& arg_name);
     std::string MakeExprForPattern(const lang::ValuePattern& pattern, const std::string& arg_name);

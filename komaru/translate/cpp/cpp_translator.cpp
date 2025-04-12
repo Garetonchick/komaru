@@ -287,10 +287,25 @@ std::vector<std::string> CppTranslator::MakeBranchExprs(const CPNode* node) {
     std::string local_name = node2local_name_[node];
 
     for(const auto& out_pin : node->OutPins()) {
-        exprs.emplace_back(MakeExprForPattern(out_pin.GetPattern(), local_name));
+        exprs.emplace_back(MakeExprForBrancher(out_pin.GetBrancher(), local_name));
     }
 
     return exprs;
+}
+
+std::string CppTranslator::MakeExprForBrancher(const CPOutPin::Brancher& brancher, const std::string& arg_name) {
+    return std::visit(util::Overloaded{
+        [&, this](const lang::Guard& guard){
+            return MakeExprForGuard(guard, arg_name);
+        },
+        [&, this](const lang::Pattern& pattern) {
+            return MakeExprForPattern(pattern, arg_name);
+        }
+    }, brancher);
+}
+
+std::string CppTranslator::MakeExprForGuard(const lang::Guard& guard, const std::string& arg_name) {
+    return MakeExprForMorphism(guard.GetMorphism(), arg_name);
 }
 
 // TODO: Support name binding for patterns

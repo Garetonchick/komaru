@@ -28,8 +28,8 @@ const CPNode& CPOutPin::GetNode() const {
     return node_;
 }
 
-const Pattern& CPOutPin::GetPattern() const {
-    return pattern_;
+const CPOutPin::Brancher& CPOutPin::GetBrancher() const {
+    return brancher_;
 }
 
 const std::deque<CPArrow>& CPOutPin::Arrows() const {
@@ -37,7 +37,11 @@ const std::deque<CPArrow>& CPOutPin::Arrows() const {
 }
 
 void CPOutPin::SetPattern(Pattern pattern) {
-    pattern_ = std::move(pattern);
+    brancher_ = std::move(pattern);
+}
+
+void CPOutPin::SetGuard(Guard guard) {
+    brancher_ = std::move(guard);
 }
 
 CPArrow& CPOutPin::AddArrow(CPNode& target_node, MorphismPtr morphism) {
@@ -69,6 +73,12 @@ CPOutPin& CPNode::AddOutPin() {
 CPOutPin& CPNode::AddOutPin(Pattern pattern) {
     auto& out_pin = out_pins_.emplace_back(CPOutPin(*this));
     out_pin.SetPattern(std::move(pattern));
+    return out_pin;
+}
+
+CPOutPin& CPNode::AddOutPin(Guard guard) {
+    auto& out_pin = out_pins_.emplace_back(CPOutPin(*this));
+    out_pin.SetGuard(std::move(guard));
     return out_pin;
 }
 
