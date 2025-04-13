@@ -127,10 +127,10 @@ private:
     const Variant* type_{nullptr};
 
     // Deque guarantees no pointer invalidation happens
-    static std::deque<Variant> storage_;
-    static std::unordered_map<TypeTag, Variant*> atom_types_index_;
-    static std::unordered_map<TupleType::ID, Variant*> tuple_types_index_;
-    static std::unordered_map<std::string, Variant*> generic_types_index_;
+    static std::deque<Variant> kStorage;
+    static std::unordered_map<TypeTag, Variant*> kAtomTypesIndex;
+    static std::unordered_map<TupleType::ID, Variant*> kTupleTypesIndex;
+    static std::unordered_map<std::string, Variant*> kGenericTypesIndex;
 };
 
 Type operator*(Type t1, Type t2);

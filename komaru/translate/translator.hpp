@@ -8,7 +8,7 @@ namespace komaru::translate {
 
 class TranslationError {
 public:
-    TranslationError(std::string msg)
+    explicit TranslationError(std::string msg)
         : msg_(std::move(msg)) {
     }
 

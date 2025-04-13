@@ -8,17 +8,17 @@
 
 #include <imnodes/imnodes.h>
 
-const float EPS = 1e-5;
+const float kEps = 1e-5;
 
 bool IsZeroLen(ImVec2 v) {
-    return (v.x * v.x + v.y * v.y) < EPS * EPS;
+    return (v.x * v.x + v.y * v.y) < kEps * kEps;
 }
 
 namespace komaru::editor {
 
 class TestApp : public GuiElement {
 public:
-    TestApp(GLFWwindow* window)
+    explicit TestApp(GLFWwindow* window)
         : window_(window),
           node_editor_("Node Editor", {0, 0}, window_.GetSize()) {
     }

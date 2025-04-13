@@ -53,8 +53,8 @@ void Block::Draw() {
     auto io = ImGui::GetIO();
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    const float kBaseCircleRadius = 10.f;
-    float circle_r = kBaseCircleRadius * camera_->GetScale();
+    const float base_circle_radius = 10.f;
+    float circle_r = base_circle_radius * camera_->GetScale();
     ImVec2 local_pos = window_manager_.GetPos();
     ImVec2 local_size = window_manager_.GetSize();
     ImVec2 circle_center = {local_pos.x + local_size.x, local_pos.y + local_size.y * 0.5f};

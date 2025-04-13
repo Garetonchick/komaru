@@ -1,9 +1,12 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.27)
 
 project(Komaru)
 
-# clang-tidy
+# Setup compilation database for clangd and clang-tidy
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Setup clang-tidy
+set(CMAKE_CXX_CLANG_TIDY clang-tidy)
 
 # Common compile options for C++
 set(CMAKE_CXX_STANDARD 23)
@@ -11,7 +14,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if (CMAKE_COMPILER_IS_GNUCC OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Werror -g -stdlib=libc++ -ftime-trace")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Werror -g -stdlib=libc++")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")
 endif()
@@ -26,6 +29,12 @@ find_package(OpenGL REQUIRED)
 set(IMNODE_SOURCES
     vendor/imnodes/imnodes.cpp
 )
+
+# Disable linting for imnodes
+set_source_files_properties(${IMNODE_SOURCES} PROPERTIES
+    SKIP_LINTING ON
+)
+
 file(GLOB EDITOR_SOURCES
     komaru/editor/*.cpp komaru/editor/*.hpp
     komaru/editor/kimgui/*.cpp komaru/editor/kimgui/*.hpp
@@ -52,6 +61,7 @@ set(IMNODE_EXAMPLE_SOURCES
     vendor/imgui/backends/imgui_impl_opengl3.cpp
     vendor/imgui/backends/imgui_impl_sdl2.cpp
 )
+
 add_executable(imnodes-hello
     ${IMNODE_EXAMPLE_SOURCES}
     vendor/imnodes/example/hello.cpp
@@ -68,6 +78,13 @@ add_executable(imnodes-save-load
     ${IMNODE_EXAMPLE_SOURCES}
     vendor/imnodes/example/save_load.cpp
 )
+
+# Disable linter for imnodes examples
+set_target_properties(imnodes-hello PROPERTIES CXX_CLANG_TIDY "")
+set_target_properties(imnodes-multi-editor PROPERTIES CXX_CLANG_TIDY "")
+set_target_properties(imnodes-color-node-editor PROPERTIES CXX_CLANG_TIDY "")
+set_target_properties(imnodes-save-load PROPERTIES CXX_CLANG_TIDY "")
+set_target_properties(test-node-graph-editor PROPERTIES CXX_CLANG_TIDY "")
 
 find_package(SDL2 REQUIRED)
 

@@ -7,7 +7,7 @@ namespace komaru::translate {
 
 class CppProgram : public IProgram {
 public:
-    CppProgram(std::string source_code);
+    explicit CppProgram(std::string source_code);
 
     const std::string& GetSourceCode() const override;
     const char* GetExt() const override;

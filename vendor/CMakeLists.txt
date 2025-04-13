@@ -30,3 +30,8 @@ add_subdirectory(glfw)
 
 # GLAD
 add_library(glad STATIC glad/src/glad.c)
+
+# Disable linting for vendor libraries
+set_target_properties(imgui PROPERTIES CXX_CLANG_TIDY "")
+set_target_properties(glfw PROPERTIES CXX_CLANG_TIDY "")
+set_target_properties(glad PROPERTIES CXX_CLANG_TIDY "")

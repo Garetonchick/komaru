@@ -19,14 +19,14 @@ Grid::Grid(GLFWwindow* window)
 void Grid::OnMouseScroll(GLFWwindow* window, double xoffset, double yoffset) {
     (void)xoffset;
 
-    const float kScrollSpeed = 0.01f;
-    const float kMinScale = 0.05f;
-    const float kMaxScale = 4.f;
+    const float scroll_speed = 0.01f;
+    const float min_scale = 0.05f;
+    const float max_scale = 4.f;
 
     float old_scale = camera_.GetScale();
     // float new_scale = old_scale + yoffset * kScrollSpeed;
-    float new_scale = old_scale * (1.f + yoffset * kScrollSpeed);
-    new_scale = std::clamp(new_scale, kMinScale, kMaxScale);
+    float new_scale = old_scale * (1.f + yoffset * scroll_speed);
+    new_scale = std::clamp(new_scale, min_scale, max_scale);
 
     double xpos = 0;
     double ypos = 0;
@@ -64,9 +64,9 @@ void Grid::UpdateAndDraw(float dt) {
         draw_list->AddLine({0, h}, {(float)win_width, h}, color, thickness);
     }
 
-    const ImVec2 kTestCirclePos = {400, 400};
+    const ImVec2 global_test_circle_pos = {400, 400};
 
-    ImVec2 test_circle_pos = camera_.Global2Camera(kTestCirclePos);
+    ImVec2 test_circle_pos = camera_.Global2Camera(global_test_circle_pos);
     // draw_list->AddQuadFilled(
     //     test_circle_pos,
     //     test_circle_pos + ImVec2{200, 0} * camera_.GetScale(),

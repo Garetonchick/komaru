@@ -8,7 +8,7 @@
 
 class Grid : public GuiElement {
 public:
-    Grid(GLFWwindow* window);
+    explicit Grid(GLFWwindow* window);
 
     void UpdateAndDraw(float dt) override;
 

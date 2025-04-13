@@ -14,7 +14,7 @@
 
 namespace komaru::translate::cpp {
 
-const std::unordered_map<std::string, std::string> CppTranslator::name_conv_ = {
+const std::unordered_map<std::string, std::string> CppTranslator::kNameConv = {
     {"+", "Plus"},
     {"-", "Minus"},
     {"*", "Mul"},

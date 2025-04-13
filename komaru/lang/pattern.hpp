@@ -42,7 +42,7 @@ public:
 
 private:
     template <typename T>
-    Pattern(T pattern)
+    explicit Pattern(T pattern)
         : pattern_(std::move(pattern)) {
     }
 

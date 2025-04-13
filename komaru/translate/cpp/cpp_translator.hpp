@@ -62,7 +62,7 @@ private:
     std::unordered_map<const CPNode*, std::string> node2local_name_;
     std::unordered_map<const CPOutPin*, CppCond> pin2cond_;
 
-    static const std::unordered_map<std::string, std::string> name_conv_;
+    static const std::unordered_map<std::string, std::string> kNameConv;
 };
 
 }  // namespace komaru::translate::cpp

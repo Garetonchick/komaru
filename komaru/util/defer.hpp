@@ -5,7 +5,7 @@ template <typename F>
 class Defer {
 public:
     template <typename U>
-    Defer(U&& func)
+    explicit Defer(U&& func)
         : func_(std::forward<U>(func)) {
     }
 

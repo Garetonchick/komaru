@@ -84,7 +84,7 @@ public:
 
 private:
     template <typename T>
-    Value(T value)
+    explicit Value(T value)
         : value_(std::move(value)) {
     }
 

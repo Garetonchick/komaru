@@ -5,10 +5,10 @@
 
 namespace komaru::lang {
 
-std::deque<Type::Variant> Type::storage_;
-std::unordered_map<TypeTag, Type::Variant*> Type::atom_types_index_;
-std::unordered_map<TupleType::ID, Type::Variant*> Type::tuple_types_index_;
-std::unordered_map<std::string, Type::Variant*> Type::generic_types_index_;
+std::deque<Type::Variant> Type::kStorage;
+std::unordered_map<TypeTag, Type::Variant*> Type::kAtomTypesIndex;
+std::unordered_map<TupleType::ID, Type::Variant*> Type::kTupleTypesIndex;
+std::unordered_map<std::string, Type::Variant*> Type::kGenericTypesIndex;
 
 AtomType::AtomType(TypeTag tag)
     : tag_(tag) {
@@ -143,26 +143,26 @@ const Type::Variant* Type::GetVariantPointer() const {
 // TODO: Support concurrency for Type constructors
 
 Type Type::FromTag(TypeTag tag) {
-    auto it = atom_types_index_.find(tag);
-    if (it != atom_types_index_.end()) {
+    auto it = kAtomTypesIndex.find(tag);
+    if (it != kAtomTypesIndex.end()) {
         return Type(it->second);
     }
 
-    Variant* new_type = &storage_.emplace_back(AtomType(tag));
-    atom_types_index_.emplace(tag, new_type);
+    Variant* new_type = &kStorage.emplace_back(AtomType(tag));
+    kAtomTypesIndex.emplace(tag, new_type);
 
     return Type(new_type);
 }
 
 Type Type::Tuple(std::vector<Type> types) {
     auto id = TupleType::GetIDFromTypes(types);
-    auto it = tuple_types_index_.find(id);
-    if (it != tuple_types_index_.end()) {
+    auto it = kTupleTypesIndex.find(id);
+    if (it != kTupleTypesIndex.end()) {
         return Type(it->second);
     }
 
-    Variant* new_type = &storage_.emplace_back(TupleType(std::move(types)));
-    tuple_types_index_.emplace(std::move(id), new_type);
+    Variant* new_type = &kStorage.emplace_back(TupleType(std::move(types)));
+    kTupleTypesIndex.emplace(std::move(id), new_type);
 
     return Type(new_type);
 }
@@ -179,14 +179,14 @@ Type Type::TupleFromTags(std::vector<TypeTag> tags) {
 }
 
 Type Type::Generic(std::string name) {
-    auto it = generic_types_index_.find(name);
+    auto it = kGenericTypesIndex.find(name);
 
-    if (it != generic_types_index_.end()) {
+    if (it != kGenericTypesIndex.end()) {
         return Type(it->second);
     }
 
-    Variant* new_type = &storage_.emplace_back(GenericType(name));
-    generic_types_index_.emplace(std::move(name), new_type);
+    Variant* new_type = &kStorage.emplace_back(GenericType(name));
+    kGenericTypesIndex.emplace(std::move(name), new_type);
 
     return Type(new_type);
 }

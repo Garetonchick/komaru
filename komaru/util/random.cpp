@@ -9,17 +9,17 @@ namespace komaru::util {
 std::string RandomAlphaNumString(size_t sz) {
     THREAD_SAFE_RANDOM_FUNC
 
-    static constexpr const char table[] =
+    static constexpr const char kTable[] =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    static constexpr size_t tlen = CStrlen(table);
-    static_assert(tlen == 62);  // 26 * 2 + 10 = 62
+    static constexpr size_t kTlen = CStrlen(kTable);
+    static_assert(kTlen == 62);  // 26 * 2 + 10 = 62
 
-    std::uniform_int_distribution<int> dist(0, tlen - 1);
+    std::uniform_int_distribution<int> dist(0, kTlen - 1);
 
     std::string res(sz, '\0');
 
     std::ranges::generate(res, [&]() {
-        return table[dist(gen)];
+        return kTable[dist(gen)];
     });
 
     return res;
