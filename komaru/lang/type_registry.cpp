@@ -41,4 +41,4 @@ namespace komaru::lang {
 //     return type_registry;
 // }
 
-}
+}  // namespace komaru::lang

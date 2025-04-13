@@ -8,7 +8,9 @@ namespace komaru::translate {
 
 class TranslationError {
 public:
-    TranslationError(std::string msg) : msg_(std::move(msg)) {}
+    TranslationError(std::string msg)
+        : msg_(std::move(msg)) {
+    }
 
     const std::string& Error() const {
         return msg_;
@@ -18,7 +20,7 @@ private:
     std::string msg_;
 };
 
-template<typename T>
+template <typename T>
 using TranslationResult = std::expected<T, TranslationError>;
 
 inline auto MakeTranslationError(std::string msg) {
@@ -29,7 +31,8 @@ struct ITranslator {
     virtual ~ITranslator() = default;
 
     // TODO: returning unique_ptr sucks
-    virtual TranslationResult<std::unique_ptr<IProgram>> Translate(const lang::CatProgram& cat_program) = 0;
+    virtual TranslationResult<std::unique_ptr<IProgram>> Translate(
+        const lang::CatProgram& cat_program) = 0;
 };
 
-}
+}  // namespace komaru::translate

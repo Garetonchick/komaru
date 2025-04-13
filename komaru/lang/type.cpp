@@ -22,9 +22,8 @@ AtomType::AtomType(TypeTag tag)
         case TypeTag::Singleton:
             return;
         default:
-            throw std::logic_error(std::format(
-                "Atomic type can't have tag {}", static_cast<int>(tag)
-            ));
+            throw std::logic_error(
+                std::format("Atomic type can't have tag {}", static_cast<int>(tag)));
     }
 }
 
@@ -67,11 +66,11 @@ TypeTag TupleType::GetTag() const {
 }
 
 bool TupleType::operator==(const TupleType& o) const {
-    if(inner_types_.size() != o.inner_types_.size()) {
+    if (inner_types_.size() != o.inner_types_.size()) {
         return false;
     }
-    for(size_t i = 0; i < inner_types_.size(); ++i) {
-        if(inner_types_[i] != o.inner_types_[i]) {
+    for (size_t i = 0; i < inner_types_.size(); ++i) {
+        if (inner_types_[i] != o.inner_types_[i]) {
             return false;
         }
     }
@@ -86,9 +85,9 @@ TupleType::TupleType(std::vector<Type> inner_types)
     : inner_types_(std::move(inner_types)) {
     name_ = "(";
 
-    for(size_t i = 0; i < inner_types_.size(); ++i) {
+    for (size_t i = 0; i < inner_types_.size(); ++i) {
         name_ += inner_types_[i].GetName();
-        if(i + 1 != inner_types_.size()) {
+        if (i + 1 != inner_types_.size()) {
             name_ += ", ";
         }
     }
@@ -103,9 +102,9 @@ TupleType::ID TupleType::GetID() const {
 TupleType::ID TupleType::GetIDFromTypes(const std::vector<Type>& types) {
     TupleType::ID id;
 
-    for(size_t i = 0; i < types.size(); ++i) {
+    for (size_t i = 0; i < types.size(); ++i) {
         id += std::to_string(types[i].GetID());
-        if(i + 1 != types.size()) {
+        if (i + 1 != types.size()) {
             id += "_";
         }
     }
@@ -113,7 +112,8 @@ TupleType::ID TupleType::GetIDFromTypes(const std::vector<Type>& types) {
     return id;
 }
 
-GenericType::GenericType(std::string name) : name_(std::move(name)) {
+GenericType::GenericType(std::string name)
+    : name_(std::move(name)) {
 }
 
 std::string_view GenericType::GetName() const {
@@ -132,7 +132,8 @@ bool GenericType::operator==(const GenericType& o) const {
     return name_ == o.name_;
 }
 
-Type::Type(Variant* type) : type_(type) {
+Type::Type(Variant* type)
+    : type_(type) {
 }
 
 const Type::Variant* Type::GetVariantPointer() const {
@@ -143,7 +144,7 @@ const Type::Variant* Type::GetVariantPointer() const {
 
 Type Type::FromTag(TypeTag tag) {
     auto it = atom_types_index_.find(tag);
-    if(it != atom_types_index_.end()) {
+    if (it != atom_types_index_.end()) {
         return Type(it->second);
     }
 
@@ -156,7 +157,7 @@ Type Type::FromTag(TypeTag tag) {
 Type Type::Tuple(std::vector<Type> types) {
     auto id = TupleType::GetIDFromTypes(types);
     auto it = tuple_types_index_.find(id);
-    if(it != tuple_types_index_.end()) {
+    if (it != tuple_types_index_.end()) {
         return Type(it->second);
     }
 
@@ -170,7 +171,7 @@ Type Type::TupleFromTags(std::vector<TypeTag> tags) {
     std::vector<Type> types;
     types.reserve(tags.size());
 
-    for(TypeTag tag : tags) {
+    for (TypeTag tag : tags) {
         types.emplace_back(FromTag(tag));
     }
 
@@ -180,7 +181,7 @@ Type Type::TupleFromTags(std::vector<TypeTag> tags) {
 Type Type::Generic(std::string name) {
     auto it = generic_types_index_.find(name);
 
-    if(it != generic_types_index_.end()) {
+    if (it != generic_types_index_.end()) {
         return Type(it->second);
     }
 
@@ -251,17 +252,17 @@ bool Type::operator==(Type o) const {
 Type operator*(Type t1, Type t2) {
     bool tup1 = t1.Holds<TupleType>();
     bool tup2 = t2.Holds<TupleType>();
-    if(!tup1 && !tup2) {
+    if (!tup1 && !tup2) {
         return Type::Tuple({t1, t2});
     }
     std::vector<Type> types;
 
-    if(tup1) {
+    if (tup1) {
         types.insert_range(types.end(), t1.GetVariant<TupleType>().GetTupleTypes());
     } else {
         types.push_back(t1);
     }
-    if(tup2) {
+    if (tup2) {
         types.insert_range(types.end(), t2.GetVariant<TupleType>().GetTupleTypes());
     } else {
         types.push_back(t2);
@@ -270,4 +271,4 @@ Type operator*(Type t1, Type t2) {
     return Type::Tuple(types);
 }
 
-}
+}  // namespace komaru::lang

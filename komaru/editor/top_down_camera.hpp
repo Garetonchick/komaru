@@ -16,5 +16,5 @@ public:
 
 private:
     float scale_{1.f};
-    ImVec2 pos_{0.f, 0.f}; // upper left corner of the camera
+    ImVec2 pos_{0.f, 0.f};  // upper left corner of the camera
 };

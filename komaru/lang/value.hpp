@@ -11,9 +11,13 @@ class Value;
 
 class AtomValue : public util::DeriveVariant<AtomValue> {
     using Variant = std::variant<int32_t, bool, char>;
+
 public:
-    template<typename T>
-    explicit AtomValue(T value) : value_(value), type_(DetermineType<T>()) {}
+    template <typename T>
+    explicit AtomValue(T value)
+        : value_(value),
+          type_(DetermineType<T>()) {
+    }
 
     Type GetType() const;
 
@@ -21,7 +25,7 @@ public:
     const Variant* GetVariantPointer() const;
 
 private:
-    template<typename T>
+    template <typename T>
     static Type DetermineType() {
         if constexpr (std::is_same_v<T, int32_t>) {
             return Type::FromTag(TypeTag::Int);
@@ -55,6 +59,7 @@ private:
 
 class Value : public util::DeriveVariant<Value> {
     using Variant = std::variant<AtomValue, TupleValue>;
+
 public:
     static Value Int(int32_t value);
     static Value Bool(bool value);
@@ -62,12 +67,12 @@ public:
 
     static Value Tuple(std::vector<Value> values);
 
-    template<typename T>
+    template <typename T>
     static Value Atom(T value) {
         return Value(AtomValue(value));
     }
 
-    template<typename... Args>
+    template <typename... Args>
     static Value TupleFromAtoms(Args&&... args) {
         return Tuple({Value::Atom(args)...});
     }
@@ -78,11 +83,13 @@ public:
     const Variant* GetVariantPointer() const;
 
 private:
-    template<typename T>
-    Value(T value) : value_(std::move(value)) {}
+    template <typename T>
+    Value(T value)
+        : value_(std::move(value)) {
+    }
 
 private:
     Variant value_;
 };
 
-}
+}  // namespace komaru::lang

@@ -19,7 +19,7 @@ private:
     static constexpr float kThickness = 4.f;
     static constexpr float kStride = 20.f;
 
-    GLFWwindow* window_; // TODO: abstract away
+    GLFWwindow* window_;  // TODO: abstract away
     TopDownCamera camera_;
     std::vector<Block> blocks_;
 };

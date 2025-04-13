@@ -5,7 +5,8 @@ namespace ImGui {
 
 class WindowGuard {
 public:
-    explicit WindowGuard(const char* window_name, bool* p_open = nullptr, ImGuiWindowFlags flags = 0);
+    explicit WindowGuard(const char* window_name, bool* p_open = nullptr,
+                         ImGuiWindowFlags flags = 0);
 
     bool Skip();
 
@@ -15,4 +16,4 @@ private:
     bool skip_{false};
 };
 
-}
+}  // namespace ImGui

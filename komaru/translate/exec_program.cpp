@@ -57,32 +57,36 @@ const std::string& ProgramExecResult::CompileError() const {
     return compile_err_;
 }
 
-ProgramExecResult::ProgramExecResult() {}
+ProgramExecResult::ProgramExecResult() {
+}
 
 ProgramExecResult ExecProgram(const IProgram& program) {
     auto sourcepath = util::GenTmpFilepath().string() + program.GetExt();
     auto progpath = util::GenTmpFilepath().string();
 
-    if(auto err = util::WriteFile(sourcepath, program.GetSourceCode())) {
-        throw std::runtime_error(std::format("failed to write file \"{}\", error \"{}\"", sourcepath, err.message()));
+    if (auto err = util::WriteFile(sourcepath, program.GetSourceCode())) {
+        throw std::runtime_error(
+            std::format("failed to write file \"{}\", error \"{}\"", sourcepath, err.message()));
     }
 
     auto build_command = program.GetBuildCommand(sourcepath, progpath);
     auto build_result = util::PerformCLICommand(build_command);
 
-    if(build_result.Fail()) {
-        auto err = std::format("STDOUT:\n{}\nSTDERR:\n{}", build_result.Stdout(), build_result.Stderr());
+    if (build_result.Fail()) {
+        auto err =
+            std::format("STDOUT:\n{}\nSTDERR:\n{}", build_result.Stdout(), build_result.Stderr());
         return ProgramExecResult::CompileErrorResult(build_result.Code(), std::move(err));
     }
 
     auto exec_result = util::PerformCLICommand(progpath);
 
-    if(exec_result.Fail()) {
-        auto err = std::format("STDOUT:\n{}\nSTDERR:\n{}", exec_result.Stdout(), exec_result.Stderr());
+    if (exec_result.Fail()) {
+        auto err =
+            std::format("STDOUT:\n{}\nSTDERR:\n{}", exec_result.Stdout(), exec_result.Stderr());
         return ProgramExecResult::RuntimeErrorResult(exec_result.Code(), std::move(err));
     }
 
     return ProgramExecResult::OkResult(exec_result.Stdout());
 }
 
-}
+}  // namespace komaru::translate

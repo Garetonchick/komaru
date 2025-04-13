@@ -11,11 +11,7 @@ namespace komaru::editor {
 
 class NodeEditor : public GuiElement {
 public:
-    explicit NodeEditor(
-        std::string name,
-        ImVec2 pos = {0, 0},
-        ImVec2 size = {800, 800}
-    );
+    explicit NodeEditor(std::string name, ImVec2 pos = {0, 0}, ImVec2 size = {800, 800});
 
     void UpdateAndDraw(float dt) override;
 
@@ -35,4 +31,4 @@ private:
     std::vector<Link> links_;
 };
 
-}
+}  // namespace komaru::editor

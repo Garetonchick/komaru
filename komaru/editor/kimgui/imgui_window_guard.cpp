@@ -14,4 +14,4 @@ WindowGuard::~WindowGuard() {
     ImGui::End();
 }
 
-}
+}  // namespace ImGui

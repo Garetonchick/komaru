@@ -34,4 +34,4 @@ private:
 
 ProgramExecResult ExecProgram(const IProgram& program);
 
-}
+}  // namespace komaru::translate

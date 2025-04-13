@@ -7,19 +7,15 @@ using namespace komaru::lang;
 using namespace komaru::util;
 
 TEST(Types, Atom) {
-    std::vector<TypeTag> tags = {
-        TypeTag::Int, TypeTag::Char, TypeTag::Float, TypeTag::Bool
-    };
-    std::vector<std::string> names = {
-        "Int", "Char", "Float", "Bool"
-    };
+    std::vector<TypeTag> tags = {TypeTag::Int, TypeTag::Char, TypeTag::Float, TypeTag::Bool};
+    std::vector<std::string> names = {"Int", "Char", "Float", "Bool"};
     std::vector<Type> types;
 
-    for(auto tag : tags) {
+    for (auto tag : tags) {
         types.emplace_back(Type::FromTag(tag));
     }
 
-    for(size_t i = 0; i < types.size(); ++i) {
+    for (size_t i = 0; i < types.size(); ++i) {
         ASSERT_EQ(types[i], Type::FromTag(tags[i]));
         ASSERT_EQ(types[i].GetTag(), tags[i]);
         ASSERT_EQ(types[i].GetName(), names[i]);
@@ -31,17 +27,15 @@ TEST(Types, Atom) {
 
         ASSERT_THROW(types[i].GetVariant<TupleType>(), std::exception);
 
-        types[i].Visit(Overloaded{
-            [&tags, i](const AtomType& atom_type) {
-                ASSERT_EQ(atom_type.GetTag(), tags[i]);
-            },
-            [](const auto&) {
-                FAIL();
-            }
-        });
+        types[i].Visit(Overloaded{[&tags, i](const AtomType& atom_type) {
+                                      ASSERT_EQ(atom_type.GetTag(), tags[i]);
+                                  },
+                                  [](const auto&) {
+                                      FAIL();
+                                  }});
 
-        for(size_t j = 0; j < types.size(); ++j) {
-            if(i == j) {
+        for (size_t j = 0; j < types.size(); ++j) {
+            if (i == j) {
                 continue;
             }
 
@@ -60,8 +54,6 @@ TEST(Types, Tuple) {
 
     ASSERT_EQ(tuple_ic2.GetName(), tuple_ic1.GetVariant<TupleType>().GetName());
     ASSERT_EQ(tuple_ic2.GetName(), "(Int, Char)");
-    ASSERT_TRUE(VecEq(
-        tuple_ic1.GetVariant<TupleType>().GetTupleTypes(),
-        {Type::FromTag(TypeTag::Int), Type::FromTag(TypeTag::Char)}
-    ));
+    ASSERT_TRUE(VecEq(tuple_ic1.GetVariant<TupleType>().GetTupleTypes(),
+                      {Type::FromTag(TypeTag::Int), Type::FromTag(TypeTag::Char)}));
 }

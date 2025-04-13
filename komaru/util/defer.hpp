@@ -1,18 +1,21 @@
 #pragma once
 #include <utility>
 
-template<typename F>
+template <typename F>
 class Defer {
 public:
-    template<typename U>
-    Defer(U&& func) : func_(std::forward<U>(func)) {}
+    template <typename U>
+    Defer(U&& func)
+        : func_(std::forward<U>(func)) {
+    }
 
     ~Defer() {
         func_();
     }
+
 private:
     F func_;
 };
 
-template<typename U>
+template <typename U>
 Defer(U&& func) -> Defer<U>;

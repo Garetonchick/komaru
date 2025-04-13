@@ -7,7 +7,7 @@ namespace komaru::lang {
 
 // TODO: better
 static std::string_view TagToName(MorphismTag tag) {
-    switch(tag) {
+    switch (tag) {
         case MorphismTag::Id:
             return "id";
         case MorphismTag::Plus:
@@ -40,10 +40,10 @@ static std::string_view TagToName(MorphismTag tag) {
 }
 
 BuiltinMorphism::BuiltinMorphism(MorphismTag tag, Type source, Type target)
-    : name_(TagToName(tag))
-    , tag_(tag)
-    , source_type_(source)
-    , target_type_(target) {
+    : name_(TagToName(tag)),
+      tag_(tag),
+      source_type_(source),
+      target_type_(target) {
 }
 
 const std::string& BuiltinMorphism::GetName() const {
@@ -63,7 +63,8 @@ MorphismTag BuiltinMorphism::GetTag() const {
 }
 
 CompoundMorphism::CompoundMorphism(std::string name, std::vector<MorphismPtr> morphisms)
-    : name_(std::move(name)), morphisms_(std::move(morphisms)) {
+    : name_(std::move(name)),
+      morphisms_(std::move(morphisms)) {
 }
 
 const std::string& CompoundMorphism::GetName() const {
@@ -87,8 +88,8 @@ const std::vector<MorphismPtr>& CompoundMorphism::GetMorphisms() const {
 }
 
 ValueMorphism::ValueMorphism(std::string name, Value value)
-    : name_(std::move(name))
-    , value_(std::move(value)) {
+    : name_(std::move(name)),
+      value_(std::move(value)) {
 }
 
 const std::string& ValueMorphism::GetName() const {
@@ -112,7 +113,9 @@ const Value& ValueMorphism::GetValue() const {
 }
 
 PositionMorphism::PositionMorphism(size_t pos)
-    : pos_(pos), name_(std::format("${}", pos_)) {}
+    : pos_(pos),
+      name_(std::format("${}", pos_)) {
+}
 
 const std::string& PositionMorphism::GetName() const {
     return name_;
@@ -139,7 +142,9 @@ bool PositionMorphism::IsNonePosition() const {
 }
 
 BindedMorphism::BindedMorphism(MorphismPtr morphism, std::map<size_t, Value> mapping)
-    : morphism_(std::move(morphism)), mapping_(std::move(mapping)) {}
+    : morphism_(std::move(morphism)),
+      mapping_(std::move(mapping)) {
+}
 
 const std::string& BindedMorphism::GetName() const {
     return morphism_->GetName();
@@ -166,30 +171,23 @@ const std::map<size_t, Value>& BindedMorphism::GetMapping() const {
 }
 
 MorphismPtr Morphism::Builtin(MorphismTag tag, Type source, Type target) {
-    return std::make_shared<Morphism>(
-        PrivateDummy{}, BuiltinMorphism(tag, source, target)
-    );
+    return std::make_shared<Morphism>(PrivateDummy{}, BuiltinMorphism(tag, source, target));
 }
 
 MorphismPtr Morphism::Compound(std::string name, std::vector<MorphismPtr> morphisms) {
-    if(!ValidateCompound(morphisms)) {
+    if (!ValidateCompound(morphisms)) {
         throw std::runtime_error("Attempt to create invalid compound morphism");
     }
-    return std::make_shared<Morphism>(
-        PrivateDummy{}, CompoundMorphism(std::move(name), std::move(morphisms))
-    );
+    return std::make_shared<Morphism>(PrivateDummy{},
+                                      CompoundMorphism(std::move(name), std::move(morphisms)));
 }
 
 MorphismPtr Morphism::WithValue(std::string name, Value value) {
-    return std::make_shared<Morphism>(
-        PrivateDummy{}, ValueMorphism(name, value)
-    );
+    return std::make_shared<Morphism>(PrivateDummy{}, ValueMorphism(name, value));
 }
 
 MorphismPtr Morphism::Position(size_t pos) {
-    return std::make_shared<Morphism>(
-        PrivateDummy{}, PositionMorphism(pos)
-    );
+    return std::make_shared<Morphism>(PrivateDummy{}, PositionMorphism(pos));
 }
 
 MorphismPtr Morphism::NonePosition() {
@@ -221,11 +219,11 @@ MorphismTag Morphism::GetTag() const {
 }
 
 bool Morphism::ValidateCompound(const std::vector<MorphismPtr>& morphisms) {
-    if(morphisms.empty()) {
+    if (morphisms.empty()) {
         return false;
     }
-    for(size_t i = 0; i + 1 < morphisms.size(); ++i) {
-        if(morphisms[i]->GetTarget() != morphisms[i + 1]->GetSource()) {
+    for (size_t i = 0; i + 1 < morphisms.size(); ++i) {
+        if (morphisms[i]->GetTarget() != morphisms[i + 1]->GetSource()) {
             return false;
         }
     }
@@ -237,9 +235,8 @@ const Morphism::Variant* Morphism::GetVariantPointer() const {
 }
 
 MorphismPtr BindMorphism(MorphismPtr morphism, std::map<size_t, Value> mapping) {
-    return std::make_shared<Morphism>(
-        Morphism::PrivateDummy{}, BindedMorphism(std::move(morphism), std::move(mapping))
-    );
+    return std::make_shared<Morphism>(Morphism::PrivateDummy{},
+                                      BindedMorphism(std::move(morphism), std::move(mapping)));
 }
 
-}
+}  // namespace komaru::lang

@@ -3,7 +3,7 @@
 
 namespace komaru::util {
 
-class [[nodiscard("CLICommandResult must be checked for errors")]] CLICommandResult  {
+class [[nodiscard("CLICommandResult must be checked for errors")]] CLICommandResult {
 public:
     CLICommandResult(int code, std::string sout, std::string serr);
 
@@ -23,4 +23,4 @@ private:
 CLICommandResult PerformCLICommand(const std::string& command);
 CLICommandResult PerformCLICommand(const std::vector<std::string>& command);
 
-}
+}  // namespace komaru::util

@@ -23,4 +23,4 @@ namespace komaru::lang {
 //     std::deque<Morphism> morphisms_;
 // };
 
-}
+}  // namespace komaru::lang

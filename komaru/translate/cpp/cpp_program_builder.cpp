@@ -17,20 +17,20 @@ void CppProgramBuilder::AddFunction(CppFunction func) {
 std::unique_ptr<IProgram> CppProgramBuilder::ExtractProgram() {
     std::string source_code;
 
-    for(const auto& header : headers_) {
+    for (const auto& header : headers_) {
         source_code += std::format("#include <{}>\n", header);
     }
 
     source_code += "\n\n";
 
-    for(const auto& func : funcs_) {
+    for (const auto& func : funcs_) {
         source_code += func.decl;
         source_code += "\n";
     }
 
     source_code += "\n\n";
 
-    for(const auto& func : funcs_) {
+    for (const auto& func : funcs_) {
         source_code += func.impl;
         source_code += "\n\n";
     }
@@ -45,4 +45,4 @@ void CppProgramBuilder::Reset() {
     new (this) CppProgramBuilder();
 }
 
-}
+}  // namespace komaru::translate::cpp

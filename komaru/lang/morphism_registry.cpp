@@ -23,4 +23,4 @@ namespace komaru::lang {
 //     return &morphisms_[idx];
 // }
 
-}
+}  // namespace komaru::lang

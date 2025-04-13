@@ -8,4 +8,4 @@ public:
     ~IdGuard();
 };
 
-}
+}  // namespace ImGui

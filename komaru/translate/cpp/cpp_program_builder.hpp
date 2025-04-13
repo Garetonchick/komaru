@@ -26,4 +26,4 @@ private:
     std::vector<std::string> order_;
 };
 
-}
+}  // namespace komaru::translate::cpp

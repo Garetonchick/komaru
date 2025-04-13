@@ -14,4 +14,4 @@ private:
     MorphismPtr morphism_;
 };
 
-}
+}  // namespace komaru::lang

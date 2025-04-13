@@ -35,4 +35,4 @@ const Pattern::Variant* Pattern::GetVariantPointer() const {
     return &pattern_;
 }
 
-}
+}  // namespace komaru::lang

@@ -24,4 +24,4 @@ namespace komaru::util {
 //     return std::string(s.begin() + start, s.begin() + finish + 1);
 // }
 
-}
+}  // namespace komaru::util

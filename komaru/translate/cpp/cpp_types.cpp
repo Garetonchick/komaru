@@ -3,7 +3,9 @@
 namespace komaru::translate::cpp {
 
 CppType::CppType(std::string type_str, std::vector<std::string> template_vars)
-    : type_str_(std::move(type_str)), template_vars_(std::move(template_vars)) {}
+    : type_str_(std::move(type_str)),
+      template_vars_(std::move(template_vars)) {
+}
 
 const std::string& CppType::GetTypeStr() const {
     return type_str_;
@@ -14,7 +16,7 @@ const std::vector<std::string>& CppType::GetTemplateVars() const {
 }
 
 static CppType TranslateType(const lang::AtomType& type) {
-    switch(type.GetTag()) {
+    switch (type.GetTag()) {
         case lang::TypeTag::Int:
             return CppType("int32_t", {});
         case lang::TypeTag::Bool:
@@ -39,17 +41,16 @@ static CppType TranslateType(const lang::TupleType& type) {
     std::string type_str = "std::tuple<";
     std::vector<std::string> template_vars;
 
-    for(size_t i = 0; i < sub_types.size(); ++i) {
+    for (size_t i = 0; i < sub_types.size(); ++i) {
         auto cpp_sub_type = ToCppType(sub_types[i]);
 
         const auto& sub_template_vars = cpp_sub_type.GetTemplateVars();
-        template_vars.insert(
-            template_vars.end(), sub_template_vars.begin(), sub_template_vars.end()
-        );
+        template_vars.insert(template_vars.end(), sub_template_vars.begin(),
+                             sub_template_vars.end());
 
         type_str += cpp_sub_type.GetTypeStr();
 
-        if(i + 1 != sub_types.size()) {
+        if (i + 1 != sub_types.size()) {
             type_str += ", ";
         }
     }
@@ -62,7 +63,7 @@ static CppType TranslateType(const lang::TupleType& type) {
 static CppType TranslateType(const lang::GenericType& type) {
     auto name = std::string(type.GetName());
 
-    if(name.empty()) {
+    if (name.empty()) {
         return CppType("auto", {});
     }
 
@@ -75,4 +76,4 @@ CppType ToCppType(lang::Type type) {
     });
 }
 
-}
+}  // namespace komaru::translate::cpp

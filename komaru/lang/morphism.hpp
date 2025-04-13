@@ -113,14 +113,18 @@ private:
 };
 
 class Morphism : public util::DeriveVariant<Morphism> {
-    using Variant = std::variant<BuiltinMorphism, CompoundMorphism, ValueMorphism, PositionMorphism, BindedMorphism>;
+    using Variant = std::variant<BuiltinMorphism, CompoundMorphism, ValueMorphism, PositionMorphism,
+                                 BindedMorphism>;
 
     friend MorphismPtr BindMorphism(MorphismPtr morphism, std::map<size_t, Value> mapping);
 
     struct PrivateDummy {};
+
 public:
-    template<typename T>
-    Morphism(PrivateDummy, T morphism) : morphism_(std::move(morphism)) {}
+    template <typename T>
+    Morphism(PrivateDummy, T morphism)
+        : morphism_(std::move(morphism)) {
+    }
 
     static MorphismPtr Builtin(MorphismTag tag, Type source, Type target);
     static MorphismPtr Compound(std::string name, std::vector<MorphismPtr> morphisms);
@@ -147,4 +151,4 @@ private:
 
 MorphismPtr BindMorphism(MorphismPtr morphism, std::map<size_t, Value> mapping);
 
-}
+}  // namespace komaru::lang

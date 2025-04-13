@@ -26,4 +26,4 @@ private:
     std::vector<int32_t> formula_;
 };
 
-}
+}  // namespace komaru::translate::cpp

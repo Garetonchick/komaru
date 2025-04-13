@@ -13,4 +13,4 @@ struct NonCopyable {
     NonCopyable& operator=(const NonCopyable&) = delete;
 };
 
-}
+}  // namespace komaru::util

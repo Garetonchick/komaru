@@ -3,7 +3,7 @@
 
 namespace komaru::util {
 
-template<typename T>
+template <typename T>
 class Exchangeable {
 public:
     T* operator->() {
@@ -14,7 +14,7 @@ public:
         return value;
     }
 
-    template<typename... Args>
+    template <typename... Args>
     T&& Exchange(Args... args) {
         new (&value) T(std::forward<Args>(args)...);
     }
@@ -23,4 +23,4 @@ private:
     T value;
 };
 
-}
+}  // namespace komaru::util

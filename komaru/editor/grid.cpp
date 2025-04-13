@@ -4,12 +4,13 @@
 
 #include <print>
 
-Grid::Grid(GLFWwindow* window) : window_(window) {
+Grid::Grid(GLFWwindow* window)
+    : window_(window) {
     glfwSetWindowUserPointer(window, this);
-    glfwSetScrollCallback(window_, [](GLFWwindow* window, double xoffset, double yoffset){
+    glfwSetScrollCallback(window_, [](GLFWwindow* window, double xoffset, double yoffset) {
         auto self = static_cast<Grid*>(glfwGetWindowUserPointer(window));
         self->OnMouseScroll(window, xoffset, yoffset);
-    }); // TODO: This should not be here
+    });  // TODO: This should not be here
 
     blocks_.push_back(Block("mop 1", &camera_, {250, 100}));
     blocks_.push_back(Block("mop 2", &camera_, {450, 100}));
@@ -31,10 +32,8 @@ void Grid::OnMouseScroll(GLFWwindow* window, double xoffset, double yoffset) {
     double ypos = 0;
     glfwGetCursorPos(window, &xpos, &ypos);
 
-    ImVec2 camera_step = {
-        (float)xpos * (1.f / old_scale - 1.f / new_scale),
-        (float)ypos * (1.f / old_scale - 1.f / new_scale)
-    };
+    ImVec2 camera_step = {(float)xpos * (1.f / old_scale - 1.f / new_scale),
+                          (float)ypos * (1.f / old_scale - 1.f / new_scale)};
 
     camera_.SetScale(new_scale);
     camera_.Move(camera_step);
@@ -57,12 +56,12 @@ void Grid::UpdateAndDraw(float dt) {
     start -= ImVec2(1.f * kStride, 1.f * kStride);
     start = camera_.Global2Camera(start);
 
-    for(float l = start.x; l < win_width + thickness; l += step) {
-        draw_list->AddLine({l, 0}, {l, (float)win_height},  color, thickness);
+    for (float l = start.x; l < win_width + thickness; l += step) {
+        draw_list->AddLine({l, 0}, {l, (float)win_height}, color, thickness);
     }
 
-    for(float h = start.y; h < win_height + thickness; h += step) {
-        draw_list->AddLine({0, h}, {(float)win_width, h},  color, thickness);
+    for (float h = start.y; h < win_height + thickness; h += step) {
+        draw_list->AddLine({0, h}, {(float)win_width, h}, color, thickness);
     }
 
     const ImVec2 kTestCirclePos = {400, 400};
@@ -74,12 +73,13 @@ void Grid::UpdateAndDraw(float dt) {
     //     test_circle_pos + ImVec2{200, 100} * camera_.GetScale(),
     //     test_circle_pos + ImVec2{0,100} * camera_.GetScale(),
     //     IM_COL32(255, 255, 0, 255));
-    draw_list->AddCircleFilled(test_circle_pos, 30.f * camera_.GetScale(), IM_COL32(255, 255, 0, 255));
+    draw_list->AddCircleFilled(test_circle_pos, 30.f * camera_.GetScale(),
+                               IM_COL32(255, 255, 0, 255));
 
     // draw_list->AddText(ImGui::GetFont(), 30, {300, 300}, IM_COL32(255, 255, 255, 255), "kek");
     // draw_list->AddText({300, 300}, IM_COL32(0, 0, 0, 255), "kek");
 
-    for(auto& block : blocks_) {
+    for (auto& block : blocks_) {
         block.UpdateAndDraw(dt);
     }
 }

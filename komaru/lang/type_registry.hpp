@@ -2,7 +2,6 @@
 #include <lang/type.hpp>
 #include <util/non_copyable_non_movable.hpp>
 
-
 namespace komaru::lang {
 
 // class TypeRegistry : util::NonCopyableNonMovable {
@@ -25,4 +24,4 @@ namespace komaru::lang {
 
 // std::unique_ptr<TypeRegistry> MakeDefaultTypeRegistry();
 
-}
+}  // namespace komaru::lang

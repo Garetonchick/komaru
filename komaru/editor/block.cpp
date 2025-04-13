@@ -6,12 +6,12 @@
 #include <print>
 
 Block::Block(std::string name, const TopDownCamera* camera, ImVec2 pos, ImVec2 size, ImVec2 pivot)
-    : name_(std::move(name))
-    , global_pos_(pos)
-    , global_size_(size)
-    , initial_pivot_(pivot)
-    , camera_(camera)
-    , window_manager_(pos, size) {
+    : name_(std::move(name)),
+      global_pos_(pos),
+      global_size_(size),
+      initial_pivot_(pivot),
+      camera_(camera),
+      window_manager_(pos, size) {
 }
 
 void Block::UpdateAndDraw(float dt) {
@@ -19,7 +19,7 @@ void Block::UpdateAndDraw(float dt) {
 
     {
         ImGuiWindowFlags flags = 0;
-        if(disable_resize_) {
+        if (disable_resize_) {
             flags |= ImGuiWindowFlags_NoResize;
         }
 
@@ -57,15 +57,12 @@ void Block::Draw() {
     float circle_r = kBaseCircleRadius * camera_->GetScale();
     ImVec2 local_pos = window_manager_.GetPos();
     ImVec2 local_size = window_manager_.GetSize();
-    ImVec2 circle_center = {
-        local_pos.x + local_size.x,
-        local_pos.y + local_size.y * 0.5f
-    };
+    ImVec2 circle_center = {local_pos.x + local_size.x, local_pos.y + local_size.y * 0.5f};
 
     ImU32 color = IM_COL32(255, 255, 255, 255);
 
     // Move to update
-    if(Length(io.MousePos - circle_center) < circle_r) {
+    if (Length(io.MousePos - circle_center) < circle_r) {
         color = IM_COL32(0, 255, 0, 255);
         disable_resize_ = true;
     } else {
@@ -73,13 +70,7 @@ void Block::Draw() {
     }
 
     draw_list->PushClipRectFullScreen();
-    draw_list->AddCircleFilled(
-        circle_center,
-        circle_r,
-        color,
-        36
-    );
-
+    draw_list->AddCircleFilled(circle_center, circle_r, color, 36);
 
     draw_list->PopClipRect();
 }

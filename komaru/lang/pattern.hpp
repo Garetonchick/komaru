@@ -7,7 +7,7 @@ namespace komaru::lang {
 
 class Pattern;
 
-struct AnyPattern {}; // dummy pattern indicating the '_'
+struct AnyPattern {};  // dummy pattern indicating the '_'
 
 class ValuePattern {
 public:
@@ -31,6 +31,7 @@ private:
 
 class Pattern : public util::DeriveVariant<Pattern> {
     using Variant = std::variant<AnyPattern, ValuePattern, TuplePattern>;
+
 public:
     static Pattern FromValue(Value value);
     static Pattern TupleFromPatterns(std::vector<Pattern> patterns);
@@ -40,11 +41,13 @@ public:
     const Variant* GetVariantPointer() const;
 
 private:
-    template<typename T>
-    Pattern(T pattern) : pattern_(std::move(pattern)) {}
+    template <typename T>
+    Pattern(T pattern)
+        : pattern_(std::move(pattern)) {
+    }
 
 private:
     Variant pattern_;
 };
 
-}
+}  // namespace komaru::lang

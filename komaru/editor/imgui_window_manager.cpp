@@ -3,9 +3,8 @@
 #include <editor/gui_math.hpp>
 
 ImguiWindowManager::ImguiWindowManager(ImVec2 pos, ImVec2 size)
-    : pos_(pos)
-    , size_(size) {
-
+    : pos_(pos),
+      size_(size) {
 }
 
 ImVec2 ImguiWindowManager::GetPos() const {
@@ -19,7 +18,7 @@ ImVec2 ImguiWindowManager::GetSize() const {
 ImVec2 ImguiWindowManager::PropogateMove() {
     auto actual_pos = ImGui::GetWindowPos();
     auto round_pos = Round(pos_);
-    if(!VecEq(round_pos, actual_pos)) {
+    if (!VecEq(round_pos, actual_pos)) {
         auto move = actual_pos - round_pos;
         pos_ += move;
         return move;
@@ -30,7 +29,7 @@ ImVec2 ImguiWindowManager::PropogateMove() {
 ImVec2 ImguiWindowManager::PropogateResize() {
     auto actual_size = ImGui::GetWindowSize();
     auto round_size = Round(size_);
-    if(!VecEq(round_size, actual_size)) {
+    if (!VecEq(round_size, actual_size)) {
         auto size_move = actual_size - round_size;
         size_ += size_move;
         return size_move;
@@ -39,19 +38,19 @@ ImVec2 ImguiWindowManager::PropogateResize() {
 }
 
 void ImguiWindowManager::SetPos(ImVec2 pos) {
-    if(!VecEq(Round(pos), Round(pos_))) {
+    if (!VecEq(Round(pos), Round(pos_))) {
         ImGui::SetWindowPos(Round(pos), ImGuiCond_Always);
         pos_ = pos;
-    } else if(!VecEq(pos_, pos)) {
+    } else if (!VecEq(pos_, pos)) {
         pos_ = pos;
     }
 }
 
 void ImguiWindowManager::SetSize(ImVec2 size) {
-    if(!VecEq(Round(size), Round(size_))) {
+    if (!VecEq(Round(size), Round(size_))) {
         ImGui::SetWindowSize(Round(size), ImGuiCond_Always);
         size_ = size;
-    } else if(!VecEq(size_, size)) {
+    } else if (!VecEq(size_, size)) {
         size_ = size;
     }
 }

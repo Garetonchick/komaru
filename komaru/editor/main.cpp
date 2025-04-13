@@ -19,9 +19,9 @@ namespace komaru::editor {
 class TestApp : public GuiElement {
 public:
     TestApp(GLFWwindow* window)
-        : window_(window)
-        , node_editor_("Node Editor", {0, 0}, window_.GetSize())
-    {}
+        : window_(window),
+          node_editor_("Node Editor", {0, 0}, window_.GetSize()) {
+    }
 
     void UpdateAndDraw(float dt) override {
         node_editor_.UpdateAndDraw(dt);
@@ -55,7 +55,7 @@ private:
     NodeEditor node_editor_;
 };
 
-}
+}  // namespace komaru::editor
 
 int main() {
     // Initialize GLFW
@@ -91,7 +91,7 @@ int main() {
 
     // Initialize ImGui for GLFW and OpenGL3
     ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 130"); // Adjust GLSL version as needed
+    ImGui_ImplOpenGL3_Init("#version 130");  // Adjust GLSL version as needed
 
     // Main loop
     while (!glfwWindowShouldClose(window)) {

@@ -24,6 +24,7 @@ class CatProgramBuilder;
 // positions determined by $i syntax.
 class CatProgram {
     friend class komaru::lang::CatProgramBuilder;
+
 public:
     class Node;
     class OutPin;
@@ -34,6 +35,7 @@ public:
         friend class CatProgram;
         friend class OutPin;
         friend class komaru::lang::CatProgramBuilder;
+
     public:
         const Node& TargetNode() const;
         const OutPin& SourcePin() const;
@@ -51,8 +53,10 @@ public:
     class OutPin : public util::NonCopyable {
         friend class CatProgram;
         friend class ::komaru::lang::CatProgramBuilder;
+
     public:
         using Brancher = std::variant<Pattern, Guard>;
+
     public:
         const Node& GetNode() const;
         const Brancher& GetBrancher() const;
@@ -67,14 +71,16 @@ public:
         Arrow& AddArrow(Node& target_node, MorphismPtr morphism);
 
     private:
-        Node& node_; // associated node
-        Brancher brancher_{Pattern::Any()}; // TODO: Add guards and make it std::variant<Pattern, Guard>
+        Node& node_;  // associated node
+        Brancher brancher_{
+            Pattern::Any()};  // TODO: Add guards and make it std::variant<Pattern, Guard>
         std::deque<Arrow> arrows_;
     };
 
     class Node : public util::NonCopyable {
         friend class CatProgram;
         friend class komaru::lang::CatProgramBuilder;
+
     public:
         Type GetType() const;
         const std::vector<Arrow*>& IncomingArrows() const;
@@ -122,4 +128,4 @@ private:
     CatProgram program_;
 };
 
-}
+}  // namespace komaru::lang

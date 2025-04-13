@@ -9,13 +9,8 @@
 
 class Block : public GuiElement {
 public:
-    explicit Block(
-        std::string name,
-        const TopDownCamera* camera,
-        ImVec2 pos = {0, 0},
-        ImVec2 size = {100, 100},
-        ImVec2 pivot={0, 0}
-    );
+    explicit Block(std::string name, const TopDownCamera* camera, ImVec2 pos = {0, 0},
+                   ImVec2 size = {100, 100}, ImVec2 pivot = {0, 0});
 
     void UpdateAndDraw(float dt) override;
 

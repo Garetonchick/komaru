@@ -21,7 +21,7 @@ std::expected<std::string, std::error_code> ReadFile(const std::filesystem::path
     std::stringstream buf;
     errno = 0;
     buf << t.rdbuf();
-    if(!t) {
+    if (!t) {
         return Error<std::string>();
     }
     return buf.str();
@@ -33,11 +33,11 @@ std::error_code WriteFile(const std::filesystem::path& path, const std::string& 
     out << content;
     out.flush();
 
-    if(!out) {
+    if (!out) {
         return std::make_error_code(std::errc(errno));
     }
 
     return std::error_code{};
 }
 
-}
+}  // namespace komaru::util

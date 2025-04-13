@@ -32,4 +32,4 @@ private:
     NodeType type_;
 };
 
-}
+}  // namespace komaru::editor

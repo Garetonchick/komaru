@@ -4,8 +4,7 @@
 
 namespace komaru::util {
 
-struct NonCopyableNonMovable : public NonCopyable
-                             , public NonMovable {
-};
+struct NonCopyableNonMovable : public NonCopyable,
+                               public NonMovable {};
 
-}
+}  // namespace komaru::util

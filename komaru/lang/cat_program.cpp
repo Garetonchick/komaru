@@ -19,9 +19,9 @@ const MorphismPtr& CPArrow::GetMorphism() const {
 }
 
 CPArrow::Arrow(CPOutPin& source_pin, CPNode& target_node, MorphismPtr morphism)
-    : source_pin_(source_pin)
-    , target_node_(target_node)
-    , morphism_(std::move(morphism)) {
+    : source_pin_(source_pin),
+      target_node_(target_node),
+      morphism_(std::move(morphism)) {
 }
 
 const CPNode& CPOutPin::GetNode() const {
@@ -48,7 +48,9 @@ CPArrow& CPOutPin::AddArrow(CPNode& target_node, MorphismPtr morphism) {
     return arrows_.emplace_back(Arrow(*this, target_node, std::move(morphism)));
 }
 
-CPOutPin::OutPin(Node& node) : node_(node) {}
+CPOutPin::OutPin(Node& node)
+    : node_(node) {
+}
 
 Type CPNode::GetType() const {
     return type_;
@@ -88,7 +90,9 @@ CPNode& CPNode::SetName(std::string name) {
 }
 
 CPNode::Node(Type type, std::string name)
-    : type_(type), name_(std::move(name)) {}
+    : type_(type),
+      name_(std::move(name)) {
+}
 
 const std::deque<CPNode>& CatProgram::GetNodes() const {
     return nodes_;
@@ -104,7 +108,8 @@ std::pair<CPNode&, CPOutPin&> CatProgramBuilder::NewNodeWithPin(Type type, std::
     return std::tie(node, pin);
 }
 
-CatProgramBuilder& CatProgramBuilder::Connect(CPOutPin& out_pin, CPNode& node, MorphismPtr morphism) {
+CatProgramBuilder& CatProgramBuilder::Connect(CPOutPin& out_pin, CPNode& node,
+                                              MorphismPtr morphism) {
     auto& arrow = out_pin.AddArrow(node, std::move(morphism));
     node.incoming_arrows_.push_back(&arrow);
     return *this;
@@ -114,4 +119,4 @@ CatProgram CatProgramBuilder::Extract() {
     return std::move(program_);
 }
 
-}
+}  // namespace komaru::lang

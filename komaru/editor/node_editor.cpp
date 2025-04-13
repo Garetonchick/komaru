@@ -8,9 +8,10 @@
 
 namespace komaru::editor {
 
-NodeEditor::NodeEditor(
-    std::string name, ImVec2 pos, ImVec2 size
-) : name_(std::move(name)), pos_(std::move(pos)), size_(std::move(size)) {
+NodeEditor::NodeEditor(std::string name, ImVec2 pos, ImVec2 size)
+    : name_(std::move(name)),
+      pos_(std::move(pos)),
+      size_(std::move(size)) {
     // Dummy nodes
     nodes_.emplace_back("START", ImVec2{100, 300}, NodeType::Start);
     nodes_.emplace_back("INT x INT", ImVec2{250, 400});
@@ -32,11 +33,11 @@ void NodeEditor::UpdateAndDraw(float dt) {
     ImGui::Begin("node editor");
     ImNodes::BeginNodeEditor();
 
-    for(auto& node : nodes_) {
+    for (auto& node : nodes_) {
         node.UpdateAndDraw(dt);
     }
 
-    for(auto& link : links_) {
+    for (auto& link : links_) {
         link.UpdateAndDraw(dt);
     }
 
@@ -58,14 +59,15 @@ void NodeEditor::UpdateAndDraw(float dt) {
         assert(source_node != nullptr && target_node != nullptr);
         bool bad_link = false;
 
-        for(auto& link : links_) {
-            if(link.GetSourceNodeID() == source_node->GetID() || link.GetTargetNodeID() == target_node->GetID()) {
+        for (auto& link : links_) {
+            if (link.GetSourceNodeID() == source_node->GetID() ||
+                link.GetTargetNodeID() == target_node->GetID()) {
                 bad_link = true;
                 break;
             }
         }
 
-        if(!bad_link) {
+        if (!bad_link) {
             links_.push_back(Link(*source_node, *target_node));
             std::println("Created new link. Total links {}", links_.size());
         }
@@ -83,25 +85,30 @@ void NodeEditor::UpdateAndDraw(float dt) {
 }
 
 Node* NodeEditor::GetNodeByID(int id) {
-    auto it = std::find_if(nodes_.begin(), nodes_.end(),
-        [id](const Node& node) { return node.GetID() == id; });
+    auto it = std::find_if(nodes_.begin(), nodes_.end(), [id](const Node& node) {
+        return node.GetID() == id;
+    });
     return it == nodes_.end() ? nullptr : &*it;
 }
 Node* NodeEditor::GetNodeByInID(int in_id) {
-    auto it = std::find_if(nodes_.begin(), nodes_.end(),
-        [in_id](const Node& node) { return node.GetInPinID() == in_id; });
+    auto it = std::find_if(nodes_.begin(), nodes_.end(), [in_id](const Node& node) {
+        return node.GetInPinID() == in_id;
+    });
     return it == nodes_.end() ? nullptr : &*it;
 }
 Node* NodeEditor::GetNodeByOutID(int out_id) {
-    auto it = std::find_if(nodes_.begin(), nodes_.end(),
-        [out_id](const Node& node) { return node.GetOutPinID() == out_id; });
+    auto it = std::find_if(nodes_.begin(), nodes_.end(), [out_id](const Node& node) {
+        return node.GetOutPinID() == out_id;
+    });
     return it == nodes_.end() ? nullptr : &*it;
 }
 
 bool NodeEditor::DestroyLinkByID(int link_id) {
-    size_t del_cnt = std::erase_if(links_, [link_id](const Link& link) { return link.GetID() ==  link_id; });
+    size_t del_cnt = std::erase_if(links_, [link_id](const Link& link) {
+        return link.GetID() == link_id;
+    });
     assert(del_cnt <= 1);
     return del_cnt == 1;
 }
 
-}
+}  // namespace komaru::editor

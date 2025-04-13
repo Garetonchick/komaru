@@ -5,10 +5,10 @@
 namespace komaru::editor {
 
 Node::Node(std::string label, ImVec2 pos, NodeType type)
-    : label_(std::move(label))
-    , pos_(pos)
-    , size_(100, 100)
-    , type_(type) {
+    : label_(std::move(label)),
+      pos_(pos),
+      size_(100, 100),
+      type_(type) {
     id_ = ImGui::AllocateID();
     in_id_ = ImGui::AllocateID();
     out_id_ = ImGui::AllocateID();
@@ -27,13 +27,12 @@ void Node::UpdateAndDraw(float) {
 
     // ImGui::Dummy(size_);
 
-
-    if(type_ != NodeType::Start) {
+    if (type_ != NodeType::Start) {
         ImNodes::BeginInputAttribute(in_id_);
         ImNodes::EndInputAttribute();
     }
 
-    if(type_ != NodeType::Terminal) {
+    if (type_ != NodeType::Terminal) {
         ImNodes::BeginOutputAttribute(out_id_);
         ImNodes::EndOutputAttribute();
     }
@@ -53,4 +52,4 @@ int Node::GetOutPinID() const {
     return out_id_;
 }
 
-}
+}  // namespace komaru::editor

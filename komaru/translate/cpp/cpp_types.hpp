@@ -19,4 +19,4 @@ private:
 
 CppType ToCppType(lang::Type type);
 
-}
+}  // namespace komaru::translate::cpp

@@ -10,25 +10,19 @@ using namespace komaru::lang;
 using namespace komaru::translate;
 
 /*
-*   9      $0
-*   ┌─>Int──┐              +
-* S─┤       ├>|Int x Int|─────>Int
-*   └─>Int──┘
-*   42     $1
-*/
+ *   9      $0
+ *   ┌─>Int──┐              +
+ * S─┤       ├>|Int x Int|─────>Int
+ *   └─>Int──┘
+ *   42     $1
+ */
 
 TEST(CppTranslator, APlusB) {
-    auto nine = Morphism::WithValue(
-        "", Value::Atom(9)
-    );
-    auto forty_two = Morphism::WithValue(
-        "", Value::Atom(42)
-    );
+    auto nine = Morphism::WithValue("", Value::Atom(9));
+    auto forty_two = Morphism::WithValue("", Value::Atom(42));
     auto pos0 = Morphism::Position(0);
     auto pos1 = Morphism::Position(1);
-    auto plus = Morphism::Builtin(
-        MorphismTag::Plus, Type::Int().Pow(2), Type::Int()
-    );
+    auto plus = Morphism::Builtin(MorphismTag::Plus, Type::Int().Pow(2), Type::Int());
 
     auto builder = CatProgramBuilder();
 
@@ -38,8 +32,7 @@ TEST(CppTranslator, APlusB) {
     auto [pair_node, pair_pin] = builder.NewNodeWithPin(Type::Int().Pow(2));
     auto& res_node = builder.NewNode(Type::Int());
 
-    builder
-        .Connect(start_pin, num0_node, nine)
+    builder.Connect(start_pin, num0_node, nine)
         .Connect(start_pin, num1_node, forty_two)
         .Connect(num0_pin, pair_node, pos0)
         .Connect(num1_pin, pair_node, pos1)
@@ -62,32 +55,28 @@ TEST(CppTranslator, APlusB) {
 }
 
 /*
-*                 $0
-*         ┌───────────────────┐
-*         │                 $ │     *15
-*   5     │ <4 ┌────|False│───┴>Int────>Int
-* S───>Int├───>│Bool|     │ $       +10
-*         │    └────|True │───┬>Int────>Int
-*         │       $0          │
-*         └───────────────────┘
-*/
+ *                 $0
+ *         ┌───────────────────┐
+ *         │                 $ │     *15
+ *   5     │ <4 ┌────|False│───┴>Int────>Int
+ * S───>Int├───>│Bool|     │ $       +10
+ *         │    └────|True │───┬>Int────>Int
+ *         │       $0          │
+ *         └───────────────────┘
+ */
 
 TEST(CppTranslator, If101) {
     auto val = Morphism::WithValue("", Value::Atom(5));
-    auto less4 = BindMorphism(
-        Morphism::Builtin(MorphismTag::Less, Type::Int().Pow(2), Type::Bool()),
-        {{1, Value::Atom(4)}}
-    );
+    auto less4 =
+        BindMorphism(Morphism::Builtin(MorphismTag::Less, Type::Int().Pow(2), Type::Bool()),
+                     {{1, Value::Atom(4)}});
     auto pos0 = Morphism::Position(0);
     auto none_pos = Morphism::NonePosition();
-    auto mul15 = BindMorphism(
-        Morphism::Builtin(MorphismTag::Multiply, Type::Int().Pow(2), Type::Int()),
-        {{1, Value::Atom(15)}}
-    );
-    auto add10 = BindMorphism(
-        Morphism::Builtin(MorphismTag::Plus, Type::Int().Pow(2), Type::Int()),
-        {{1, Value::Atom(10)}}
-    );
+    auto mul15 =
+        BindMorphism(Morphism::Builtin(MorphismTag::Multiply, Type::Int().Pow(2), Type::Int()),
+                     {{1, Value::Atom(15)}});
+    auto add10 = BindMorphism(Morphism::Builtin(MorphismTag::Plus, Type::Int().Pow(2), Type::Int()),
+                              {{1, Value::Atom(10)}});
 
     auto builder = CatProgramBuilder();
 
@@ -102,8 +91,7 @@ TEST(CppTranslator, If101) {
     auto& false_pin = cond_node.AddOutPin(Pattern::FromValue(Value::Atom(false)));
     auto& true_pin = cond_node.AddOutPin(Pattern::FromValue(Value::Atom(true)));
 
-    builder
-        .Connect(start_pin, val_node, val)
+    builder.Connect(start_pin, val_node, val)
         .Connect(val_pin, cond_node, less4)
         .Connect(val_pin, branch0_node, pos0)
         .Connect(val_pin, branch1_node, pos0)
@@ -130,26 +118,22 @@ TEST(CppTranslator, If101) {
 }
 
 /*
-*               +10
-*   5  ┌───|<4|────>Int
-* S───>│Int|  | *15
-*      └───|* |────>Int
-*/
+ *               +10
+ *   5  ┌───|<4|────>Int
+ * S───>│Int|  | *15
+ *      └───|* |────>Int
+ */
 
 TEST(CppTranslator, Guards101) {
     auto val = Morphism::WithValue("", Value::Atom(5));
-    auto less4_guard = Guard(BindMorphism(
-        Morphism::Builtin(MorphismTag::Less, Type::Int().Pow(2), Type::Bool()),
-        {{1, Value::Atom(4)}}
-    ));
-    auto mul15 = BindMorphism(
-        Morphism::Builtin(MorphismTag::Multiply, Type::Int().Pow(2), Type::Int()),
-        {{1, Value::Atom(15)}}
-    );
-    auto add10 = BindMorphism(
-        Morphism::Builtin(MorphismTag::Plus, Type::Int().Pow(2), Type::Int()),
-        {{1, Value::Atom(10)}}
-    );
+    auto less4_guard =
+        Guard(BindMorphism(Morphism::Builtin(MorphismTag::Less, Type::Int().Pow(2), Type::Bool()),
+                           {{1, Value::Atom(4)}}));
+    auto mul15 =
+        BindMorphism(Morphism::Builtin(MorphismTag::Multiply, Type::Int().Pow(2), Type::Int()),
+                     {{1, Value::Atom(15)}});
+    auto add10 = BindMorphism(Morphism::Builtin(MorphismTag::Plus, Type::Int().Pow(2), Type::Int()),
+                              {{1, Value::Atom(10)}});
 
     auto builder = CatProgramBuilder();
 
@@ -161,8 +145,7 @@ TEST(CppTranslator, Guards101) {
     auto& less4_pin = val_node.AddOutPin(less4_guard);
     auto& any_pin = val_node.AddOutPin(Pattern::Any());
 
-    builder
-        .Connect(start_pin, val_node, val)
+    builder.Connect(start_pin, val_node, val)
         .Connect(less4_pin, res0_node, add10)
         .Connect(any_pin, res1_node, mul15);
 

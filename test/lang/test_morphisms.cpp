@@ -23,21 +23,14 @@ TEST(Morphisms, Builtin) {
 TEST(Morphisms, Compound) {
     auto ti = Type::FromTag(TypeTag::Int);
     auto ti2 = Type::TupleFromTags({TypeTag::Int, TypeTag::Int});
-    auto start_morphism = Morphism::Builtin(
-        MorphismTag::Id, Type::FromTag(TypeTag::Source), Type::FromTag(TypeTag::Singleton)
-    );
-    auto value_morphism = Morphism::WithValue(
-        "some_value", Value::TupleFromAtoms(9, 42)
-    );
-    auto plus_morphism = Morphism::Builtin(
-        MorphismTag::Plus, ti2, ti
-    );
-    auto end_morphism = Morphism::Builtin(
-        MorphismTag::Id, Type::FromTag(TypeTag::Int), Type::FromTag(TypeTag::Target)
-    );
-    std::vector<MorphismPtr> program_morphisms = {
-        start_morphism, value_morphism, plus_morphism, end_morphism
-    };
+    auto start_morphism = Morphism::Builtin(MorphismTag::Id, Type::FromTag(TypeTag::Source),
+                                            Type::FromTag(TypeTag::Singleton));
+    auto value_morphism = Morphism::WithValue("some_value", Value::TupleFromAtoms(9, 42));
+    auto plus_morphism = Morphism::Builtin(MorphismTag::Plus, ti2, ti);
+    auto end_morphism = Morphism::Builtin(MorphismTag::Id, Type::FromTag(TypeTag::Int),
+                                          Type::FromTag(TypeTag::Target));
+    std::vector<MorphismPtr> program_morphisms = {start_morphism, value_morphism, plus_morphism,
+                                                  end_morphism};
     auto program_morphism = Morphism::Compound("main", program_morphisms);
 
     ASSERT_EQ(program_morphism->GetName(), "main");
@@ -45,15 +38,15 @@ TEST(Morphisms, Compound) {
     ASSERT_EQ(program_morphism->GetTarget(), Type::FromTag(TypeTag::Target));
     ASSERT_EQ(program_morphism->GetTag(), MorphismTag::Compound);
 
-    program_morphism->Visit(Overloaded{
-        [&](const CompoundMorphism& morphism){
-            const auto& submorphisms = morphism.GetMorphisms();
-            ASSERT_EQ(submorphisms.size(), program_morphisms.size());
-            for(size_t i = 0; i < program_morphisms.size(); ++i) {
-                ASSERT_EQ(submorphisms[i]->GetName(), program_morphisms[i]->GetName());
-            }
-        }, [](const auto&) {
-            FAIL();
-        }
-    });
+    program_morphism->Visit(Overloaded{[&](const CompoundMorphism& morphism) {
+                                           const auto& submorphisms = morphism.GetMorphisms();
+                                           ASSERT_EQ(submorphisms.size(), program_morphisms.size());
+                                           for (size_t i = 0; i < program_morphisms.size(); ++i) {
+                                               ASSERT_EQ(submorphisms[i]->GetName(),
+                                                         program_morphisms[i]->GetName());
+                                           }
+                                       },
+                                       [](const auto&) {
+                                           FAIL();
+                                       }});
 }

@@ -13,4 +13,4 @@ struct NonMovable {
     NonMovable& operator=(NonMovable&&) = delete;
 };
 
-}
+}  // namespace komaru::util

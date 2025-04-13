@@ -25,16 +25,16 @@ enum class TypeTag {
     Generic,
 };
 
-class AtomType; // Int, Char, Bool, Float, ...
-class TupleType; // (A, B, C)
+class AtomType;   // Int, Char, Bool, Float, ...
+class TupleType;  // (A, B, C)
 // class ListType; // [T]
 // class GenericType; // T
 // class StructType; // struct MyStruct {i: Int, b: Bool}
 
-template<typename T>
+template <typename T>
 concept TypeLike = requires(const T t) {
-    {t.GetName()} -> std::convertible_to<std::string_view>;
-    {t.GetTag()} -> std::same_as<TypeTag>;
+    { t.GetName() } -> std::convertible_to<std::string_view>;
+    { t.GetTag() } -> std::same_as<TypeTag>;
 } && std::equality_comparable<T>;
 
 class Type;
@@ -54,7 +54,7 @@ private:
 
 class TupleType {
 public:
-    using ID = std::string; // TODO: change to something like vector of tags
+    using ID = std::string;  // TODO: change to something like vector of tags
 
 public:
     explicit TupleType(std::vector<Type> inner_types);
@@ -93,6 +93,7 @@ static_assert(TypeLike<GenericType>);
 
 class Type : public util::DeriveVariant<Type> {
     using Variant = std::variant<AtomType, TupleType, GenericType>;
+
 public:
     static Type FromTag(TypeTag tag);
     static Type Tuple(std::vector<Type> types);
@@ -108,7 +109,6 @@ public:
     static Type Singleton();
     static Type Source();
     static Type Target();
-
 
     std::string_view GetName() const;
     TypeTag GetTag() const;
@@ -137,4 +137,4 @@ Type operator*(Type t1, Type t2);
 
 static_assert(TypeLike<Type>);
 
-}
+}  // namespace komaru::lang

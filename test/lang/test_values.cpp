@@ -10,14 +10,11 @@ TEST(Values, Basic) {
     Value ival = Value::Int(42);
     Value cval = Value::Char('m');
     Value bval = Value::Bool(true);
-    std::vector<Type> types = {
-        Type::FromTag(TypeTag::Int),
-        Type::FromTag(TypeTag::Char),
-        Type::FromTag(TypeTag::Bool)
-    };
+    std::vector<Type> types = {Type::FromTag(TypeTag::Int), Type::FromTag(TypeTag::Char),
+                               Type::FromTag(TypeTag::Bool)};
     std::vector<Value> values = {ival, cval, bval};
 
-    for(size_t i = 0; i < values.size(); ++i) {
+    for (size_t i = 0; i < values.size(); ++i) {
         ASSERT_EQ(values[i].GetType(), types[i]);
     }
 
@@ -28,19 +25,15 @@ TEST(Values, Basic) {
     ASSERT_TRUE(ival.GetVariant<AtomValue>().Holds<int32_t>());
     ASSERT_FALSE(ival.GetVariant<AtomValue>().Holds<char>());
 
-    ival.Visit(Overloaded{
-        [](const AtomValue& val){
-            val.Visit(Overloaded{
-                [](int32_t val){
-                    ASSERT_EQ(val, 42);
-                },
-                [](const auto&) {
-                    FAIL();
-                }
-            });
-        },
-        [](const auto&) {
-            FAIL();
-        }
-    });
+    ival.Visit(Overloaded{[](const AtomValue& val) {
+                              val.Visit(Overloaded{[](int32_t val) {
+                                                       ASSERT_EQ(val, 42);
+                                                   },
+                                                   [](const auto&) {
+                                                       FAIL();
+                                                   }});
+                          },
+                          [](const auto&) {
+                              FAIL();
+                          }});
 }

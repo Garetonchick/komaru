@@ -12,4 +12,4 @@ IdGuard::~IdGuard() {
     ImGui::PopID();
 }
 
-}
+}  // namespace ImGui

@@ -8,4 +8,4 @@ struct CppFunction {
     std::string impl;
 };
 
-}
+}  // namespace komaru::translate::cpp

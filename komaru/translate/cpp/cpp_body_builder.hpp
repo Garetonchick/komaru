@@ -21,21 +21,22 @@ public:
     };
 
 public:
-    template<std::ranges::input_range R1, std::ranges::input_range R2>
+    template <std::ranges::input_range R1, std::ranges::input_range R2>
     CppBranches(const R1& exprs, const R2& scopes) {
         auto it1 = std::ranges::begin(exprs);
         auto it2 = std::ranges::begin(scopes);
         auto end1 = std::ranges::end(exprs);
         auto end2 = std::ranges::end(scopes);
 
-        while(it1 != end1 && it2 != end2) {
+        while (it1 != end1 && it2 != end2) {
             branches_.emplace_back(*it1, *it2);
             ++it1;
             ++it2;
         }
 
-        if(it1 != end1 || it2 != end2) {
-            throw std::runtime_error("mismatch between number of exprs and number of scopes in CppBranches");
+        if (it1 != end1 || it2 != end2) {
+            throw std::runtime_error(
+                "mismatch between number of exprs and number of scopes in CppBranches");
         }
     }
 
@@ -68,7 +69,8 @@ public:
 
     void AddStatement(const CppCond& cond, std::string statement);
     void AddReturn(const CppCond& cond, std::string statement);
-    std::vector<CppCond> AddBranches(const CppCond& cond, const std::vector<std::string>& branch_exprs);
+    std::vector<CppCond> AddBranches(const CppCond& cond,
+                                     const std::vector<std::string>& branch_exprs);
 
     TranslationResult<std::string> Extract();
     void Reset();
@@ -82,4 +84,4 @@ private:
     int32_t branch_id_{0};
 };
 
-}
+}  // namespace komaru::translate::cpp

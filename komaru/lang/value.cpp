@@ -11,8 +11,8 @@ const AtomValue::Variant* AtomValue::GetVariantPointer() const {
 }
 
 TupleValue::TupleValue(std::vector<Value> values)
-    : type_(DetermineType(values))
-    , values_(std::move(values)) {
+    : type_(DetermineType(values)),
+      values_(std::move(values)) {
 }
 
 Type TupleValue::GetType() const {
@@ -26,7 +26,7 @@ const std::vector<Value>& TupleValue::GetValues() const {
 Type TupleValue::DetermineType(const std::vector<Value>& values) {
     std::vector<Type> types;
 
-    for(const Value& value : values) {
+    for (const Value& value : values) {
         types.push_back(value.GetType());
     }
 
@@ -59,5 +59,4 @@ const Value::Variant* Value::GetVariantPointer() const {
     return &value_;
 }
 
-
-}
+}  // namespace komaru::lang

@@ -26,13 +26,13 @@ CppFunctionBuilder&& CppFunctionBuilder::AddInputParameter(lang::Type type, std:
 CppFunctionBuilder&& CppFunctionBuilder::SetBody(const std::string& body) {
     body_.clear();
 
-    if(!body.empty()) {
+    if (!body.empty()) {
         body_ += "    ";
     }
 
-    for(char c : body) {
+    for (char c : body) {
         body_.push_back(c);
-        if(c == '\n') {
+        if (c == '\n') {
             body_ += "    ";
         }
     }
@@ -46,27 +46,23 @@ CppFunction CppFunctionBuilder::Extract() && {
     std::vector<std::string> param_strs;
 
     CppType cpp_ret_type = ToCppType(ret_type_);
-    template_vars.insert(
-        cpp_ret_type.GetTemplateVars().begin(),
-        cpp_ret_type.GetTemplateVars().end()
-    );
+    template_vars.insert(cpp_ret_type.GetTemplateVars().begin(),
+                         cpp_ret_type.GetTemplateVars().end());
 
-    for(const auto& [param_type, param_name] : input_params_) {
+    for (const auto& [param_type, param_name] : input_params_) {
         CppType cpp_param_type = ToCppType(param_type);
-        template_vars.insert(
-            cpp_param_type.GetTemplateVars().begin(),
-            cpp_param_type.GetTemplateVars().end()
-        );
+        template_vars.insert(cpp_param_type.GetTemplateVars().begin(),
+                             cpp_param_type.GetTemplateVars().end());
         param_strs.push_back(cpp_param_type.GetTypeStr() + " " + param_name);
     }
 
-    if(!template_vars.empty()) {
+    if (!template_vars.empty()) {
         result.decl += "template<";
 
-        for(const auto& [i, tvar] : util::Enumerate(template_vars)) {
+        for (const auto& [i, tvar] : util::Enumerate(template_vars)) {
             result.decl += "typename " + tvar;
 
-            if(i + 1 != template_vars.size()) {
+            if (i + 1 != template_vars.size()) {
                 result.decl += ", ";
             }
         }
@@ -74,14 +70,13 @@ CppFunction CppFunctionBuilder::Extract() && {
         result.decl += ">\n";
     }
 
-
     result.decl += cpp_ret_type.GetTypeStr() + " ";
     result.decl += name_ + "(";
 
-    for(const auto& [i, param_str] : util::Enumerate(param_strs)) {
+    for (const auto& [i, param_str] : util::Enumerate(param_strs)) {
         result.decl += param_str;
 
-        if(i + 1 != param_strs.size()) {
+        if (i + 1 != param_strs.size()) {
             result.decl += ", ";
         }
     }
@@ -95,4 +90,4 @@ CppFunction CppFunctionBuilder::Extract() && {
     return result;
 }
 
-}
+}  // namespace komaru::translate::cpp

@@ -7,7 +7,7 @@ namespace komaru::editor {
 
 class Link : GuiElement {
 public:
-    Link(const Node& from, const Node& to, std::string label="");
+    Link(const Node& from, const Node& to, std::string label = "");
 
     void UpdateAndDraw(float dt) override;
 
@@ -24,4 +24,4 @@ private:
     std::string label_;
 };
 
-}
+}  // namespace komaru::editor

@@ -23,4 +23,4 @@ private:
     std::vector<std::pair<lang::Type, std::string>> input_params_;
 };
 
-}
+}  // namespace komaru::translate::cpp
