@@ -1,5 +1,5 @@
 #pragma once
-#include <editor/node.hpp>
+#include <komaru/editor/node.hpp>
 
 #include <string>
 

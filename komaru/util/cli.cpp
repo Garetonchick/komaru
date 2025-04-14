@@ -1,7 +1,7 @@
 #include "cli.hpp"
 
-#include <util/filesystem.hpp>
-#include <util/string.hpp>
+#include <komaru/util/filesystem.hpp>
+#include <komaru/util/string.hpp>
 
 #include <sys/wait.h>
 #include <unistd.h>

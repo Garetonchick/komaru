@@ -1,6 +1,6 @@
 #include "imgui_id_guard.hpp"
 
-#include <editor/gui.hpp>
+#include <komaru/editor/gui.hpp>
 
 namespace ImGui {
 

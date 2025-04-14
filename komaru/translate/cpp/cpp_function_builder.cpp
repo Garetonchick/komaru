@@ -1,8 +1,8 @@
 #include "cpp_function_builder.hpp"
 
-#include <util/string.hpp>
-#include <translate/cpp/cpp_types.hpp>
-#include <util/std_extensions.hpp>
+#include <komaru/util/string.hpp>
+#include <komaru/translate/cpp/cpp_types.hpp>
+#include <komaru/util/std_extensions.hpp>
 
 #include <unordered_set>
 

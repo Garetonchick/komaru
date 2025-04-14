@@ -1,5 +1,5 @@
 #pragma once
-#include <lang/morphism.hpp>
+#include <komaru/lang/morphism.hpp>
 
 namespace komaru::lang {
 

@@ -1,6 +1,6 @@
 #pragma once
-#include <util/non_copyable_non_movable.hpp>
-#include <lang/morphism.hpp>
+#include <komaru/util/non_copyable_non_movable.hpp>
+#include <komaru/lang/morphism.hpp>
 
 #include <deque>
 

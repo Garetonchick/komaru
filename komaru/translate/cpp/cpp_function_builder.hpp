@@ -1,6 +1,6 @@
 #pragma once
-#include <translate/cpp/cpp_function.hpp>
-#include <lang/type.hpp>
+#include <komaru/translate/cpp/cpp_function.hpp>
+#include <komaru/lang/type.hpp>
 
 namespace komaru::translate::cpp {
 

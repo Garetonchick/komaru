@@ -1,9 +1,9 @@
 #pragma once
 
-#include <editor/gui.hpp>
-#include <editor/top_down_camera.hpp>
-#include <editor/imgui_window_manager.hpp>
-#include <editor/gui_element.hpp>
+#include <komaru/editor/gui.hpp>
+#include <komaru/editor/top_down_camera.hpp>
+#include <komaru/editor/imgui_window_manager.hpp>
+#include <komaru/editor/gui_element.hpp>
 
 #include <string>
 

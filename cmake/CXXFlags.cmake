@@ -1,0 +1,27 @@
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Werror -stdlib=libc++")
+else()
+    message(FATAL_ERROR "You must compile with Clang")
+endif()
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting default build type to 'Release' as none was specified.")
+  set(CMAKE_BUILD_TYPE "Release")
+endif()
+
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE} -g")
+set(CMAKE_CXX_FLAGS_ASAN "-g -O1 -fsanitize=address,undefined -fsanitize-address-use-after-scope -fsanitize-recover=address")
+set(CMAKE_CXX_FLAGS_UBSAN "-g -O1 -fsanitize=undefined")
+
+init_current_build_type_flags()
+
+message(STATUS "CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
+message(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+message(STATUS "CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
+message(STATUS "CMAKE_CXX_FLAGS_RELEASE = ${CMAKE_CXX_FLAGS_RELEASE}")
+message(STATUS "CMAKE_CXX_FLAGS_RELWITHDEBINFO = ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+message(STATUS "CMAKE_CXX_FLAGS_ASAN = ${CMAKE_CXX_FLAGS_ASAN}")
+message(STATUS "CMAKE_CXX_FLAGS_UBSAN = ${CMAKE_CXX_FLAGS_UBSAN}")
+message(STATUS "Final compilation flags = ${CMAKE_CXX_FLAGS} ${CURRENT_BUILD_TYPE_CXX_FLAGS}")

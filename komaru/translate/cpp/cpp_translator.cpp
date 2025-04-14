@@ -1,12 +1,12 @@
 #include "cpp_translator.hpp"
 
-#include <translate/cpp/cpp_program.hpp>
-#include <translate/cpp/cpp_function_builder.hpp>
-#include <translate/cpp/cpp_value.hpp>
-#include <translate/cpp/cpp_types.hpp>
-#include <translate/cpp/cpp_body_builder.hpp>
-#include <util/std_extensions.hpp>
-#include <util/string.hpp>
+#include <komaru/translate/cpp/cpp_program.hpp>
+#include <komaru/translate/cpp/cpp_function_builder.hpp>
+#include <komaru/translate/cpp/cpp_value.hpp>
+#include <komaru/translate/cpp/cpp_types.hpp>
+#include <komaru/translate/cpp/cpp_body_builder.hpp>
+#include <komaru/util/std_extensions.hpp>
+#include <komaru/util/string.hpp>
 
 #include <cassert>
 #include <algorithm>

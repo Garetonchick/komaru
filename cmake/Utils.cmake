@@ -1,0 +1,6 @@
+function(init_current_build_type_flags)
+    set(current_build_type ${CMAKE_BUILD_TYPE})
+    string(TOUPPER ${current_build_type} build_type_upper)
+    set(flags_var_name "CMAKE_CXX_FLAGS_${build_type_upper}")
+    set(CURRENT_BUILD_TYPE_CXX_FLAGS "${${flags_var_name}}" PARENT_SCOPE)
+endfunction()

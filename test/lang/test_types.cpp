@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <util/std_extensions.hpp>
-#include <lang/type.hpp>
+#include <komaru/util/std_extensions.hpp>
+#include <komaru/lang/type.hpp>
 
 using namespace komaru::lang;
 using namespace komaru::util;

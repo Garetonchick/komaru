@@ -1,7 +1,7 @@
 #pragma once
-#include <editor/gui_element.hpp>
-#include <editor/block.hpp>
-#include <editor/top_down_camera.hpp>
+#include <komaru/editor/gui_element.hpp>
+#include <komaru/editor/block.hpp>
+#include <komaru/editor/top_down_camera.hpp>
 #include <GLFW/glfw3.h>
 
 #include <vector>

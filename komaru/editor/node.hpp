@@ -1,6 +1,6 @@
 #pragma once
-#include <editor/gui.hpp>
-#include <editor/gui_element.hpp>
+#include <komaru/editor/gui.hpp>
+#include <komaru/editor/gui_element.hpp>
 
 #include <string>
 

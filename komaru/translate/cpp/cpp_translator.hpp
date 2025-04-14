@@ -1,8 +1,8 @@
 #pragma once
-#include <translate/translator.hpp>
-#include <translate/cpp/cpp_program_builder.hpp>
-#include <translate/cpp/cpp_body_builder.hpp>
-#include <translate/cpp/cpp_cond.hpp>
+#include <komaru/translate/translator.hpp>
+#include <komaru/translate/cpp/cpp_program_builder.hpp>
+#include <komaru/translate/cpp/cpp_body_builder.hpp>
+#include <komaru/translate/cpp/cpp_cond.hpp>
 
 #include <unordered_map>
 

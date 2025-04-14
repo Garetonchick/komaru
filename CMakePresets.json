@@ -1,0 +1,109 @@
+{
+  "version": 8,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "description": "All other configure presets inherit from base",
+      "generator": "Unix Makefiles"
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "inherits": "base",
+      "binaryDir": "build/debug",
+      "description": "Configure for Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "inherits": "base",
+      "binaryDir": "build/release",
+      "description": "Configure for Release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "relwithdebinfo",
+      "displayName": "RelWithDebInfo",
+      "inherits": "base",
+      "binaryDir": "build/relwithdebinfo",
+      "description": "Configure for Release with debug info",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "asan",
+      "displayName": "ASAN",
+      "inherits": "base",
+      "binaryDir": "build/asan",
+      "description": "Configure with Address sanitizer",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "ASAN"
+      }
+    },
+    {
+      "name": "ubsan",
+      "displayName": "UBSan",
+      "inherits": "base",
+      "binaryDir": "build/ubsan",
+      "description": "Configure with UB sanitizer",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "UBSan"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "base",
+      "configurePreset": "base",
+      "description": "All other build presets inherit from base",
+      "hidden": true
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "inherits": "base",
+      "configurePreset": "debug",
+      "description": "Build Debug"
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "inherits": "base",
+      "configurePreset": "release",
+      "description": "Build Release"
+    },
+    {
+      "name": "relwithdebinfo",
+      "displayName": "RelWithDebInfo",
+      "inherits": "base",
+      "configurePreset": "relwithdebinfo",
+      "description": "Build Release with debug info"
+    },
+    {
+      "name": "asan",
+      "displayName": "ASAN",
+      "inherits": "base",
+      "configurePreset": "asan",
+      "description": "Build with Address sanitizer"
+    },
+    {
+      "name": "ubsan",
+      "displayName": "UBSAN",
+      "inherits": "base",
+      "configurePreset": "ubsan",
+      "description": "Build with UB sanitizer"
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include <lang/cat_program.hpp>
-#include <translate/cpp/cpp_translator.hpp>
-#include <translate/exec_program.hpp>
+#include <komaru/lang/cat_program.hpp>
+#include <komaru/translate/cpp/cpp_translator.hpp>
+#include <komaru/translate/exec_program.hpp>
 
 #include <print>
 

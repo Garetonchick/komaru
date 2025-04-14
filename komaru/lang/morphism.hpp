@@ -1,7 +1,7 @@
 #pragma once
-#include <lang/type.hpp>
-#include <lang/value.hpp>
-#include <util/derive_variant.hpp>
+#include <komaru/lang/type.hpp>
+#include <komaru/lang/value.hpp>
+#include <komaru/util/derive_variant.hpp>
 
 #include <map>
 

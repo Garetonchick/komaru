@@ -1,7 +1,7 @@
 #pragma once
 
-#include <util/derive_variant.hpp>
-#include <lang/value.hpp>
+#include <komaru/util/derive_variant.hpp>
+#include <komaru/lang/value.hpp>
 
 namespace komaru::lang {
 

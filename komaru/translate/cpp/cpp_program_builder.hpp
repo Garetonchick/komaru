@@ -5,8 +5,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include <translate/program.hpp>
-#include <translate/cpp/cpp_function.hpp>
+#include <komaru/translate/program.hpp>
+#include <komaru/translate/cpp/cpp_function.hpp>
 
 namespace komaru::translate::cpp {
 

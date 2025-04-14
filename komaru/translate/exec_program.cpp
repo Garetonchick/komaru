@@ -1,7 +1,7 @@
 #include "exec_program.hpp"
 
-#include <util/filesystem.hpp>
-#include <util/cli.hpp>
+#include <komaru/util/filesystem.hpp>
+#include <komaru/util/cli.hpp>
 
 namespace komaru::translate {
 

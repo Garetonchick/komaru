@@ -1,7 +1,7 @@
 #include "node_editor.hpp"
 
-#include <editor/kimgui/imgui_window_guard.hpp>
-#include <editor/kimgui/imgui_child_guard.hpp>
+#include <komaru/editor/kimgui/imgui_window_guard.hpp>
+#include <komaru/editor/kimgui/imgui_child_guard.hpp>
 
 #include <algorithm>
 #include <print>

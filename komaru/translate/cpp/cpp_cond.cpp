@@ -1,6 +1,6 @@
 #include "cpp_cond.hpp"
 
-#include <util/string.hpp>
+#include <komaru/util/string.hpp>
 
 #include <set>
 
@@ -31,7 +31,7 @@ CppCond CppCond::operator&(const CppCond& o) const {
     for (size_t i = 0; i < formula_.size(); i += formula_[i] + 1) {
         int32_t n1 = formula_[i];
         for (size_t j = 0; j < o.formula_.size(); j += o.formula_[j] + 1) {
-            int32_t n2 = formula_[j];
+            int32_t n2 = o.formula_[j];
 
             cond.formula_.push_back(n1 + n2);
             cond.formula_.append_range(
@@ -104,8 +104,8 @@ bool CppCond::DoesImply(const CppCond& o) const {
         int32_t n1 = formula_[i];
         std::set<int32_t> st(formula_.begin() + i + 1, formula_.begin() + i + 1 + n1);
 
-        for (size_t j = 0; j < o.formula_.size(); j += o.formula_[j]) {
-            int32_t n2 = formula_[i];
+        for (size_t j = 0; j < o.formula_.size(); j += o.formula_[j] + 1) {
+            int32_t n2 = o.formula_[j];
 
             bool ok = true;
 

@@ -1,6 +1,6 @@
 #pragma once
-#include <lang/type.hpp>
-#include <util/non_copyable_non_movable.hpp>
+#include <komaru/lang/type.hpp>
+#include <komaru/util/non_copyable_non_movable.hpp>
 
 namespace komaru::lang {
 

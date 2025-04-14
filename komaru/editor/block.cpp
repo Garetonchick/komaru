@@ -1,7 +1,7 @@
 #include "block.hpp"
 
-#include <editor/kimgui/imgui_window_guard.hpp>
-#include <editor/gui_math.hpp>
+#include <komaru/editor/kimgui/imgui_window_guard.hpp>
+#include <komaru/editor/gui_math.hpp>
 
 #include <print>
 

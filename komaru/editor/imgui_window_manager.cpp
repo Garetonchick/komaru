@@ -1,6 +1,6 @@
 #include "imgui_window_manager.hpp"
 
-#include <editor/gui_math.hpp>
+#include <komaru/editor/gui_math.hpp>
 
 ImguiWindowManager::ImguiWindowManager(ImVec2 pos, ImVec2 size)
     : pos_(pos),

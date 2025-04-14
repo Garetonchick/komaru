@@ -1,6 +1,6 @@
 #include "grid.hpp"
 
-#include <editor/gui.hpp>
+#include <komaru/editor/gui.hpp>
 
 #include <print>
 

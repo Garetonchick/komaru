@@ -1,5 +1,5 @@
 #pragma once
-#include <translate/program.hpp>
+#include <komaru/translate/program.hpp>
 
 #include <string>
 

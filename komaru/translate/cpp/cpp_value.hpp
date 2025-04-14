@@ -1,5 +1,5 @@
 #pragma once
-#include <lang/value.hpp>
+#include <komaru/lang/value.hpp>
 
 namespace komaru::translate::cpp {
 

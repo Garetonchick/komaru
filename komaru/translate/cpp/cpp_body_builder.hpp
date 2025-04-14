@@ -1,7 +1,7 @@
 #pragma once
 
-#include <translate/cpp/cpp_cond.hpp>
-#include <translate/translator.hpp>
+#include <komaru/translate/cpp/cpp_cond.hpp>
+#include <komaru/translate/translator.hpp>
 
 #include <string>
 #include <list>

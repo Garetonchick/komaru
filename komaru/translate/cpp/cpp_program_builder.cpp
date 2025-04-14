@@ -1,6 +1,6 @@
 #include "cpp_program_builder.hpp"
 
-#include <translate/cpp/cpp_program.hpp>
+#include <komaru/translate/cpp/cpp_program.hpp>
 
 #include <format>
 

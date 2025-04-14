@@ -1,6 +1,6 @@
 #pragma once
-#include <lang/type.hpp>
-#include <util/derive_variant.hpp>
+#include <komaru/lang/type.hpp>
+#include <komaru/util/derive_variant.hpp>
 
 #include <cstdint>
 #include <variant>

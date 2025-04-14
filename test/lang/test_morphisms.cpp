@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include <lang/type.hpp>
-#include <lang/morphism.hpp>
-#include <util/std_extensions.hpp>
+#include <komaru/lang/type.hpp>
+#include <komaru/lang/morphism.hpp>
+#include <komaru/util/std_extensions.hpp>
 
 using namespace komaru::lang;
 using namespace komaru::util;

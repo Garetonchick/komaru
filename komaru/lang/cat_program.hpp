@@ -1,9 +1,9 @@
 #pragma once
-#include <lang/type.hpp>
-#include <lang/morphism.hpp>
-#include <lang/pattern.hpp>
-#include <lang/guard.hpp>
-#include <util/non_copyable.hpp>
+#include <komaru/lang/type.hpp>
+#include <komaru/lang/morphism.hpp>
+#include <komaru/lang/pattern.hpp>
+#include <komaru/lang/guard.hpp>
+#include <komaru/util/non_copyable.hpp>
 
 namespace komaru::lang {
 

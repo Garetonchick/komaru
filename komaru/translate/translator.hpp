@@ -1,6 +1,6 @@
 #pragma once
-#include <lang/cat_program.hpp>
-#include <translate/program.hpp>
+#include <komaru/lang/cat_program.hpp>
+#include <komaru/translate/program.hpp>
 
 #include <expected>
 

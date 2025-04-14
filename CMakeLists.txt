@@ -2,24 +2,11 @@ cmake_minimum_required(VERSION 3.27)
 
 project(Komaru)
 
-# Setup compilation database for clangd and clang-tidy
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+include(cmake/Utils.cmake)
+include(cmake/CXXSetup.cmake)
+include(cmake/CXXFlags.cmake)
 
-# Setup clang-tidy
-set(CMAKE_CXX_CLANG_TIDY clang-tidy)
-
-# Common compile options for C++
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-if (CMAKE_COMPILER_IS_GNUCC OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Werror -g -stdlib=libc++")
-else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")
-endif()
-
-include_directories(vendor)
+include_directories(.)
 include_directories(vendor/glfw/include)
 include_directories(vendor/glad/include)
 add_subdirectory(vendor)
@@ -44,7 +31,6 @@ file(GLOB UTIL_SOURCES komaru/util/*.cpp komaru/util/*.hpp)
 file(GLOB LANG_SOURCES komaru/lang/*.cpp komaru/lang/*.hpp)
 file(GLOB_RECURSE TRANSLATE_SOURCES komaru/translate/*.cpp komaru/translate/*.hpp)
 
-include_directories(komaru)
 add_library(util STATIC ${UTIL_SOURCES})
 add_library(lang STATIC ${LANG_SOURCES})
 add_library(translate STATIC ${TRANSLATE_SOURCES})
@@ -110,6 +96,8 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
+set(ENV{ASAN_OPTIONS} "alloc_dealloc_mismatch=0")
+
 add_executable(tests
   test/lang/test_types.cpp
   test/lang/test_morphisms.cpp
@@ -127,3 +115,4 @@ target_link_libraries(
 
 include(GoogleTest)
 gtest_discover_tests(tests)
+

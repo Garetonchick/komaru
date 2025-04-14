@@ -1,8 +1,8 @@
 #pragma once
-#include <editor/gui_element.hpp>
-#include <editor/top_down_camera.hpp>
-#include <editor/node.hpp>
-#include <editor/link.hpp>
+#include <komaru/editor/gui_element.hpp>
+#include <komaru/editor/top_down_camera.hpp>
+#include <komaru/editor/node.hpp>
+#include <komaru/editor/link.hpp>
 
 #include <string>
 #include <vector>

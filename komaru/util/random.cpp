@@ -1,6 +1,6 @@
 #include "random.hpp"
 
-#include <util/string.hpp>
+#include <komaru/util/string.hpp>
 
 #include <algorithm>
 

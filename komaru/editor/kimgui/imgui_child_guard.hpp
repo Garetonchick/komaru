@@ -1,5 +1,5 @@
 #pragma once
-#include <editor/gui.hpp>
+#include <komaru/editor/gui.hpp>
 
 namespace ImGui {
 

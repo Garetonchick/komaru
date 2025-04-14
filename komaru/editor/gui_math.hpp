@@ -1,5 +1,5 @@
 #pragma once
-#include <editor/gui.hpp>
+#include <komaru/editor/gui.hpp>
 
 static constexpr float kEps = 1e-5;
 

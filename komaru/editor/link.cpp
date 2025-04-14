@@ -1,6 +1,6 @@
 #include "link.hpp"
 
-#include <editor/kimgui/imgui_id_allocator.hpp>
+#include <komaru/editor/kimgui/imgui_id_allocator.hpp>
 
 namespace komaru::editor {
 

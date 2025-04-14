@@ -2,9 +2,9 @@
 #include <GLFW/glfw3.h>
 #include <print>
 
-#include <editor/gui.hpp>
-#include <editor/node_editor.hpp>
-#include <editor/os_window.hpp>
+#include <komaru/editor/gui.hpp>
+#include <komaru/editor/node_editor.hpp>
+#include <komaru/editor/os_window.hpp>
 
 #include <imnodes/imnodes.h>
 
