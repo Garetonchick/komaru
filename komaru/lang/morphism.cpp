@@ -34,6 +34,8 @@ static std::string_view TagToName(MorphismTag tag) {
             return "ERROR (Position)";
         case MorphismTag::Binded:
             return "ERROR (Binded)";
+        case MorphismTag::Name:
+            return "ERROR (Name)";
     }
 
     throw std::logic_error("unknown morphism tag");
@@ -87,9 +89,10 @@ const std::vector<MorphismPtr>& CompoundMorphism::GetMorphisms() const {
     return morphisms_;
 }
 
-ValueMorphism::ValueMorphism(std::string name, Value value)
+ValueMorphism::ValueMorphism(std::string name, Value value, bool strict)
     : name_(std::move(name)),
-      value_(std::move(value)) {
+      value_(std::move(value)),
+      strict_(strict) {
 }
 
 const std::string& ValueMorphism::GetName() const {
@@ -97,7 +100,7 @@ const std::string& ValueMorphism::GetName() const {
 }
 
 Type ValueMorphism::GetSource() const {
-    return Type::FromTag(TypeTag::Singleton);
+    return strict_ ? Type::Singleton() : Type::Auto();
 }
 
 Type ValueMorphism::GetTarget() const {
@@ -110,6 +113,10 @@ MorphismTag ValueMorphism::GetTag() const {
 
 const Value& ValueMorphism::GetValue() const {
     return value_;
+}
+
+MorphismPtr ValueMorphism::Unrestricted() const {
+    return Morphism::WithValue(name_, value_, false);
 }
 
 PositionMorphism::PositionMorphism(size_t pos)
@@ -170,6 +177,28 @@ const std::map<size_t, Value>& BindedMorphism::GetMapping() const {
     return mapping_;
 }
 
+NameMorphism::NameMorphism(std::string name, Type source, Type target)
+    : name_(std::move(name)),
+      source_(source),
+      target_(target) {
+}
+
+const std::string& NameMorphism::GetName() const {
+    return name_;
+}
+
+Type NameMorphism::GetSource() const {
+    return source_;
+}
+
+Type NameMorphism::GetTarget() const {
+    return target_;
+}
+
+MorphismTag NameMorphism::GetTag() const {
+    return MorphismTag::Name;
+}
+
 MorphismPtr Morphism::Builtin(MorphismTag tag, Type source, Type target) {
     return std::make_shared<Morphism>(PrivateDummy{}, BuiltinMorphism(tag, source, target));
 }
@@ -182,8 +211,8 @@ MorphismPtr Morphism::Compound(std::string name, std::vector<MorphismPtr> morphi
                                       CompoundMorphism(std::move(name), std::move(morphisms)));
 }
 
-MorphismPtr Morphism::WithValue(std::string name, Value value) {
-    return std::make_shared<Morphism>(PrivateDummy{}, ValueMorphism(name, value));
+MorphismPtr Morphism::WithValue(std::string name, Value value, bool strict) {
+    return std::make_shared<Morphism>(PrivateDummy{}, ValueMorphism(name, value, strict));
 }
 
 MorphismPtr Morphism::Position(size_t pos) {
@@ -192,6 +221,11 @@ MorphismPtr Morphism::Position(size_t pos) {
 
 MorphismPtr Morphism::NonePosition() {
     return Position(std::numeric_limits<size_t>::max());
+}
+
+MorphismPtr Morphism::WithName(std::string name, Type source, Type target) {
+    return std::make_shared<Morphism>(PrivateDummy{},
+                                      NameMorphism(std::move(name), source, target));
 }
 
 const std::string& Morphism::GetName() const {

@@ -4,6 +4,7 @@
 #include <komaru/translate/cpp/cpp_translator.hpp>
 #include <komaru/translate/exec_program.hpp>
 #include <test/translate/programs.hpp>
+#include <test/translate/common.hpp>
 
 #include <print>
 
@@ -37,6 +38,18 @@ TEST(CppTranslator, If101) {
     CheckRunCppProgram(MakeIf101Program(5), "75\n");
     CheckRunCppProgram(MakeIf101Program(4), "60\n");
     CheckRunCppProgram(MakeIf101Program(-2), "8\n");
+}
+
+/*
+ *                           !y      *15
+ *   x   y   <4 ┌────|False│────>Int────>Int
+ * S───>Int────>│Bool|     │ !y      +10
+ *              └────|True │────>Int────>Int
+ */
+TEST(CppTranslator, IfWithLocalVar) {
+    CheckRunCppProgram(MakeIfWithLocalVarProgram(5), "75\n");
+    CheckRunCppProgram(MakeIfWithLocalVarProgram(4), "60\n");
+    CheckRunCppProgram(MakeIfWithLocalVarProgram(-2), "8\n");
 }
 
 /*

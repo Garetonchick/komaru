@@ -22,6 +22,7 @@ enum class MorphismTag {
     DebugInt,
     Position,
     Binded,
+    Name,
 };
 
 class Morphism;
@@ -65,17 +66,19 @@ private:
 // Singleton -> *Some Type*
 class ValueMorphism {
 public:
-    ValueMorphism(std::string name, Value value);
+    ValueMorphism(std::string name, Value value, bool strict = true);
 
     const std::string& GetName() const;
     Type GetSource() const;
     Type GetTarget() const;
     MorphismTag GetTag() const;
     const Value& GetValue() const;
+    MorphismPtr Unrestricted() const;
 
 private:
     std::string name_;
     Value value_;
+    bool strict_;
 };
 
 class PositionMorphism {
@@ -112,9 +115,24 @@ private:
     std::map<size_t, Value> mapping_;
 };
 
+class NameMorphism {
+public:
+    NameMorphism(std::string name, Type source, Type target);
+
+    const std::string& GetName() const;
+    Type GetSource() const;
+    Type GetTarget() const;
+    MorphismTag GetTag() const;
+
+private:
+    std::string name_;
+    Type source_;
+    Type target_;
+};
+
 class Morphism : public util::DeriveVariant<Morphism> {
     using Variant = std::variant<BuiltinMorphism, CompoundMorphism, ValueMorphism, PositionMorphism,
-                                 BindedMorphism>;
+                                 BindedMorphism, NameMorphism>;
 
     friend MorphismPtr BindMorphism(MorphismPtr morphism, std::map<size_t, Value> mapping);
 
@@ -128,9 +146,10 @@ public:
 
     static MorphismPtr Builtin(MorphismTag tag, Type source, Type target);
     static MorphismPtr Compound(std::string name, std::vector<MorphismPtr> morphisms);
-    static MorphismPtr WithValue(std::string name, Value value);
+    static MorphismPtr WithValue(std::string name, Value value, bool strict = true);
     static MorphismPtr Position(size_t pos);
     static MorphismPtr NonePosition();
+    static MorphismPtr WithName(std::string name, Type source, Type target);
 
     // TODO: const std::string& vs std::string_view vs std::string vs ???
     const std::string& GetName() const;

@@ -23,10 +23,12 @@ enum class TypeTag {
     Tuple,
     List,
     Generic,
+    Function,
 };
 
 class AtomType;   // Int, Char, Bool, Float, ...
 class TupleType;  // (A, B, C)
+class FunctionType;
 // class ListType; // [T]
 // class GenericType; // T
 // class StructType; // struct MyStruct {i: Int, b: Bool}
@@ -92,12 +94,17 @@ static_assert(TypeLike<TupleType>);
 static_assert(TypeLike<GenericType>);
 
 class Type : public util::DeriveVariant<Type> {
-    using Variant = std::variant<AtomType, TupleType, GenericType>;
+    using Variant = std::variant<AtomType, TupleType, GenericType, FunctionType>;
+    friend class FunctionType;
 
 public:
+    Type(const Type& o) = default;
+    Type& operator=(const Type& o) = default;
+
     static Type FromTag(TypeTag tag);
     static Type Tuple(std::vector<Type> types);
     static Type TupleFromTags(std::vector<TypeTag> tags);
+    static Type Function(Type source, Type target);
 
     static Type Generic(std::string name);
     static Type Auto();
@@ -121,7 +128,7 @@ public:
     const Variant* GetVariantPointer() const;
 
 private:
-    explicit Type(Variant* type);
+    explicit Type(const Variant* type);
 
 private:
     const Variant* type_{nullptr};
@@ -131,10 +138,29 @@ private:
     static std::unordered_map<TypeTag, Variant*> kAtomTypesIndex;
     static std::unordered_map<TupleType::ID, Variant*> kTupleTypesIndex;
     static std::unordered_map<std::string, Variant*> kGenericTypesIndex;
+    static std::unordered_map<std::string, Variant*> kFunctionTypesIndex;
+};
+
+class FunctionType {
+public:
+    FunctionType(const Type::Variant* source, const Type::Variant* target);
+
+    std::string_view GetName() const;
+    TypeTag GetTag() const;
+    Type Source() const;
+    Type Target() const;
+
+    bool operator==(const FunctionType& o) const;
+
+private:
+    const Type::Variant* source_;
+    const Type::Variant* target_;
+    std::string name_;
 };
 
 Type operator*(Type t1, Type t2);
 
+static_assert(TypeLike<FunctionType>);
 static_assert(TypeLike<Type>);
 
 }  // namespace komaru::lang

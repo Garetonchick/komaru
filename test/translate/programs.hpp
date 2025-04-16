@@ -3,8 +3,6 @@
 
 namespace komaru::test {
 
-void CheckRunCppProgram(const lang::CatProgram& program, const std::string& expected_output);
-
 /*
  *   a      $0
  *   ┌─>Int──┐              +
@@ -25,6 +23,14 @@ lang::CatProgram MakeAPlusBProgram(int32_t a, int32_t b);
  *         └───────────────────┘
  */
 lang::CatProgram MakeIf101Program(int32_t x);
+
+/*
+ *                           !y      *15
+ *   x   y   <4 ┌────|False│────>Int────>Int
+ * S───>Int────>│Bool|     │ !y      +10
+ *              └────|True │────>Int────>Int
+ */
+lang::CatProgram MakeIfWithLocalVarProgram(int32_t x);
 
 /*
  *               +10

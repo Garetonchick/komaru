@@ -9,6 +9,7 @@ std::deque<Type::Variant> Type::kStorage;
 std::unordered_map<TypeTag, Type::Variant*> Type::kAtomTypesIndex;
 std::unordered_map<TupleType::ID, Type::Variant*> Type::kTupleTypesIndex;
 std::unordered_map<std::string, Type::Variant*> Type::kGenericTypesIndex;
+std::unordered_map<std::string, Type::Variant*> Type::kFunctionTypesIndex;
 
 AtomType::AtomType(TypeTag tag)
     : tag_(tag) {
@@ -132,7 +133,33 @@ bool GenericType::operator==(const GenericType& o) const {
     return name_ == o.name_;
 }
 
-Type::Type(Variant* type)
+FunctionType::FunctionType(const Type::Variant* source, const Type::Variant* target)
+    : source_(source),
+      target_(target) {
+    name_ = std::format("{} -> {}", Source().GetName(), Target().GetName());
+}
+
+std::string_view FunctionType::GetName() const {
+    return name_;
+}
+
+TypeTag FunctionType::GetTag() const {
+    return TypeTag::Function;
+}
+
+Type FunctionType::Source() const {
+    return Type(source_);
+}
+
+Type FunctionType::Target() const {
+    return Type(target_);
+}
+
+bool FunctionType::operator==(const FunctionType& o) const {
+    return Source() == o.Source() && Target() == o.Target();
+}
+
+Type::Type(const Variant* type)
     : type_(type) {
 }
 
@@ -176,6 +203,20 @@ Type Type::TupleFromTags(std::vector<TypeTag> tags) {
     }
 
     return Tuple(std::move(types));
+}
+
+Type Type::Function(Type source, Type target) {
+    std::string key = std::to_string(source.GetID()) + "_" + std::to_string(target.GetID());
+    auto it = kFunctionTypesIndex.find(key);
+    if (it != kFunctionTypesIndex.end()) {
+        return Type(it->second);
+    }
+
+    Variant* new_type = &kStorage.emplace_back(
+        FunctionType(source.GetVariantPointer(), target.GetVariantPointer()));
+    kFunctionTypesIndex.emplace(std::move(key), new_type);
+
+    return Type(new_type);
 }
 
 Type Type::Generic(std::string name) {

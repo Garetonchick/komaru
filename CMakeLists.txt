@@ -118,3 +118,18 @@ target_link_libraries(
 include(GoogleTest)
 gtest_discover_tests(tests)
 
+add_executable(playground playground/playground.cpp)
+add_library(test_programs
+            test/translate/programs.hpp
+            test/translate/programs.cpp
+            test/translate/program_utils.cpp
+            test/translate/program_utils.hpp
+)
+
+target_link_libraries(playground PRIVATE
+    test_programs
+    GTest::gtest
+    translate
+    lang
+    util
+)

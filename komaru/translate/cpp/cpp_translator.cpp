@@ -84,6 +84,8 @@ TranslationResult<std::unique_ptr<IProgram>> CppTranslator::Translate(
 }
 
 TranslationResult<CppFunction> CppTranslator::TranslateMorphismGraph(const CPNode* root) {
+    local_name2type_.clear();
+
     if (root->GetName().empty()) {
         return MakeTranslationError("root node must have a name");
     }
@@ -137,6 +139,9 @@ TranslationResult<CppFunction> CppTranslator::TranslateMorphismGraph(const CPNod
         if (first_visit && node != root) {
             std::string local_name = make_node_name(node);
             node2local_name_[node] = local_name;
+            if (!node->GetName().empty()) {
+                local_name2type_.emplace(local_name, node->GetType());
+            }
             AddStatementsForNode(body_builder, node_cond, node, local_name);
         } else if (!first_visit) {
             auto branch_conds = body_builder.AddBranches(node_cond, MakeBranchExprs(node));
@@ -411,6 +416,22 @@ std::string CppTranslator::MakeExprForMorphism(const lang::BindedMorphism& morph
     binded += ")";
 
     return MakeExprForMorphism(*morphism.GetUnderlyingMorphism(), binded);
+}
+
+std::string CppTranslator::MakeExprForMorphism(const lang::NameMorphism& morphism,
+                                               const std::string& arg_name) {
+    auto it = local_name2type_.find(morphism.GetName());
+    if (it == local_name2type_.end()) {
+        throw std::runtime_error(std::format("named morphism {} not found", morphism.GetName()));
+    }
+
+    auto type = it->second;
+    if (type.Holds<lang::FunctionType>()) {
+        return std::format("{}({})", morphism.GetName(), arg_name);
+    }
+
+    // TODO: Properly check types compatibility
+    return morphism.GetName();
 }
 
 std::string CppTranslator::MakeStatement(lang::Type type, const std::string& var_name,

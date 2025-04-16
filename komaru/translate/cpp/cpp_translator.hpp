@@ -43,6 +43,8 @@ private:
                                     const std::string& arg_name);
     std::string MakeExprForMorphism(const lang::BindedMorphism& morphism,
                                     const std::string& arg_name);
+    std::string MakeExprForMorphism(const lang::NameMorphism& morphism,
+                                    const std::string& arg_name);
 
     std::vector<std::string> MakeBranchExprs(const CPNode* node);
     std::string MakeStatement(lang::Type type, const std::string& var_name,
@@ -61,6 +63,7 @@ private:
     std::unordered_map<const CPNode*, size_t> node2views_;
     std::unordered_map<const CPNode*, std::string> node2local_name_;
     std::unordered_map<const CPOutPin*, CppCond> pin2cond_;
+    std::unordered_map<std::string, lang::Type> local_name2type_;
 
     static const std::unordered_map<std::string, std::string> kNameConv;
 };

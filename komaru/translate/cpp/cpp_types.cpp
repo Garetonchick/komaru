@@ -70,6 +70,10 @@ static CppType TranslateType(const lang::GenericType& type) {
     return CppType(name, {name});
 }
 
+static CppType TranslateType(const lang::FunctionType&) {
+    throw std::runtime_error("TODO: add function type support");
+}
+
 CppType ToCppType(lang::Type type) {
     return type.Visit([](const auto& type) {
         return TranslateType(type);

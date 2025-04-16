@@ -1,29 +1,12 @@
 #include "programs.hpp"
 
-#include <gtest/gtest.h>
-
 #include <komaru/translate/cpp/cpp_translator.hpp>
 #include <komaru/translate/exec_program.hpp>
-#include <test/translate/common.hpp>
+#include <test/translate/program_utils.hpp>
 
 using namespace komaru::lang;
 
 namespace komaru::test {
-
-void CheckRunCppProgram(const lang::CatProgram& program, const std::string& expected_output) {
-    std::unique_ptr<translate::ITranslator> translator =
-        std::make_unique<translate::cpp::CppTranslator>();
-    auto maybe_program = translator->Translate(program);
-
-    ASSERT_TRUE(maybe_program.has_value());
-
-    auto cpp_program = std::move(maybe_program.value());
-
-    auto exec_res = translate::ExecProgram(*cpp_program);
-
-    ASSERT_TRUE(exec_res.Success());
-    ASSERT_EQ(exec_res.Output(), expected_output);
-}
 
 lang::CatProgram MakeAPlusBProgram(int32_t a, int32_t b) {
     auto nine = MakeAtomValueMorphism(a);
@@ -76,6 +59,37 @@ lang::CatProgram MakeIf101Program(int32_t x) {
         .Connect(val_pin, branch1_node, pos0)
         .Connect(false_pin, branch0_node, none_pos)
         .Connect(true_pin, branch1_node, none_pos)
+        .Connect(branch0_pin, res0_node, mul15)
+        .Connect(branch1_pin, res1_node, add10);
+
+    return builder.Extract();
+}
+
+lang::CatProgram MakeIfWithLocalVarProgram(int32_t x) {
+    auto val = MakeAtomValueMorphism(x);
+    auto less4 = MakeRBindIntLess(4);
+    auto mul15 = MakeRBindIntMul(15);
+    auto add10 = MakeRBindIntPlus(10);
+    auto y_var =
+        Morphism::WithName("y", Type::Auto(), Type::Int());  // Cheat a bit with the source type
+
+    auto builder = CatProgramBuilder();
+
+    auto [start_node, start_pin] = builder.NewNodeWithPin(Type::Singleton(), "main");
+    auto [val_node, val_pin] = builder.NewNodeWithPin(Type::Int(), "y");
+    auto& cond_node = builder.NewNode(Type::Bool());
+    auto [branch0_node, branch0_pin] = builder.NewNodeWithPin(Type::Int());
+    auto [branch1_node, branch1_pin] = builder.NewNodeWithPin(Type::Int());
+    auto& res0_node = builder.NewNode(Type::Int());
+    auto& res1_node = builder.NewNode(Type::Int());
+
+    auto& false_pin = cond_node.AddOutPin(Pattern::FromValue(Value::Atom(false)));
+    auto& true_pin = cond_node.AddOutPin(Pattern::FromValue(Value::Atom(true)));
+
+    builder.Connect(start_pin, val_node, val)
+        .Connect(val_pin, cond_node, less4)
+        .Connect(false_pin, branch0_node, y_var)
+        .Connect(true_pin, branch1_node, y_var)
         .Connect(branch0_pin, res0_node, mul15)
         .Connect(branch1_pin, res1_node, add10);
 
