@@ -98,12 +98,14 @@ enable_testing()
 
 set(ENV{ASAN_OPTIONS} "alloc_dealloc_mismatch=0")
 
-add_executable(tests
-  test/lang/test_types.cpp
-  test/lang/test_morphisms.cpp
-  test/lang/test_values.cpp
-  test/translate/test_cpp_translator.cpp
+file(GLOB TEST_SOURCES
+    test/lang/*.cpp
+    test/lang/*.hpp
+    test/translate/*.cpp
+    test/translate/*.hpp
 )
+
+add_executable(tests ${TEST_SOURCES})
 
 target_link_libraries(
   tests

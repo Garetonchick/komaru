@@ -211,7 +211,7 @@ void CppTranslator::AddStatementsForNode(CppBodyBuilder& body_builder, const Cpp
     for (const auto* arrow : node->IncomingArrows()) {
         std::string expr = MakeExprForArrow(arrow);
         auto statement = MakeStatement(node->GetType(), local_name, expr);
-        body_builder.AddStatement(node_cond, std::move(statement));
+        body_builder.AddStatement(pin2cond_[&arrow->SourcePin()], std::move(statement));
 
         if (node->OutPins().empty()) {
             body_builder.AddReturn(node_cond, std::format("return {}", local_name));
