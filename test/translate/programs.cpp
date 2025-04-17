@@ -216,4 +216,48 @@ int32_t CalcMegaIfResult(int32_t x) {
     return x10 * x15;
 }
 
+lang::CatProgram MakeFibProgram(int32_t x) {
+    auto val = MakeAtomValueMorphism(x);
+    auto fib = Morphism::WithName("fib", Type::Int(), Type::Int());
+    auto less2 = MakeRBindIntLess(2);
+    auto id = Morphism::Builtin(MorphismTag::Id, Type::Auto(), Type::Auto());
+    auto minus1 = MakeRBindIntMinus(1);
+    auto pos0 = Morphism::Position(0);
+    auto pos1 = Morphism::Position(1);
+    auto plus = MakeIntPlus();
+
+    auto builder = CatProgramBuilder();
+
+    auto& fib_node = builder.NewNode(Type::Int(), "fib");
+    auto& x1_node = builder.NewNode(Type::Int());
+    auto [x2_node, x2_pin] = builder.NewNodeWithPin(Type::Int());
+    auto [x3_node, x3_pin] = builder.NewNodeWithPin(Type::Int());
+    auto [x4_node, x4_pin] = builder.NewNodeWithPin(Type::Int());
+    auto [x5_node, x5_pin] = builder.NewNodeWithPin(Type::Int());
+    auto [x6_node, x6_pin] = builder.NewNodeWithPin(Type::Int().Pow(2));
+    auto& x7_node = builder.NewNode(Type::Int());
+
+    auto& c1_pin = fib_node.AddOutPin(Guard(less2));
+    auto& c2_pin = fib_node.AddOutPin(Pattern::Any());
+
+    // Connect fib function
+    builder.Connect(c1_pin, x1_node, id)
+        .Connect(c2_pin, x2_node, minus1)
+        .Connect(x2_pin, x3_node, minus1)
+        .Connect(x2_pin, x4_node, fib)
+        .Connect(x3_pin, x5_node, fib)
+        .Connect(x4_pin, x6_node, pos1)
+        .Connect(x5_pin, x6_node, pos0)
+        .Connect(x6_pin, x7_node, plus);
+
+    auto [main_node, main_pin] = builder.NewNodeWithPin(Type::Singleton(), "main");
+    auto [val_node, val_pin] = builder.NewNodeWithPin(Type::Int());
+    auto& final_node = builder.NewNode(Type::Int());
+
+    // Connect main function
+    builder.Connect(main_pin, val_node, val).Connect(val_pin, final_node, fib);
+
+    return builder.Extract();
+}
+
 }  // namespace komaru::test

@@ -34,13 +34,26 @@ lang::CatProgram MakeIfWithLocalVarProgram(int32_t x);
 
 /*
  *               +10
- *   x  ┌───|<4|────>Int
- * S───>│Int|  | *15
- *      └───|* |────>Int
+ *   x  ┌───|<4│────>Int
+ * S───>│Int|  │ *15
+ *      └───|* │────>Int
  */
 lang::CatProgram MakeGuards101Program(int32_t x);
 
 lang::CatProgram MakeMegaIfProgram(int32_t x);
 int32_t CalcMegaIfResult(int32_t x);
+
+/* fib:
+ *          id
+ * ┌───|<2│────>Int
+ * │Int|  │ -1      -1       fib      $0
+ * └───|* │────>Int┬────>Int─────>Int────┐             +
+ *                 │ fib         $1      ├>|Int x Int|───>Int
+ *                 └────>Int─────────────┘
+ * main:
+ *   x     fib
+ * S───>Int───>Int
+ */
+lang::CatProgram MakeFibProgram(int32_t x);
 
 }  // namespace komaru::test

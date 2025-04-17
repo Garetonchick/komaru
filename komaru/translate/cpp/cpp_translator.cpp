@@ -47,17 +47,13 @@ TranslationResult<std::unique_ptr<IProgram>> CppTranslator::Translate(
         return std::unexpected(maybe_err.value());
     }
 
-    std::unordered_set<const CPNode*> processed_roots;
+    auto maybe_roots = DiscoverFunctions(cat_prog);
+    if (!maybe_roots.has_value()) {
+        return std::unexpected(maybe_roots.error());
+    }
+    auto roots = maybe_roots.value();
 
-    for (const auto& node : cat_prog.GetNodes()) {
-        auto root = GetRoot(&node);
-
-        auto [_, inserted] = processed_roots.insert(root);
-
-        if (!inserted) {
-            continue;
-        }
-
+    for (const auto* root : roots) {
         auto func_or_err = TranslateMorphismGraph(root);
 
         if (!func_or_err.has_value()) {
@@ -86,10 +82,6 @@ TranslationResult<std::unique_ptr<IProgram>> CppTranslator::Translate(
 TranslationResult<CppFunction> CppTranslator::TranslateMorphismGraph(const CPNode* root) {
     local_name2type_.clear();
 
-    if (root->GetName().empty()) {
-        return MakeTranslationError("root node must have a name");
-    }
-
     auto make_node_name = [local_var_id = size_t(0)](const CPNode* node) mutable {
         if (!node->GetName().empty()) {
             return node->GetName();
@@ -97,7 +89,6 @@ TranslationResult<CppFunction> CppTranslator::TranslateMorphismGraph(const CPNod
         return std::format("var__{}", local_var_id++);
     };
 
-    std::optional<lang::Type> ret_type;
     CppBodyBuilder body_builder;
     std::queue<const CPNode*> normal_q;
     std::queue<const CPNode*> branch_q;
@@ -115,18 +106,6 @@ TranslationResult<CppFunction> CppTranslator::TranslateMorphismGraph(const CPNod
             node = branch_q.front();
             branch_q.pop();
             first_visit = false;
-        }
-
-        if (node->OutPins().empty()) {
-            if (ret_type.has_value()) {
-                if (node->GetType() != *ret_type) {
-                    return MakeTranslationError(
-                        std::format("found 2 conflicting return types {} and {}",
-                                    ret_type->GetName(), node->GetType().GetName()));
-                }
-            } else {
-                ret_type = node->GetType();
-            }
         }
 
         bool branch_node = node->OutPins().size() > 1;
@@ -182,12 +161,11 @@ TranslationResult<CppFunction> CppTranslator::TranslateMorphismGraph(const CPNod
 
     std::string body = std::move(maybe_body.value());
 
-    if (!ret_type.has_value()) {
-        return MakeTranslationError("return type not found");
-    }
+    auto ret_type =
+        global_name2type_.find(root->GetName())->second.GetVariant<lang::FunctionType>().Target();
 
     auto func_builder = CppFunctionBuilder()
-                            .SetReturnType(ret_type.value())
+                            .SetReturnType(ret_type)
                             .AddInputParameter(root->GetType(), "cat__arg")
                             .SetBody(body);
 
@@ -420,12 +398,21 @@ std::string CppTranslator::MakeExprForMorphism(const lang::BindedMorphism& morph
 
 std::string CppTranslator::MakeExprForMorphism(const lang::NameMorphism& morphism,
                                                const std::string& arg_name) {
-    auto it = local_name2type_.find(morphism.GetName());
-    if (it == local_name2type_.end()) {
-        throw std::runtime_error(std::format("named morphism {} not found", morphism.GetName()));
-    }
+    lang::Type type = std::invoke([&, this]() {
+        {
+            auto it = local_name2type_.find(morphism.GetName());
+            if (it != local_name2type_.end()) {
+                return it->second;
+            }
+        }
+        auto it = global_name2type_.find(morphism.GetName());
+        if (it != global_name2type_.end()) {
+            return it->second;
+        }
 
-    auto type = it->second;
+        throw std::runtime_error(std::format("named morphism {} not found", morphism.GetName()));
+    });
+
     if (type.Holds<lang::FunctionType>()) {
         return std::format("{}({})", morphism.GetName(), arg_name);
     }
@@ -506,6 +493,41 @@ std::optional<const CppTranslator::CPNode*> CppTranslator::GetRootOrCalcIt(const
 
 const CppTranslator::CPNode* CppTranslator::GetRoot(const CPNode* node) {
     return node2root_.at(node);
+}
+
+TranslationResult<std::vector<const CppTranslator::CPNode*>> CppTranslator::DiscoverFunctions(
+    const lang::CatProgram& cat_prog) {
+    std::unordered_map<const CPNode*, lang::Type> root2ret_type;
+
+    for (const auto& node : cat_prog.GetNodes()) {
+        if (!node.OutPins().empty()) {
+            continue;
+        }
+
+        auto root = GetRoot(&node);
+
+        auto [it, inserted] = root2ret_type.emplace(root, node.GetType());
+
+        if (inserted) {
+            continue;
+        }
+
+        if (it->second != node.GetType()) {
+            return MakeTranslationError(std::format("found 2 conflicting return types {} and {}",
+                                                    it->second.GetName(),
+                                                    node.GetType().GetName()));
+        }
+    }
+
+    for (const auto& [node, ret_type] : root2ret_type) {
+        if (node->GetName().empty()) {
+            return MakeTranslationError("found root node with no name");
+        }
+
+        global_name2type_.emplace(node->GetName(), lang::Type::Function(node->GetType(), ret_type));
+    }
+
+    return root2ret_type | std::views::keys | std::ranges::to<std::vector<const CPNode*>>();
 }
 
 void CppTranslator::Reset() {

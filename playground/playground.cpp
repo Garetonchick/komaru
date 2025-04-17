@@ -4,7 +4,7 @@
 #include <test/translate/programs.hpp>
 
 int main() {
-    auto cat_program = komaru::test::MakeIfWithLocalVarProgram(5);
+    auto cat_program = komaru::test::MakeFibProgram(5);
 
     komaru::translate::cpp::CppTranslator translator;
 

@@ -55,6 +55,9 @@ private:
     std::optional<const CPNode*> GetRootOrCalcIt(const CPNode* node);
     const CPNode* GetRoot(const CPNode* node);
 
+    TranslationResult<std::vector<const CPNode*>> DiscoverFunctions(
+        const lang::CatProgram& cat_prog);
+
     void Reset();
 
 private:
@@ -64,6 +67,7 @@ private:
     std::unordered_map<const CPNode*, std::string> node2local_name_;
     std::unordered_map<const CPOutPin*, CppCond> pin2cond_;
     std::unordered_map<std::string, lang::Type> local_name2type_;
+    std::unordered_map<std::string, lang::Type> global_name2type_;
 
     static const std::unordered_map<std::string, std::string> kNameConv;
 };
