@@ -119,7 +119,8 @@ include(GoogleTest)
 gtest_discover_tests(tests)
 
 add_executable(playground playground/playground.cpp)
-add_library(test_programs
+add_library(playlib
+            catlib/cpp/catlib.hpp
             test/translate/programs.hpp
             test/translate/programs.cpp
             test/translate/program_utils.cpp
@@ -127,8 +128,7 @@ add_library(test_programs
 )
 
 target_link_libraries(playground PRIVATE
-    test_programs
-    GTest::gtest
+    playlib
     translate
     lang
     util

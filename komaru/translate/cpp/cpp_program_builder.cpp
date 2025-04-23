@@ -14,6 +14,10 @@ void CppProgramBuilder::AddFunction(CppFunction func) {
     funcs_.emplace_back(std::move(func));
 }
 
+void CppProgramBuilder::AddIncludeDir(const std::string& path) {
+    include_dirs_.push_back(path);
+}
+
 std::unique_ptr<IProgram> CppProgramBuilder::ExtractProgram() {
     std::string source_code;
 
@@ -35,9 +39,11 @@ std::unique_ptr<IProgram> CppProgramBuilder::ExtractProgram() {
         source_code += "\n\n";
     }
 
+    auto include_dirs = std::move(include_dirs_);
+
     Reset();
 
-    return std::make_unique<CppProgram>(std::move(source_code));
+    return std::make_unique<CppProgram>(std::move(source_code), std::move(include_dirs));
 }
 
 void CppProgramBuilder::Reset() {

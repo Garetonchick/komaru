@@ -32,6 +32,6 @@ private:
     int exec_code_{0};
 };
 
-ProgramExecResult ExecProgram(const IProgram& program);
+ProgramExecResult ExecProgram(const IProgram& program, const std::string& sin = "");
 
 }  // namespace komaru::translate

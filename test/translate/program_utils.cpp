@@ -30,7 +30,8 @@ lang::MorphismPtr MakeIntGreater() {
 }
 
 lang::MorphismPtr MakeRBindIntBinaryOp(lang::MorphismTag tag, int32_t x, lang::Type target) {
-    return lang::BindMorphism(MakeIntBinaryOp(tag, target), {{1, lang::Value::Atom(x)}});
+    return lang::BindMorphism(MakeIntBinaryOp(tag, target),
+                              {{1, lang::Morphism::WithValue("", lang::Value::Atom(x))}});
 }
 
 lang::MorphismPtr MakeRBindIntPlus(int32_t x) {

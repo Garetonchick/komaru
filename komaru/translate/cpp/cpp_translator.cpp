@@ -11,14 +11,22 @@
 #include <cassert>
 #include <algorithm>
 #include <format>
+#include <print>
 
 namespace komaru::translate::cpp {
 
 const std::unordered_map<std::string, std::string> CppTranslator::kNameConv = {
-    {"+", "Plus"},
-    {"-", "Minus"},
-    {"*", "Mul"},
+    {"read", "Read"},
+    {"print", "Print"},
+    {"liftM2", "LiftM2"},
+    {">>=", "Bind"},
 };
+
+const std::unordered_set<std::string> CppTranslator::kDeductionSet = {"read"};
+
+CppTranslator::CppTranslator(const std::filesystem::path& catlib_dir)
+    : catlib_dir_(std::filesystem::canonical(catlib_dir)) {
+}
 
 TranslationResult<std::unique_ptr<IProgram>> CppTranslator::Translate(
     const lang::CatProgram& cat_prog) {
@@ -47,6 +55,8 @@ TranslationResult<std::unique_ptr<IProgram>> CppTranslator::Translate(
         return std::unexpected(maybe_err.value());
     }
 
+    LoadCatlib();
+
     auto maybe_roots = DiscoverFunctions(cat_prog);
     if (!maybe_roots.has_value()) {
         return std::unexpected(maybe_roots.error());
@@ -63,20 +73,49 @@ TranslationResult<std::unique_ptr<IProgram>> CppTranslator::Translate(
         builder_.AddFunction(std::move(func_or_err.value()));
     }
 
-    auto main_cpp_func = CppFunctionBuilder()
-                             .SetName("main")
-                             .SetReturnType(lang::Type::Int())
-                             .SetBody("std::cout << cat__main({}) << std::endl;")
-                             .Extract();
+    auto main_cpp_func_builder = CppFunctionBuilder()
+                                     .SetName("main")
+                                     .SetReturnType(lang::Type::Int())
+                                     .SetBody("std::cout << cat__main({}) << std::endl;");
 
-    builder_.AddFunction(std::move(main_cpp_func));
+    auto cat_main_it = global_name2type_.find("main");
+
+    if (cat_main_it != global_name2type_.end() &&
+        cat_main_it->second.GetVariant<lang::FunctionType>().Target() ==
+            lang::Type::Parameterized("IO", {lang::Type::Singleton()})) {
+        main_cpp_func_builder.SetBody("cat__main({}).Run();");
+    }
+
+    builder_.AddFunction(std::move(main_cpp_func_builder).Extract());
 
     builder_.AddHeader("cstdint");
     builder_.AddHeader("tuple");
     builder_.AddHeader("variant");
     builder_.AddHeader("iostream");
+    builder_.AddHeader("catlib.hpp");
+
+    builder_.AddIncludeDir(catlib_dir_);
 
     return builder_.ExtractProgram();
+}
+
+void CppTranslator::LoadCatlib() {
+    auto at = lang::Type::Generic("a");
+    auto bt = lang::Type::Generic("b");
+    auto ct = lang::Type::Generic("c");
+    auto io_a = lang::Type::Parameterized("IO", {at});
+    auto io_b = lang::Type::Parameterized("IO", {bt});
+    auto io_c = lang::Type::Parameterized("IO", {ct});
+    auto io_s = lang::Type::Parameterized("IO", {lang::Type::Singleton()});
+
+    global_name2type_.emplace(
+        "read", lang::Type::Function(lang::Type::Singleton(),
+                                     lang::Type::Parameterized("IO", {lang::Type::Auto()})));
+    global_name2type_.emplace(
+        "liftM2", lang::Type::Function(lang::Type::Function(at * bt, ct) * io_a * io_b, io_c));
+    global_name2type_.emplace(">>=",
+                              lang::Type::Function(io_a * lang::Type::Function(at, io_b), io_b));
+    global_name2type_.emplace("print", lang::Type::Function(lang::Type::Auto(), io_s));
 }
 
 TranslationResult<CppFunction> CppTranslator::TranslateMorphismGraph(const CPNode* root) {
@@ -181,7 +220,7 @@ TranslationResult<CppFunction> CppTranslator::TranslateMorphismGraph(const CPNod
 void CppTranslator::AddStatementsForNode(CppBodyBuilder& body_builder, const CppCond& node_cond,
                                          const CPNode* node, const std::string& local_name) {
     if (IsIntersectionNode(node)) {
-        std::string expr = MakeExprForIntersectionNode(node);
+        std::string expr = MakeExprForIntersectionNode(node).AsWholeExpr();
         auto statement = MakeStatement(node->GetType(), local_name, expr);
         body_builder.AddStatement(node_cond, std::move(statement));
 
@@ -192,7 +231,7 @@ void CppTranslator::AddStatementsForNode(CppBodyBuilder& body_builder, const Cpp
     }
 
     for (const auto* arrow : node->IncomingArrows()) {
-        std::string expr = MakeExprForArrow(arrow);
+        std::string expr = MakeExprForArrow(arrow).AsWholeExpr();
         auto statement = MakeStatement(node->GetType(), local_name, expr);
         body_builder.AddStatement(pin2cond_[&arrow->SourcePin()], std::move(statement));
 
@@ -209,8 +248,7 @@ bool CppTranslator::IsIntersectionNode(const CPNode* node) {
     return node->IncomingArrows().front()->GetMorphism()->Holds<lang::PositionMorphism>();
 }
 
-std::string CppTranslator::MakeExprForIntersectionNode(const CPNode* node) {
-    std::string expr = "std::make_tuple(";
+CppExpr CppTranslator::MakeExprForIntersectionNode(const CPNode* node) {
     std::vector<std::pair<size_t, const CPNode*>> order;
 
     for (const auto* arrow : node->IncomingArrows()) {
@@ -223,14 +261,17 @@ std::string CppTranslator::MakeExprForIntersectionNode(const CPNode* node) {
     }
 
     if (order.empty()) {
-        return "std::monostate{}";  // use this instead of an empty tuple
+        return CppExpr("std::monostate{}", 1);  // use this instead of an empty tuple
     }
 
     if (order.size() == 1) {
-        return node2local_name_[order.front().second];
+        return CppExpr(node2local_name_[order.front().second],
+                       order.front().second->GetType().NumComponents());
     }
 
     std::ranges::sort(order);
+
+    std::vector<std::string> exprs;
 
     for (const auto [i, p] : util::Enumerate(order)) {
         const auto [pos, node] = p;
@@ -240,21 +281,17 @@ std::string CppTranslator::MakeExprForIntersectionNode(const CPNode* node) {
             throw std::runtime_error("intersection node has invalid incoming position morphisms");
         }
 
-        expr += node2local_name_[node];
-
-        if (i + 1 != order.size()) {
-            expr += ", ";
-        }
+        exprs.push_back(node2local_name_[node]);
     }
 
-    expr += ")";
-
-    return expr;
+    return CppExpr(exprs);
 }
 
-std::string CppTranslator::MakeExprForArrow(const CPArrow* arrow) {
+CppExpr CppTranslator::MakeExprForArrow(const CPArrow* arrow) {
     return MakeExprForMorphism(*arrow->GetMorphism(),
-                               node2local_name_[&arrow->SourcePin().GetNode()]);
+                               CppExpr(node2local_name_[&arrow->SourcePin().GetNode()],
+                                       arrow->SourcePin().GetNode().GetType().NumComponents()),
+                               arrow->TargetNode().GetType());
 }
 
 std::vector<std::string> CppTranslator::MakeBranchExprs(const CPNode* node) {
@@ -264,82 +301,113 @@ std::vector<std::string> CppTranslator::MakeBranchExprs(const CPNode* node) {
     std::string local_name = node2local_name_[node];
 
     for (const auto& out_pin : node->OutPins()) {
-        exprs.emplace_back(MakeExprForBrancher(out_pin.GetBrancher(), local_name));
+        exprs.emplace_back(MakeExprForBrancher(out_pin.GetBrancher(),
+                                               CppExpr(local_name, node->GetType().NumComponents()))
+                               .AsWholeExpr());
     }
 
     return exprs;
 }
 
-std::string CppTranslator::MakeExprForBrancher(const CPOutPin::Brancher& brancher,
-                                               const std::string& arg_name) {
+CppExpr CppTranslator::MakeExprForBrancher(const CPOutPin::Brancher& brancher,
+                                           const CppExpr& in_expr) {
     return std::visit(util::Overloaded{[&, this](const lang::Guard& guard) {
-                                           return MakeExprForGuard(guard, arg_name);
+                                           return MakeExprForGuard(guard, in_expr);
                                        },
                                        [&, this](const lang::Pattern& pattern) {
-                                           return MakeExprForPattern(pattern, arg_name);
+                                           return MakeExprForPattern(pattern, in_expr);
                                        }},
                       brancher);
 }
 
-std::string CppTranslator::MakeExprForGuard(const lang::Guard& guard, const std::string& arg_name) {
-    return MakeExprForMorphism(guard.GetMorphism(), arg_name);
+CppExpr CppTranslator::MakeExprForGuard(const lang::Guard& guard, const CppExpr& in_expr) {
+    return MakeExprForMorphism(guard.GetMorphism(), in_expr, lang::Type::Bool());
 }
 
 // TODO: Support name binding for patterns
-std::string CppTranslator::MakeExprForPattern(const lang::Pattern& pattern,
-                                              const std::string& arg_name) {
-    return pattern.Visit([this, &arg_name](const auto& pattern_variant) {
-        return MakeExprForPattern(pattern_variant, arg_name);
+CppExpr CppTranslator::MakeExprForPattern(const lang::Pattern& pattern, const CppExpr& in_expr) {
+    return pattern.Visit([this, &in_expr](const auto& pattern_variant) {
+        return MakeExprForPattern(pattern_variant, in_expr);
     });
 }
 
-std::string CppTranslator::MakeExprForPattern(const lang::AnyPattern&, const std::string&) {
-    return "true";
+CppExpr CppTranslator::MakeExprForPattern(const lang::AnyPattern&, const CppExpr&) {
+    return CppExpr("true", 1);
 }
 
-std::string CppTranslator::MakeExprForPattern(const lang::ValuePattern& pattern,
-                                              const std::string& arg_name) {
+CppExpr CppTranslator::MakeExprForPattern(const lang::ValuePattern& pattern,
+                                          const CppExpr& in_expr) {
     auto cpp_value = ToCppValue(pattern.GetValue());
-    return std::format("{} == {}", cpp_value, arg_name);
+    return CppExpr(std::format("{} == {}", cpp_value, in_expr.AsWholeExpr()), 1);
 }
 
-std::string CppTranslator::MakeExprForPattern(const lang::TuplePattern& pattern,
-                                              const std::string& arg_name) {
+CppExpr CppTranslator::MakeExprForPattern(const lang::TuplePattern& pattern,
+                                          const CppExpr& in_expr) {
     const auto& sub_patterns = pattern.GetPatterns();
 
     if (sub_patterns.empty()) {
-        return std::format("{} == std::monostate{{}}", arg_name);
+        return CppExpr(std::format("{} == std::monostate{{}}", in_expr.AsWholeExpr()), 1);
+    }
+    std::string expr;
+
+    for (const auto& [i, sub_pattern] : util::Enumerate(pattern.GetPatterns())) {
+        std::string sub_arg_name = std::format("std::get<{}>({})", i, in_expr.AsWholeExpr());
+        expr += MakeExprForPattern(sub_pattern, CppExpr(sub_arg_name, 1)).AsWholeExpr();
+
+        if (i + 1 != pattern.GetPatterns().size()) {
+            expr += " && ";
+        }
     }
 
-    return pattern.GetPatterns() |
-           std::views::transform([this, i = size_t(0), &arg_name](const auto& sub_pattern) mutable {
-               std::string sub_arg_name = std::format("std::get<{}>({})", i, arg_name);
-               ++i;
-               return std::format("({})", MakeExprForPattern(sub_pattern, sub_arg_name));
-           }) |
-           util::JoinStrings("&&") | std::ranges::to<std::string>();
+    return CppExpr(expr, 1);
 }
 
-std::string CppTranslator::MakeExprForMorphism(const lang::Morphism& morphism,
-                                               const std::string& arg_name) {
+CppExpr CppTranslator::MakeExprForMorphism(const lang::Morphism& morphism, const CppExpr& in_expr,
+                                           lang::Type out_type) {
     return morphism.Visit(
-        util::Overloaded{[](const lang::PositionMorphism&) -> std::string {
+        util::Overloaded{[](const lang::PositionMorphism&) -> CppExpr {
                              throw std::runtime_error(
                                  "position morphism can't be converted to an expression directly");
                          },
-                         [this, &arg_name](const auto& inner_morphism) {
-                             return MakeExprForMorphism(inner_morphism, arg_name);
+                         [this, &in_expr, &out_type](const auto& inner_morphism) {
+                             return MakeExprForMorphism(inner_morphism, in_expr, out_type);
                          }});
 }
 
-std::string CppTranslator::MakeExprForMorphism(const lang::CompoundMorphism&, const std::string&) {
+CppExpr CppTranslator::MakeExprForMorphism(const lang::CompoundMorphism&, const CppExpr&,
+                                           lang::Type) {
     throw std::runtime_error("compound morphisms are unsupported for now");
 }
 
-std::string CppTranslator::MakeExprForMorphism(const lang::BuiltinMorphism& morphism,
-                                               const std::string& arg_name) {
-    auto make_binary_expr = [&arg_name](const std::string& op) {
-        return std::format("std::get<0>({}) {} std::get<1>({})", arg_name, op, arg_name);
+CppExpr CppTranslator::MakeExprForMorphism(const lang::BuiltinMorphism& morphism,
+                                           const CppExpr& in_expr, lang::Type) {
+    if (in_expr.NumSubexprs() == 0) {
+        switch (morphism.GetTag()) {
+            case lang::MorphismTag::Plus:
+                return CppExpr({"Plus"});
+            case lang::MorphismTag::Minus:
+                return CppExpr({"Minus"});
+            case lang::MorphismTag::Multiply:
+                return CppExpr({"Multiply"});
+            case lang::MorphismTag::Less:
+                return CppExpr({"Less"});
+            case lang::MorphismTag::LessEq:
+                return CppExpr({"LessEq"});
+            case lang::MorphismTag::Greater:
+                return CppExpr({"Greater"});
+            case lang::MorphismTag::GreaterEq:
+                return CppExpr({"GreaterEq"});
+            case lang::MorphismTag::Id: {
+                return CppExpr({"Id"});
+            }
+            default:
+                throw std::runtime_error("Unsupported builtin morphism for cpp translation");
+        }
+    }
+
+    auto make_binary_expr = [&in_expr](const std::string& op) {
+        const auto& subexprs = in_expr.GetSubexprs();
+        return CppExpr(std::format("{} {} {}", subexprs[0], op, subexprs[1]), 1);
     };
 
     switch (morphism.GetTag()) {
@@ -358,46 +426,54 @@ std::string CppTranslator::MakeExprForMorphism(const lang::BuiltinMorphism& morp
         case lang::MorphismTag::GreaterEq:
             return make_binary_expr(">=");
         case lang::MorphismTag::Id: {
-            return arg_name;
+            return in_expr;
         }
         default:
             throw std::runtime_error("Unsupported builtin morphism for cpp translation");
     }
 }
 
-std::string CppTranslator::MakeExprForMorphism(const lang::ValueMorphism& morphism,
-                                               const std::string&) {
-    return ToCppValue(morphism.GetValue());
+CppExpr CppTranslator::MakeExprForMorphism(const lang::ValueMorphism& morphism, const CppExpr&,
+                                           lang::Type) {
+    return CppExpr(ToCppValue(morphism.GetValue()), 1);
 }
 
-std::string CppTranslator::MakeExprForMorphism(const lang::BindedMorphism& morphism,
-                                               const std::string& arg_name) {
-    std::string binded = "std::make_tuple(";
-    size_t arg_idx = 0;
-    for (const auto& [idx, val] : morphism.GetMapping()) {
-        if (idx != arg_idx) {
-            if (arg_idx) {
-                binded += ", ";
-            }
-            binded += arg_name + ", " + ToCppValue(val);
-        } else {
-            ++arg_idx;
+CppExpr CppTranslator::MakeExprForMorphism(const lang::BindedMorphism& morphism,
+                                           const CppExpr& in_expr, lang::Type) {
+    std::vector<std::string> exprs;
+    size_t n = morphism.GetUnderlyingMorphism()->GetSource().NumComponents();
+    const auto& mapping = morphism.GetMapping();
+    if (n < mapping.size()) {
+        throw std::runtime_error("too much binded args");
+    }
+    size_t left = n - mapping.size();
+    bool use_subexprs = left == in_expr.NumSubexprs();
+    size_t subexpr_idx = 0;
 
-            if (idx) {
-                binded += ", ";
-            }
-
-            binded += ToCppValue(val);
+    for (size_t idx = 0; idx < n; ++idx) {
+        auto it = mapping.find(idx);
+        if (it != mapping.end()) {
+            exprs.push_back(
+                MakeExprForMorphism(*it->second, CppExpr({}), lang::Type::Auto()).AsWholeExpr());
+            continue;
         }
+
+        if (use_subexprs) {
+            exprs.push_back(in_expr.GetSubexprs()[subexpr_idx]);
+        } else if (left == 1) {
+            exprs.push_back(in_expr.AsWholeExpr());
+        } else {
+            exprs.push_back(std::format("std::get<{}>({})", subexpr_idx, in_expr.AsWholeExpr()));
+        }
+        ++subexpr_idx;
     }
 
-    binded += ")";
-
-    return MakeExprForMorphism(*morphism.GetUnderlyingMorphism(), binded);
+    return MakeExprForMorphism(*morphism.GetUnderlyingMorphism(), CppExpr(std::move(exprs)),
+                               lang::Type::Auto());
 }
 
-std::string CppTranslator::MakeExprForMorphism(const lang::NameMorphism& morphism,
-                                               const std::string& arg_name) {
+CppExpr CppTranslator::MakeExprForMorphism(const lang::NameMorphism& morphism,
+                                           const CppExpr& in_expr, lang::Type out_type) {
     lang::Type type = std::invoke([&, this]() {
         {
             auto it = local_name2type_.find(morphism.GetName());
@@ -414,11 +490,24 @@ std::string CppTranslator::MakeExprForMorphism(const lang::NameMorphism& morphis
     });
 
     if (type.Holds<lang::FunctionType>()) {
-        return std::format("{}({})", morphism.GetName(), arg_name);
+        if (in_expr.NumSubexprs() == 0) {
+            return CppExpr(ToCppName(morphism.GetName()), 1);
+        }
+        size_t n_args = type.GetVariant<lang::FunctionType>().Source().NumComponents();
+
+        auto args_str =
+            in_expr.Cook(n_args) | util::JoinStrings(", ") | std::ranges::to<std::string>();
+
+        if (kDeductionSet.contains(morphism.GetName())) {
+            args_str += std::format(", DeductionTag<{}>{{}}", ToCppType(out_type).GetTypeStr());
+        }
+
+        return CppExpr(std::format("{}({})", ToCppName(morphism.GetName()), args_str),
+                       type.GetVariant<lang::FunctionType>().Target().NumComponents());
     }
 
     // TODO: Properly check types compatibility
-    return morphism.GetName();
+    return CppExpr(ToCppName(morphism.GetName()), 1);
 }
 
 std::string CppTranslator::MakeStatement(lang::Type type, const std::string& var_name,
@@ -530,9 +619,18 @@ TranslationResult<std::vector<const CppTranslator::CPNode*>> CppTranslator::Disc
     return root2ret_type | std::views::keys | std::ranges::to<std::vector<const CPNode*>>();
 }
 
+std::string CppTranslator::ToCppName(const std::string& name) {
+    auto it = kNameConv.find(name);
+    if (it != kNameConv.end()) {
+        return it->second;
+    }
+    return name;
+}
+
 void CppTranslator::Reset() {
+    auto catlib_dir = catlib_dir_;
     this->~CppTranslator();
-    new (this) CppTranslator();
+    new (this) CppTranslator(catlib_dir);
 }
 
 }  // namespace komaru::translate::cpp

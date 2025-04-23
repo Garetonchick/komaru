@@ -1,5 +1,7 @@
 #include "cpp_types.hpp"
 
+#include <komaru/util/std_extensions.hpp>
+
 namespace komaru::translate::cpp {
 
 CppType::CppType(std::string type_str, std::vector<std::string> template_vars)
@@ -72,6 +74,25 @@ static CppType TranslateType(const lang::GenericType& type) {
 
 static CppType TranslateType(const lang::FunctionType&) {
     throw std::runtime_error("TODO: add function type support");
+}
+
+static CppType TranslateType(const lang::ParameterizedType& type) {
+    auto type_str = std::string(type.GetMainName()) + "<";
+    std::vector<std::string> template_vars;
+
+    for (auto [i, param] : util::Enumerate(type.GetParamTypes())) {
+        auto param_cpp = ToCppType(param);
+        template_vars.append_range(param_cpp.GetTemplateVars());
+
+        type_str += param_cpp.GetTypeStr();
+
+        if (i + 1 != type.GetParamTypes().size()) {
+            type_str += ", ";
+        }
+    }
+
+    type_str += ">";
+    return CppType(std::move(type_str), std::move(template_vars));
 }
 
 CppType ToCppType(lang::Type type) {

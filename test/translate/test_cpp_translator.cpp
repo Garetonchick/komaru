@@ -9,6 +9,7 @@
 #include <print>
 
 using namespace komaru::test;
+using namespace komaru::translate;
 
 /*
  *   9      $0
@@ -88,4 +89,31 @@ TEST(CppTranslator, Fibonacci) {
     CheckRunCppProgram(MakeFibProgram(4), "3\n");
     CheckRunCppProgram(MakeFibProgram(5), "5\n");
     CheckRunCppProgram(MakeFibProgram(6), "8\n");
+}
+
+/*
+ *               id         $0
+ *  read          ┌─|IO Int|─┐                   liftM2 +
+ * S────>|IO Int|─┤          ├>|IO Int x IO Int|─────────>|IO Int|──>|IO S|
+ *                └─|IO Int|─┘
+ *               id         $1
+ */
+TEST(CppTranslator, IO101) {
+    auto cat_program = MakeIO101Program();
+    auto translator = cpp::CppTranslator("../../catlib/cpp");
+    auto maybe_program = translator.Translate(cat_program);
+
+    ASSERT_TRUE(maybe_program.has_value());
+    auto& program = maybe_program.value();
+
+    for (const auto& [input, expected] : std::vector<std::pair<std::string, std::string>>{
+             {"4 42", "46"},
+             {"52 321", "373"},
+             {"-8 8", "0"},
+         }) {
+        auto res = ExecProgram(*program, input);
+
+        ASSERT_TRUE(res.Success());
+        ASSERT_EQ(res.Output(), expected);
+    }
 }

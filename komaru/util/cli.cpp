@@ -36,12 +36,24 @@ bool CLICommandResult::Fail() const {
     return code_ != 0;
 }
 
-CLICommandResult PerformCLICommand(const std::string& command) {
+CLICommandResult PerformCLICommand(const std::string& command, const std::string& sin) {
+    auto stdin_path = GenTmpFilepath().string();
     auto stdout_path = GenTmpFilepath().string();
     auto stderr_path = GenTmpFilepath().string();
 
-    const std::string final_command =
-        std::format("{} 1> {} 2> {}", command, stdout_path, stderr_path);
+    if (!sin.empty()) {
+        if (auto err = WriteFile(stdin_path, sin)) {
+            throw std::runtime_error(
+                std::format("failed to write stdin to file: {}", err.message()));
+        }
+    }
+
+    const std::string final_command = std::invoke([&]() {
+        if (sin.empty()) {
+            return std::format("{} 1> {} 2> {}", command, stdout_path, stderr_path);
+        }
+        return std::format("{} < {} 1> {} 2> {}", command, stdin_path, stdout_path, stderr_path);
+    });
 
     auto pid = fork();
 
@@ -88,10 +100,11 @@ CLICommandResult PerformCLICommand(const std::string& command) {
         std::format("Failed to wait for child when executing command \"{}\"", command));
 }
 
-CLICommandResult PerformCLICommand(const std::vector<std::string>& command) {
+CLICommandResult PerformCLICommand(const std::vector<std::string>& command,
+                                   const std::string& sin) {
     auto joined_command = command | JoinStrings(" ") | std::ranges::to<std::string>();
 
-    return PerformCLICommand(joined_command);
+    return PerformCLICommand(joined_command, sin);
 }
 
 }  // namespace komaru::util

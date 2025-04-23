@@ -4,11 +4,12 @@
 
 #include <komaru/translate/cpp/cpp_translator.hpp>
 #include <komaru/translate/exec_program.hpp>
+#include <komaru/util/string.hpp>
 
 namespace komaru::test {
 
 void CheckRunCppProgram(const lang::CatProgram& program, const std::string& expected_output) {
-    translate::cpp::CppTranslator translator;
+    translate::cpp::CppTranslator translator("../../catlib/cpp");
     auto maybe_program = translator.Translate(program);
 
     ASSERT_TRUE(maybe_program.has_value());

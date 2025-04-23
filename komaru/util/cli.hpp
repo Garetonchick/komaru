@@ -20,7 +20,8 @@ private:
     std::string serr_;
 };
 
-CLICommandResult PerformCLICommand(const std::string& command);
-CLICommandResult PerformCLICommand(const std::vector<std::string>& command);
+CLICommandResult PerformCLICommand(const std::string& command, const std::string& sin = "");
+CLICommandResult PerformCLICommand(const std::vector<std::string>& command,
+                                   const std::string& sin = "");
 
 }  // namespace komaru::util

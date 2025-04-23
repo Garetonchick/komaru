@@ -9,8 +9,8 @@ using namespace komaru::lang;
 namespace komaru::test {
 
 lang::CatProgram MakeAPlusBProgram(int32_t a, int32_t b) {
-    auto nine = MakeAtomValueMorphism(a);
-    auto forty_two = MakeAtomValueMorphism(b);
+    auto val1 = MakeAtomValueMorphism(a);
+    auto val2 = MakeAtomValueMorphism(b);
     auto pos0 = Morphism::Position(0);
     auto pos1 = Morphism::Position(1);
     auto plus = MakeIntPlus();
@@ -23,8 +23,8 @@ lang::CatProgram MakeAPlusBProgram(int32_t a, int32_t b) {
     auto [pair_node, pair_pin] = builder.NewNodeWithPin(Type::Int().Pow(2));
     auto& res_node = builder.NewNode(Type::Int());
 
-    builder.Connect(start_pin, num0_node, nine)
-        .Connect(start_pin, num1_node, forty_two)
+    builder.Connect(start_pin, num0_node, val1)
+        .Connect(start_pin, num1_node, val2)
         .Connect(num0_pin, pair_node, pos0)
         .Connect(num1_pin, pair_node, pos1)
         .Connect(pair_pin, res_node, plus);
@@ -256,6 +256,48 @@ lang::CatProgram MakeFibProgram(int32_t x) {
 
     // Connect main function
     builder.Connect(main_pin, val_node, val).Connect(val_pin, final_node, fib);
+
+    return builder.Extract();
+}
+
+lang::CatProgram MakeIO101Program() {
+    auto io = Type::Parameterized("IO", {Type::Auto()});
+    auto at = Type::Generic("a");
+    auto bt = Type::Generic("b");
+    auto ct = Type::Generic("c");
+    auto io_a = Type::Parameterized("IO", {at});
+    auto io_b = Type::Parameterized("IO", {bt});
+    auto io_c = Type::Parameterized("IO", {ct});
+    auto io_s = Type::Parameterized("IO", {Type::Singleton()});
+    auto io_int = Type::Parameterized("IO", {Type::Int()});
+    auto io_int2 = io_int.Pow(2);
+    auto read = Morphism::WithName("read", Type::Singleton(), io);
+    auto id = Morphism::Builtin(MorphismTag::Id, Type::Auto(), Type::Auto());
+    auto pos0 = Morphism::Position(0);
+    auto pos1 = Morphism::Position(1);
+    auto lift_m2 = Morphism::WithName("liftM2", Type::Function(at * bt, ct) * io_a * io_b, io_c);
+    auto lifted_plus = BindMorphism(lift_m2, {{0, MakeIntPlus()}});
+    auto bind = Morphism::WithName(">>=", io_a * Type::Function(at, io_b), io_b);
+    auto print = Morphism::WithName("print", Type::Auto(), io_s);
+    auto binded_print = BindMorphism(bind, {{1, print}});
+
+    auto builder = CatProgramBuilder();
+
+    auto [main_node, main_pin] = builder.NewNodeWithPin(Type::Singleton(), "main");
+    auto [read_node, read_pin] = builder.NewNodeWithPin(io_int);
+    auto [num0_node, num0_pin] = builder.NewNodeWithPin(io_int);
+    auto [num1_node, num1_pin] = builder.NewNodeWithPin(io_int);
+    auto [pair_node, pair_pin] = builder.NewNodeWithPin(io_int2);
+    auto [sum_node, sum_pin] = builder.NewNodeWithPin(io_int);
+    auto& final_node = builder.NewNode(io_s);
+
+    builder.Connect(main_pin, read_node, read)
+        .Connect(read_pin, num0_node, id)
+        .Connect(read_pin, num1_node, id)
+        .Connect(num0_pin, pair_node, pos0)
+        .Connect(num1_pin, pair_node, pos1)
+        .Connect(pair_pin, sum_node, lifted_plus)
+        .Connect(sum_pin, final_node, binded_print);
 
     return builder.Extract();
 }

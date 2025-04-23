@@ -100,7 +100,7 @@ private:
 
 class BindedMorphism {
 public:
-    BindedMorphism(MorphismPtr morphism, std::map<size_t, Value> mapping);
+    BindedMorphism(MorphismPtr morphism, std::map<size_t, MorphismPtr> mapping);
 
     const std::string& GetName() const;
     Type GetSource() const;
@@ -108,11 +108,11 @@ public:
     MorphismTag GetTag() const;
 
     const MorphismPtr& GetUnderlyingMorphism() const;
-    const std::map<size_t, Value>& GetMapping() const;
+    const std::map<size_t, MorphismPtr>& GetMapping() const;
 
 private:
     MorphismPtr morphism_;
-    std::map<size_t, Value> mapping_;
+    std::map<size_t, MorphismPtr> mapping_;
 };
 
 class NameMorphism {
@@ -134,7 +134,7 @@ class Morphism : public util::DeriveVariant<Morphism> {
     using Variant = std::variant<BuiltinMorphism, CompoundMorphism, ValueMorphism, PositionMorphism,
                                  BindedMorphism, NameMorphism>;
 
-    friend MorphismPtr BindMorphism(MorphismPtr morphism, std::map<size_t, Value> mapping);
+    friend MorphismPtr BindMorphism(MorphismPtr morphism, std::map<size_t, MorphismPtr> mapping);
 
     struct PrivateDummy {};
 
@@ -168,6 +168,6 @@ private:
     Variant morphism_;
 };
 
-MorphismPtr BindMorphism(MorphismPtr morphism, std::map<size_t, Value> mapping);
+MorphismPtr BindMorphism(MorphismPtr morphism, std::map<size_t, MorphismPtr> mapping);
 
 }  // namespace komaru::lang

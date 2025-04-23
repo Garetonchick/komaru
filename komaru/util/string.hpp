@@ -39,7 +39,7 @@ inline decltype(auto) JoinStrings(const std::string& sep) {
     return std::views::transform([first = true, &sep](const auto& s) mutable {
                if (first) {
                    first = false;
-                   return std::array<std::string, 2>{sep, s} | std::views::join;
+                   return std::array<std::string, 2>{"", s} | std::views::join;
                }
                return std::array<std::string, 2>{sep, s} | std::views::join;
            }) |

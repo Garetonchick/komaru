@@ -148,7 +148,7 @@ bool PositionMorphism::IsNonePosition() const {
     return pos_ == std::numeric_limits<size_t>::max();
 }
 
-BindedMorphism::BindedMorphism(MorphismPtr morphism, std::map<size_t, Value> mapping)
+BindedMorphism::BindedMorphism(MorphismPtr morphism, std::map<size_t, MorphismPtr> mapping)
     : morphism_(std::move(morphism)),
       mapping_(std::move(mapping)) {
 }
@@ -173,7 +173,7 @@ const MorphismPtr& BindedMorphism::GetUnderlyingMorphism() const {
     return morphism_;
 }
 
-const std::map<size_t, Value>& BindedMorphism::GetMapping() const {
+const std::map<size_t, MorphismPtr>& BindedMorphism::GetMapping() const {
     return mapping_;
 }
 
@@ -268,7 +268,7 @@ const Morphism::Variant* Morphism::GetVariantPointer() const {
     return &morphism_;
 }
 
-MorphismPtr BindMorphism(MorphismPtr morphism, std::map<size_t, Value> mapping) {
+MorphismPtr BindMorphism(MorphismPtr morphism, std::map<size_t, MorphismPtr> mapping) {
     return std::make_shared<Morphism>(Morphism::PrivateDummy{},
                                       BindedMorphism(std::move(morphism), std::move(mapping)));
 }

@@ -60,7 +60,7 @@ const std::string& ProgramExecResult::CompileError() const {
 ProgramExecResult::ProgramExecResult() {
 }
 
-ProgramExecResult ExecProgram(const IProgram& program) {
+ProgramExecResult ExecProgram(const IProgram& program, const std::string& sin) {
     auto sourcepath = util::GenTmpFilepath().string() + program.GetExt();
     auto progpath = util::GenTmpFilepath().string();
 
@@ -78,7 +78,7 @@ ProgramExecResult ExecProgram(const IProgram& program) {
         return ProgramExecResult::CompileErrorResult(build_result.Code(), std::move(err));
     }
 
-    auto exec_result = util::PerformCLICommand(progpath);
+    auto exec_result = util::PerformCLICommand(progpath, sin);
 
     if (exec_result.Fail()) {
         auto err =

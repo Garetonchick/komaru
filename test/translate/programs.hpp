@@ -56,4 +56,13 @@ int32_t CalcMegaIfResult(int32_t x);
  */
 lang::CatProgram MakeFibProgram(int32_t x);
 
+/*
+ *               id         $0
+ *  read          ┌─|IO Int|─┐                   liftM2 +
+ * S────>|IO Int|─┤          ├>|IO Int x IO Int|─────────>|IO Int|──>|IO S|
+ *                └─|IO Int|─┘
+ *               id         $1
+ */
+lang::CatProgram MakeIO101Program();
+
 }  // namespace komaru::test

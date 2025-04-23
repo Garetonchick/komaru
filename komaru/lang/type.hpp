@@ -24,14 +24,14 @@ enum class TypeTag {
     List,
     Generic,
     Function,
+    Parameterized,
 };
 
 class AtomType;   // Int, Char, Bool, Float, ...
 class TupleType;  // (A, B, C)
 class FunctionType;
 // class ListType; // [T]
-// class GenericType; // T
-// class StructType; // struct MyStruct {i: Int, b: Bool}
+// class RecordType; // struct MyStruct {i: Int, b: Bool}
 
 template <typename T>
 concept TypeLike = requires(const T t) {
@@ -64,6 +64,7 @@ public:
     std::string_view GetName() const;
     TypeTag GetTag() const;
     const std::vector<Type>& GetTupleTypes() const;
+    size_t GetTypesNum() const;
     ID GetID() const;
 
     bool operator==(const TupleType& o) const;
@@ -89,12 +90,33 @@ private:
     std::string name_;
 };
 
+class ParameterizedType {
+public:
+    ParameterizedType(const std::string& name, std::vector<Type> params);
+
+    std::string_view GetMainName() const;
+    std::string_view GetName() const;
+    TypeTag GetTag() const;
+    std::string GetID() const;
+    const std::vector<Type>& GetParamTypes() const;
+
+    bool operator==(const ParameterizedType& o) const;
+
+    static std::string CalcID(const std::string& name, const std::vector<Type>& params);
+
+private:
+    std::string main_name_;
+    std::string name_;
+    std::vector<Type> params_;
+};
+
 static_assert(TypeLike<AtomType>);
 static_assert(TypeLike<TupleType>);
 static_assert(TypeLike<GenericType>);
+static_assert(TypeLike<ParameterizedType>);
 
 class Type : public util::DeriveVariant<Type> {
-    using Variant = std::variant<AtomType, TupleType, GenericType, FunctionType>;
+    using Variant = std::variant<AtomType, TupleType, GenericType, FunctionType, ParameterizedType>;
     friend class FunctionType;
 
 public:
@@ -105,6 +127,7 @@ public:
     static Type Tuple(std::vector<Type> types);
     static Type TupleFromTags(std::vector<TypeTag> tags);
     static Type Function(Type source, Type target);
+    static Type Parameterized(std::string name, std::vector<Type> params);
 
     static Type Generic(std::string name);
     static Type Auto();
@@ -121,6 +144,7 @@ public:
     TypeTag GetTag() const;
     std::uintptr_t GetID() const;
     Type Pow(size_t n) const;
+    size_t NumComponents() const;
 
     bool operator==(Type o) const;
 
@@ -139,6 +163,7 @@ private:
     static std::unordered_map<TupleType::ID, Variant*> kTupleTypesIndex;
     static std::unordered_map<std::string, Variant*> kGenericTypesIndex;
     static std::unordered_map<std::string, Variant*> kFunctionTypesIndex;
+    static std::unordered_map<std::string, Variant*> kParameterizedTypesIndex;
 };
 
 class FunctionType {

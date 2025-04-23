@@ -2,12 +2,13 @@
 #include <komaru/translate/program.hpp>
 
 #include <string>
+#include <vector>
 
 namespace komaru::translate {
 
 class CppProgram : public IProgram {
 public:
-    explicit CppProgram(std::string source_code);
+    explicit CppProgram(std::string source_code, std::vector<std::string> include_dirs = {});
 
     const std::string& GetSourceCode() const override;
     const char* GetExt() const override;
@@ -16,6 +17,7 @@ public:
 
 private:
     std::string source_code_;
+    std::vector<std::string> include_dirs_;
 };
 
 }  // namespace komaru::translate

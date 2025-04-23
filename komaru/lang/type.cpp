@@ -3,6 +3,8 @@
 #include <format>
 #include <cassert>
 
+#include <komaru/util/std_extensions.hpp>
+
 namespace komaru::lang {
 
 std::deque<Type::Variant> Type::kStorage;
@@ -10,6 +12,7 @@ std::unordered_map<TypeTag, Type::Variant*> Type::kAtomTypesIndex;
 std::unordered_map<TupleType::ID, Type::Variant*> Type::kTupleTypesIndex;
 std::unordered_map<std::string, Type::Variant*> Type::kGenericTypesIndex;
 std::unordered_map<std::string, Type::Variant*> Type::kFunctionTypesIndex;
+std::unordered_map<std::string, Type::Variant*> Type::kParameterizedTypesIndex;
 
 AtomType::AtomType(TypeTag tag)
     : tag_(tag) {
@@ -80,6 +83,10 @@ bool TupleType::operator==(const TupleType& o) const {
 
 const std::vector<Type>& TupleType::GetTupleTypes() const {
     return inner_types_;
+}
+
+size_t TupleType::GetTypesNum() const {
+    return inner_types_.size();
 }
 
 TupleType::TupleType(std::vector<Type> inner_types)
@@ -159,6 +166,49 @@ bool FunctionType::operator==(const FunctionType& o) const {
     return Source() == o.Source() && Target() == o.Target();
 }
 
+ParameterizedType::ParameterizedType(const std::string& name, std::vector<Type> params)
+    : main_name_(name),
+      name_(name),
+      params_(std::move(params)) {
+    for (auto& type : params_) {
+        name_ += " " + std::string(type.GetName());
+    }
+}
+
+std::string_view ParameterizedType::GetMainName() const {
+    return main_name_;
+}
+
+std::string_view ParameterizedType::GetName() const {
+    return name_;
+}
+
+TypeTag ParameterizedType::GetTag() const {
+    return TypeTag::Parameterized;
+}
+
+std::string ParameterizedType::GetID() const {
+    return CalcID(name_, params_);
+}
+
+const std::vector<Type>& ParameterizedType::GetParamTypes() const {
+    return params_;
+}
+
+bool ParameterizedType::operator==(const ParameterizedType& o) const {
+    return name_ == o.name_ && util::VecEq(params_, o.params_);
+}
+
+std::string ParameterizedType::CalcID(const std::string& name, const std::vector<Type>& params) {
+    std::string id = name;
+
+    for (const Type& type : params) {
+        id += "_" + std::to_string(type.GetID());
+    }
+
+    return id;
+}
+
 Type::Type(const Variant* type)
     : type_(type) {
 }
@@ -219,6 +269,20 @@ Type Type::Function(Type source, Type target) {
     return Type(new_type);
 }
 
+Type Type::Parameterized(std::string name, std::vector<Type> params) {
+    std::string id = ParameterizedType::CalcID(name, params);
+    auto it = kParameterizedTypesIndex.find(id);
+    if (it != kParameterizedTypesIndex.end()) {
+        return Type(it->second);
+    }
+
+    Variant* new_type =
+        &kStorage.emplace_back(ParameterizedType(std::move(name), std::move(params)));
+    kParameterizedTypesIndex.emplace(std::move(id), new_type);
+
+    return Type(new_type);
+}
+
 Type Type::Generic(std::string name) {
     auto it = kGenericTypesIndex.find(name);
 
@@ -266,6 +330,15 @@ Type Type::Target() {
 
 Type Type::Pow(size_t n) const {
     return Tuple(std::vector<Type>(n, *this));
+}
+
+size_t Type::NumComponents() const {
+    return this->Visit(util::Overloaded{[](const TupleType& t) -> size_t {
+                                            return t.GetTypesNum();
+                                        },
+                                        [](const TypeLike auto&) -> size_t {
+                                            return 1;
+                                        }});
 }
 
 std::string_view Type::GetName() const {

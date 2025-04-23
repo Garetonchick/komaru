@@ -3,8 +3,10 @@
 #include <komaru/translate/cpp/cpp_program_builder.hpp>
 #include <komaru/translate/cpp/cpp_body_builder.hpp>
 #include <komaru/translate/cpp/cpp_cond.hpp>
+#include <komaru/translate/cpp/cpp_expr.hpp>
 
 #include <unordered_map>
+#include <filesystem>
 
 namespace komaru::translate::cpp {
 
@@ -14,37 +16,41 @@ class CppTranslator : public ITranslator {
     using CPArrow = lang::CatProgram::Arrow;
 
 public:
+    explicit CppTranslator(const std::filesystem::path& catlib_dir);
+
     TranslationResult<std::unique_ptr<IProgram>> Translate(
         const lang::CatProgram& cat_prog) override;
 
 private:
+    void LoadCatlib();
+
     TranslationResult<CppFunction> TranslateMorphismGraph(const CPNode* root);
 
     bool IsIntersectionNode(const CPNode* node);
     void AddStatementsForNode(CppBodyBuilder& body_builder, const CppCond& node_cond,
                               const CPNode* node, const std::string& local_name);
-    std::string MakeExprForIntersectionNode(const CPNode* node);
-    std::string MakeExprForArrow(const CPArrow* arrow);
+    CppExpr MakeExprForIntersectionNode(const CPNode* node);
+    CppExpr MakeExprForArrow(const CPArrow* arrow);
 
-    std::string MakeExprForBrancher(const CPOutPin::Brancher& brancher,
-                                    const std::string& arg_name);
-    std::string MakeExprForGuard(const lang::Guard& guard, const std::string& arg_name);
-    std::string MakeExprForPattern(const lang::Pattern& pattern, const std::string& arg_name);
-    std::string MakeExprForPattern(const lang::AnyPattern& pattern, const std::string& arg_name);
-    std::string MakeExprForPattern(const lang::ValuePattern& pattern, const std::string& arg_name);
-    std::string MakeExprForPattern(const lang::TuplePattern& pattern, const std::string& arg_name);
+    CppExpr MakeExprForBrancher(const CPOutPin::Brancher& brancher, const CppExpr& in_expr);
+    CppExpr MakeExprForGuard(const lang::Guard& guard, const CppExpr& in_expr);
+    CppExpr MakeExprForPattern(const lang::Pattern& pattern, const CppExpr& in_expr);
+    CppExpr MakeExprForPattern(const lang::AnyPattern& pattern, const CppExpr& in_expr);
+    CppExpr MakeExprForPattern(const lang::ValuePattern& pattern, const CppExpr& in_expr);
+    CppExpr MakeExprForPattern(const lang::TuplePattern& pattern, const CppExpr& in_expr);
 
-    std::string MakeExprForMorphism(const lang::Morphism& morphism, const std::string& arg_name);
-    std::string MakeExprForMorphism(const lang::CompoundMorphism& morphism,
-                                    const std::string& arg_name);
-    std::string MakeExprForMorphism(const lang::BuiltinMorphism& morphism,
-                                    const std::string& arg_name);
-    std::string MakeExprForMorphism(const lang::ValueMorphism& morphism,
-                                    const std::string& arg_name);
-    std::string MakeExprForMorphism(const lang::BindedMorphism& morphism,
-                                    const std::string& arg_name);
-    std::string MakeExprForMorphism(const lang::NameMorphism& morphism,
-                                    const std::string& arg_name);
+    CppExpr MakeExprForMorphism(const lang::Morphism& morphism, const CppExpr& in_expr,
+                                lang::Type out_type);
+    CppExpr MakeExprForMorphism(const lang::CompoundMorphism& morphism, const CppExpr& in_expr,
+                                lang::Type out_type);
+    CppExpr MakeExprForMorphism(const lang::BuiltinMorphism& morphism, const CppExpr& in_expr,
+                                lang::Type out_type);
+    CppExpr MakeExprForMorphism(const lang::ValueMorphism& morphism, const CppExpr& in_expr,
+                                lang::Type out_type);
+    CppExpr MakeExprForMorphism(const lang::BindedMorphism& morphism, const CppExpr& in_expr,
+                                lang::Type out_type);
+    CppExpr MakeExprForMorphism(const lang::NameMorphism& morphism, const CppExpr& in_expr,
+                                lang::Type out_type);
 
     std::vector<std::string> MakeBranchExprs(const CPNode* node);
     std::string MakeStatement(lang::Type type, const std::string& var_name,
@@ -58,10 +64,13 @@ private:
     TranslationResult<std::vector<const CPNode*>> DiscoverFunctions(
         const lang::CatProgram& cat_prog);
 
+    std::string ToCppName(const std::string& name);
+
     void Reset();
 
 private:
     CppProgramBuilder builder_;
+    std::filesystem::path catlib_dir_;
     std::unordered_map<const CPNode*, const CPNode*> node2root_;
     std::unordered_map<const CPNode*, size_t> node2views_;
     std::unordered_map<const CPNode*, std::string> node2local_name_;
@@ -70,6 +79,7 @@ private:
     std::unordered_map<std::string, lang::Type> global_name2type_;
 
     static const std::unordered_map<std::string, std::string> kNameConv;
+    static const std::unordered_set<std::string> kDeductionSet;
 };
 
 }  // namespace komaru::translate::cpp
