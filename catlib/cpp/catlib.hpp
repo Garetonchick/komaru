@@ -24,105 +24,101 @@ private:
     std::function<T()> producer_;
 };
 
+// NOLINTBEGIN(readability-identifier-naming)
 
-template<typename T>
-IO<T> Pure(T val) {
+inline constexpr auto Pure = [] <typename T> (T val) -> IO<T> {
     return IO<T>([val=std::move(val)]() mutable -> T {
         return val;
     });
-}
+};
 
-template<typename F, typename A>
-IO<typename std::invoke_result_t<F, A>> Fmap(F func, IO<A> a) {
+inline constexpr auto Fmap = [] <typename F, typename A>
+(F func, IO<A> a) -> IO<typename std::invoke_result_t<F, A>> {
     using B = typename std::invoke_result_t<F, A>;
 
     return IO<B>([func=std::move(func), a=std::move(a)]() mutable -> B {
         return func(a.Run());
     });
-}
+};
 
-template<typename F, typename A>
-IO<typename std::invoke_result_t<F, A>::ValueType> Bind(IO<A> a, F func) {
+inline constexpr auto Bind = [] <typename F, typename A>
+(IO<A> a, F func) -> IO<typename std::invoke_result_t<F, A>::ValueType> {
     using B = typename std::invoke_result_t<F, A>::ValueType;
 
     return IO<B>([func=std::move(func), a=std::move(a)]() mutable -> B {
         auto b = func(a.Run());
         return b.Run();
     });
-}
+};
 
-template<typename A, typename B>
-IO<B> Chain(IO<A> a, IO<B> b) {
+inline constexpr auto Chain = [] <typename A, typename B> (IO<A> a, IO<B> b) -> IO<B> {
     return IO<B>([a=std::move(a), b=std::move(b)]() mutable -> B{
         a.Run();
         return b.Run();
     });
-}
+};
 
-template<typename F, typename A, typename B>
-IO<std::invoke_result_t<F, A, B>> LiftM2(F func, IO<A> a, IO<B> b) {
+inline constexpr auto LiftM2 = [] <typename F, typename A, typename B>
+(F func, IO<A> a, IO<B> b) -> IO<std::invoke_result_t<F, A, B>> {
     using C = std::invoke_result_t<F, A, B>;
 
     return IO<C>([func = std::move(func), a = std::move(a), b = std::move(b)]() mutable -> C {
         return func(a.Run(), b.Run());
     });
-}
+};
 
-inline IO<std::monostate> PutStr(std::string s) {
+inline constexpr auto PutStr = [](std::string s) -> IO<std::monostate> {
     return IO<std::monostate>([s=std::move(s)]() mutable -> std::monostate {
         std::cout << s;
         return std::monostate{};
     });
-}
+};
 
-inline IO<std::monostate> PutStrLn(std::string s) {
+inline constexpr auto PutStrLn = [](std::string s) -> IO<std::monostate> {
     return IO<std::monostate>([s=std::move(s)]() mutable -> std::monostate {
         std::cout << s << "\n";
         return std::monostate{};
     });
-}
+};
 
-template<typename T>
-IO<T> Read(std::monostate = {}, DeductionTag<IO<T>> = {}) {
+inline constexpr auto Read = [] <typename T> (std::monostate = {}, DeductionTag<IO<T>> = {}) -> IO<T> {
     return IO<T>([]() mutable -> T {
         return *std::istream_iterator<T>(std::cin);
     });
-}
+};
 
-// NOLINTBEGIN(readability-identifier-naming)
-
-constexpr auto Print = [] (auto val) -> IO<std::monostate> {
+inline constexpr auto Print = [] (auto val) -> IO<std::monostate> {
     return IO<std::monostate>([val=std::move(val)] mutable -> std::monostate {
         std::cout << val;
         return std::monostate{};
     });
 };
 
-constexpr auto Plus = [] <typename T> (T x, T y) -> T {
+inline constexpr auto Plus = [] <typename T> (T x, T y) -> T {
     return x + y;
 };
 
-constexpr auto Minus = [] <typename T> (T x, T y) -> T {
+inline constexpr auto Minus = [] <typename T> (T x, T y) -> T {
     return x - y;
 };
 
-constexpr auto Multiply = [] <typename T> (T x, T y) -> T {
+inline constexpr auto Multiply = [] <typename T> (T x, T y) -> T {
     return x * y;
 };
 
-constexpr auto Less = [] <typename T> (T x, T y) -> bool {
+inline constexpr auto Less = [] <typename T> (T x, T y) -> bool {
     return x < y;
 };
 
-constexpr auto LessEq = [] <typename T> (T x, T y) -> bool {
+inline constexpr auto LessEq = [] <typename T> (T x, T y) -> bool {
     return x <= y;
 };
 
-constexpr auto GreaterEq = [] <typename T> (T x, T y) -> bool {
+inline constexpr auto GreaterEq = [] <typename T> (T x, T y) -> bool {
     return x >= y;
 };
 
-constexpr auto Id = [] <typename T> (T x) -> T {
+inline constexpr auto Id = [] <typename T> (T x) -> T {
     return x;
 };
 
