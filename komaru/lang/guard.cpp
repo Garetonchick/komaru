@@ -16,4 +16,8 @@ const Morphism& Guard::GetMorphism() const {
     return *morphism_;
 }
 
+std::string Guard::ToString() const {
+    return morphism_->ToString();
+}
+
 }  // namespace komaru::lang

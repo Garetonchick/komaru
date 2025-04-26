@@ -1,9 +1,24 @@
 #include "value.hpp"
 
+#include <komaru/util/std_extensions.hpp>
+
 namespace komaru::lang {
 
 Type AtomValue::GetType() const {
     return type_;
+}
+
+std::string AtomValue::ToString() const {
+    return std::visit(util::Overloaded{[](bool val) -> std::string {
+                                           return val ? "True" : "False";
+                                       },
+                                       [](char val) -> std::string {
+                                           return "\'" + std::string(1, val) + "\'";
+                                       },
+                                       [](int32_t val) -> std::string {
+                                           return std::to_string(val);
+                                       }},
+                      value_);
 }
 
 const AtomValue::Variant* AtomValue::GetVariantPointer() const {
@@ -21,6 +36,20 @@ Type TupleValue::GetType() const {
 
 const std::vector<Value>& TupleValue::GetValues() const {
     return values_;
+}
+
+std::string TupleValue::ToString() const {
+    std::string res = "(";
+
+    for (const auto& [i, value] : util::Enumerate(values_)) {
+        res += value.ToString();
+        if (i + 1 != values_.size()) {
+            res += ", ";
+        }
+    }
+
+    res += ")";
+    return res;
 }
 
 Type TupleValue::DetermineType(const std::vector<Value>& values) {
@@ -52,6 +81,12 @@ Value Value::Char(char value) {
 Type Value::GetType() const {
     return Visit([](const auto& value) {
         return value.GetType();
+    });
+}
+
+std::string Value::ToString() const {
+    return Visit([](const auto& value) {
+        return value.ToString();
     });
 }
 

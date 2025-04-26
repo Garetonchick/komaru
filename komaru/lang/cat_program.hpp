@@ -72,8 +72,7 @@ public:
 
     private:
         Node& node_;  // associated node
-        Brancher brancher_{
-            Pattern::Any()};  // TODO: Add guards and make it std::variant<Pattern, Guard>
+        Brancher brancher_{Pattern::Any()};
         std::deque<Arrow> arrows_;
     };
 

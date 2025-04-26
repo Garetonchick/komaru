@@ -3,6 +3,8 @@
 #include <cassert>
 #include <format>
 
+#include <komaru/util/std_extensions.hpp>
+
 namespace komaru::lang {
 
 // TODO: better
@@ -64,6 +66,10 @@ MorphismTag BuiltinMorphism::GetTag() const {
     return tag_;
 }
 
+std::string BuiltinMorphism::ToString() const {
+    return GetName();
+}
+
 CompoundMorphism::CompoundMorphism(std::string name, std::vector<MorphismPtr> morphisms)
     : name_(std::move(name)),
       morphisms_(std::move(morphisms)) {
@@ -83,6 +89,10 @@ Type CompoundMorphism::GetTarget() const {
 
 MorphismTag CompoundMorphism::GetTag() const {
     return MorphismTag::Compound;
+}
+
+std::string CompoundMorphism::ToString() const {
+    return "compound UNIMPLEMENTED";
 }
 
 const std::vector<MorphismPtr>& CompoundMorphism::GetMorphisms() const {
@@ -119,6 +129,10 @@ MorphismPtr ValueMorphism::Unrestricted() const {
     return Morphism::WithValue(name_, value_, false);
 }
 
+std::string ValueMorphism::ToString() const {
+    return value_.ToString();
+}
+
 PositionMorphism::PositionMorphism(size_t pos)
     : pos_(pos),
       name_(std::format("${}", pos_)) {
@@ -138,6 +152,13 @@ Type PositionMorphism::GetTarget() const {
 
 MorphismTag PositionMorphism::GetTag() const {
     return MorphismTag::Position;
+}
+
+std::string PositionMorphism::ToString() const {
+    if (IsNonePosition()) {
+        return "$";
+    }
+    return std::format("${}", pos_);
 }
 
 size_t PositionMorphism::GetPosition() const {
@@ -169,6 +190,50 @@ MorphismTag BindedMorphism::GetTag() const {
     return MorphismTag::Binded;
 }
 
+std::string BindedMorphism::ToString() const {
+    std::string mname = morphism_->ToString();
+    if (IsComplex(*morphism_)) {
+        mname = "(" + mname + ")";
+    }
+
+    auto to_wrapped_str = [&](const Morphism& m) {
+        if (IsFunction(m)) {
+            return "(" + m.ToString() + ")";
+        }
+        return m.ToString();
+    };
+
+    std::string res;
+
+    if (IsOperator(*morphism_)) {
+        auto it = mapping_.find(0);
+        if (it != mapping_.end()) {
+            res += to_wrapped_str(*it->second) + " ";
+        }
+        res += mname;
+        it = mapping_.find(1);
+        if (it != mapping_.end()) {
+            res += " " + to_wrapped_str(*it->second);
+        }
+    } else {
+        size_t n_comps = morphism_->GetSource().NumComponents();
+        res = mname;
+        size_t n_mapped = 0;
+
+        for (size_t i = 0; i < n_comps && n_mapped < mapping_.size(); ++i) {
+            auto it = mapping_.find(i);
+            if (it != mapping_.end()) {
+                res += " " + to_wrapped_str(*it->second);
+                ++n_mapped;
+            } else {
+                res += " _";
+            }
+        }
+    }
+
+    return res;
+}
+
 const MorphismPtr& BindedMorphism::GetUnderlyingMorphism() const {
     return morphism_;
 }
@@ -197,6 +262,10 @@ Type NameMorphism::GetTarget() const {
 
 MorphismTag NameMorphism::GetTag() const {
     return MorphismTag::Name;
+}
+
+std::string NameMorphism::ToString() const {
+    return name_;
 }
 
 MorphismPtr Morphism::Builtin(MorphismTag tag, Type source, Type target) {
@@ -252,6 +321,12 @@ MorphismTag Morphism::GetTag() const {
     });
 }
 
+std::string Morphism::ToString() const {
+    return Visit([](const auto& morphism) {
+        return morphism.ToString();
+    });
+}
+
 bool Morphism::ValidateCompound(const std::vector<MorphismPtr>& morphisms) {
     if (morphisms.empty()) {
         return false;
@@ -271,6 +346,27 @@ const Morphism::Variant* Morphism::GetVariantPointer() const {
 MorphismPtr BindMorphism(MorphismPtr morphism, std::map<size_t, MorphismPtr> mapping) {
     return std::make_shared<Morphism>(Morphism::PrivateDummy{},
                                       BindedMorphism(std::move(morphism), std::move(mapping)));
+}
+
+bool IsOperator(const Morphism& morphism) {
+    return morphism.Visit(
+        util::Overloaded{[](const BuiltinMorphism& m) -> bool {
+                             return m.GetTag() != MorphismTag::Id;  // TODO: change later
+                         },
+                         [](const NameMorphism& m) -> bool {
+                             return !m.GetName().empty() && !std::isalpha(m.GetName().front());
+                         },
+                         [](const auto&) -> bool {
+                             return false;
+                         }});
+}
+
+bool IsComplex(const Morphism& morphism) {
+    return morphism.Holds<BindedMorphism>();
+}
+
+bool IsFunction(const Morphism& morphism) {
+    return !morphism.Holds<ValueMorphism>();
 }
 
 }  // namespace komaru::lang

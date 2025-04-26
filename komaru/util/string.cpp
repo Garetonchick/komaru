@@ -1,27 +1,52 @@
 #include "string.hpp"
 
 #include <cctype>
+#include <string_view>
 
 namespace komaru::util {
 
-// constexpr std::string Strip(const std::string& s) {
-//     int64_t len = static_cast<int64_t>(s.size());
-//     int64_t start = 0;
-//     int64_t finish = len - 1;
+std::string Indent(const std::string& s, const std::string& indent) {
+    using std::operator""sv;
 
-//     while(start < len && std::isspace(s[start])) {
-//         ++start;
-//     }
+    std::string res;
 
-//     while(finish >= 0 && std::isspace(s[finish])) {
-//         --finish;
-//     }
+    for (const auto line : std::views::split(s, "\n"sv)) {
+        auto sline = std::string(std::string_view(line));
+        if (!sline.empty()) {
+            res += indent + sline + "\n";
+        } else {
+            res += "\n";
+        }
+    }
 
-//     if(start > finish) {
-//         return "";
-//     }
+    if (!res.empty()) {
+        res.pop_back();
+    }
 
-//     return std::string(s.begin() + start, s.begin() + finish + 1);
-// }
+    return res;
+}
+
+std::string Escape(const std::string& s, const std::string& esc) {
+    std::string res;
+    res.reserve(s.size());
+
+    for (char c : s) {
+        bool need_esc = std::invoke([&]() {
+            for (char ec : esc) {
+                if (c == ec) {
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        if (need_esc) {
+            res.push_back('\\');
+        }
+        res.push_back(c);
+    }
+
+    return res;
+}
 
 }  // namespace komaru::util

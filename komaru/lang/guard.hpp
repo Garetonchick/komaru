@@ -9,6 +9,7 @@ public:
     explicit Guard(MorphismPtr morphism);
 
     const Morphism& GetMorphism() const;
+    std::string ToString() const;
 
 private:
     MorphismPtr morphism_;

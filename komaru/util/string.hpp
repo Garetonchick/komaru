@@ -8,7 +8,6 @@ inline constexpr bool IsSpace(char c) {
     return c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\t' || c == '\v';
 }
 
-// constexpr std::string Strip(const std::string& s);
 inline constexpr std::string Strip(const std::string& s) {
     int64_t len = static_cast<int64_t>(s.size());
     int64_t start = 0;
@@ -45,5 +44,8 @@ inline decltype(auto) JoinStrings(const std::string& sep) {
            }) |
            std::views::join;
 }
+
+std::string Indent(const std::string& s, const std::string& indent);
+std::string Escape(const std::string& s, const std::string& esc);
 
 }  // namespace komaru::util

@@ -38,6 +38,7 @@ public:
     Type GetSource() const;
     Type GetTarget() const;
     MorphismTag GetTag() const;
+    std::string ToString() const;
 
 private:
     std::string name_;
@@ -55,6 +56,7 @@ public:
     Type GetSource() const;
     Type GetTarget() const;
     MorphismTag GetTag() const;
+    std::string ToString() const;
 
     const std::vector<MorphismPtr>& GetMorphisms() const;
 
@@ -74,6 +76,7 @@ public:
     MorphismTag GetTag() const;
     const Value& GetValue() const;
     MorphismPtr Unrestricted() const;
+    std::string ToString() const;
 
 private:
     std::string name_;
@@ -89,6 +92,7 @@ public:
     Type GetSource() const;
     Type GetTarget() const;
     MorphismTag GetTag() const;
+    std::string ToString() const;
 
     size_t GetPosition() const;
     bool IsNonePosition() const;
@@ -106,6 +110,7 @@ public:
     Type GetSource() const;
     Type GetTarget() const;
     MorphismTag GetTag() const;
+    std::string ToString() const;
 
     const MorphismPtr& GetUnderlyingMorphism() const;
     const std::map<size_t, MorphismPtr>& GetMapping() const;
@@ -123,6 +128,7 @@ public:
     Type GetSource() const;
     Type GetTarget() const;
     MorphismTag GetTag() const;
+    std::string ToString() const;
 
 private:
     std::string name_;
@@ -156,6 +162,7 @@ public:
     Type GetSource() const;
     Type GetTarget() const;
     MorphismTag GetTag() const;
+    std::string ToString() const;
     // TODO: GetType()
 
     // For CRTP
@@ -169,5 +176,8 @@ private:
 };
 
 MorphismPtr BindMorphism(MorphismPtr morphism, std::map<size_t, MorphismPtr> mapping);
+bool IsOperator(const Morphism& morphism);
+bool IsComplex(const Morphism& morphism);
+bool IsFunction(const Morphism& morphism);
 
 }  // namespace komaru::lang

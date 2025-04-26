@@ -20,6 +20,7 @@ public:
     }
 
     Type GetType() const;
+    std::string ToString() const;
 
     // For CRTP
     const Variant* GetVariantPointer() const;
@@ -48,6 +49,7 @@ public:
 
     Type GetType() const;
     const std::vector<Value>& GetValues() const;
+    std::string ToString() const;
 
 private:
     static Type DetermineType(const std::vector<Value>& values);
@@ -78,6 +80,7 @@ public:
     }
 
     Type GetType() const;
+    std::string ToString() const;
 
     // For CRTP
     const Variant* GetVariantPointer() const;

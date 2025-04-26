@@ -91,16 +91,12 @@ size_t TupleType::GetTypesNum() const {
 
 TupleType::TupleType(std::vector<Type> inner_types)
     : inner_types_(std::move(inner_types)) {
-    name_ = "(";
-
     for (size_t i = 0; i < inner_types_.size(); ++i) {
         name_ += inner_types_[i].GetName();
         if (i + 1 != inner_types_.size()) {
-            name_ += ", ";
+            name_ += " x ";
         }
     }
-
-    name_ += ")";
 }
 
 TupleType::ID TupleType::GetID() const {
