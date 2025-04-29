@@ -53,7 +53,7 @@ TEST(Types, Tuple) {
     ASSERT_NE(tuple_ic1, tuple_ib);
 
     ASSERT_EQ(tuple_ic2.GetName(), tuple_ic1.GetVariant<TupleType>().GetName());
-    ASSERT_EQ(tuple_ic2.GetName(), "(Int, Char)");
+    ASSERT_EQ(tuple_ic2.GetName(), "Int x Char");
     ASSERT_TRUE(VecEq(tuple_ic1.GetVariant<TupleType>().GetTupleTypes(),
                       {Type::FromTag(TypeTag::Int), Type::FromTag(TypeTag::Char)}));
 }
