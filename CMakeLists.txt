@@ -6,23 +6,28 @@ include(cmake/Utils.cmake)
 include(cmake/CXXSetup.cmake)
 include(cmake/CXXFlags.cmake)
 
+# TODO: cleanup cmake
+
 include_directories(.)
 
-# file(GLOB EDITOR_SOURCES
-#     komaru/editor/*.cpp komaru/editor/*.hpp
-#     komaru/editor/kimgui/*.cpp komaru/editor/kimgui/*.hpp
-#     ${IMNODE_SOURCES}
-#
+file(GLOB EDITOR_SOURCES komaru/editor/*.cpp komaru/editor/*.hpp)
 file(GLOB UTIL_SOURCES komaru/util/*.cpp komaru/util/*.hpp)
 file(GLOB LANG_SOURCES komaru/lang/*.cpp komaru/lang/*.hpp)
 file(GLOB_RECURSE TRANSLATE_SOURCES komaru/translate/*.cpp komaru/translate/*.hpp)
 
-add_library(util STATIC ${UTIL_SOURCES})
-add_library(lang STATIC ${LANG_SOURCES})
-add_library(translate STATIC ${TRANSLATE_SOURCES})
-# add_executable(editor ${EDITOR_SOURCES})
+add_library(komarulib ${UTIL_SOURCES} ${LANG_SOURCES} ${TRANSLATE_SOURCES})
 
-# target_link_libraries(editor PRIVATE util lang translate)
+# Setup Qt
+list(APPEND CMAKE_PREFIX_PATH "/home/gareton/Qt/6.9.0/gcc_64/lib/cmake/Qt6") # TODO: more elegant solution
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+
+add_executable(editor ${EDITOR_SOURCES})
+
+target_link_libraries(editor PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets komarulib)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -35,22 +40,11 @@ enable_testing()
 
 set(ENV{ASAN_OPTIONS} "alloc_dealloc_mismatch=0")
 
-file(GLOB TEST_SOURCES
-    test/lang/*.cpp
-    test/lang/*.hpp
-    test/translate/*.cpp
-    test/translate/*.hpp
-)
+file(GLOB_RECURSE TEST_SOURCES test/*.cpp test/*.hpp)
 
 add_executable(tests ${TEST_SOURCES})
 
-target_link_libraries(
-  tests
-  GTest::gtest_main
-  translate
-  lang
-  util
-)
+target_link_libraries(tests GTest::gtest_main komarulib)
 
 include(GoogleTest)
 gtest_discover_tests(tests)
@@ -63,10 +57,5 @@ add_library(playlib
             test/translate/program_utils.cpp
             test/translate/program_utils.hpp
 )
-
-target_link_libraries(playground PRIVATE
-    playlib
-    translate
-    lang
-    util
-)
+target_link_libraries(playlib PUBLIC komarulib)
+target_link_libraries(playground PRIVATE playlib)
