@@ -13,6 +13,17 @@ public:
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
+protected:
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
+    QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
+    void focusOutEvent(QFocusEvent* event) override;
+
+private:
+    void SetupMainText();
+    void StartMainTextEditing();
+    void StopMainTextEditing();
+    void UpdateLayout();
+
 private:
     static constexpr QColor kNodeColor{60, 60, 60};
     static constexpr QColor kOutlineColor{120, 120, 120};
@@ -21,6 +32,7 @@ private:
     static constexpr qreal kRoundingRadius{5.0};
 
     QRectF bounding_rect_{0, 0, 100, 100};
+    QGraphicsTextItem* main_text_{nullptr};
 };
 
 }  // namespace komaru::editor

@@ -19,18 +19,6 @@ GridView::GridView(QGraphicsScene* scene, QWidget* parent)
     setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
     setSceneRect(-1'000'000, -1'000'000, 2'000'000, 2'000'000);
     setMouseTracking(true);
-
-    // Test nodes
-    auto node1 = std::make_unique<Node>();
-    auto node2 = std::make_unique<Node>();
-    auto node3 = std::make_unique<Node>();
-    node1->setPos(-200, -150);
-    node2->setPos(200, 150);
-    node3->setPos(300, -170);
-
-    scene->addItem(node1.release());
-    scene->addItem(node2.release());
-    scene->addItem(node3.release());
 }
 
 void GridView::SetLineGap(qreal gap) {
@@ -160,6 +148,28 @@ void GridView::mouseReleaseEvent(QMouseEvent* event) {
         return;
     }
     QGraphicsView::mouseReleaseEvent(event);
+}
+
+void GridView::keyPressEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_A && event->modifiers() & Qt::ControlModifier) {
+        QPointF cursor_pos = mapToScene(mapFromGlobal(QCursor::pos()));
+
+        auto node = std::make_unique<Node>();
+        node->setPos(cursor_pos);
+        scene()->addItem(node.release());
+        event->accept();
+    } else if (event->key() == Qt::Key_D && event->modifiers() & Qt::ControlModifier) {
+        QList<QGraphicsItem*> selected = scene()->selectedItems();
+
+        for (QGraphicsItem* item : selected) {
+            if (Node* node = dynamic_cast<Node*>(item)) {
+                scene()->removeItem(node);
+                delete node;
+            }
+        }
+    } else {
+        QGraphicsView::keyPressEvent(event);
+    }
 }
 
 }  // namespace komaru::editor
