@@ -21,6 +21,7 @@ public:
 protected:
     void drawBackground(QPainter* painter, const QRectF& rect) override;
     void wheelEvent(QWheelEvent* event) override;
+    void scrollContentsBy(int dx, int dy) override;
     void mousePressEvent(QMouseEvent* event) override;
     void mouseMoveEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
@@ -38,7 +39,8 @@ private:
     qreal zoom_speed_{1.15};
 
     bool is_panning_{false};
-    QPoint last_pan_pos_;
+    QPoint last_pan_pos_{};
+    bool disable_scrolling_{false};
 };
 
 }  // namespace komaru::editor

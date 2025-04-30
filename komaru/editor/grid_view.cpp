@@ -13,7 +13,7 @@ GridView::GridView(QGraphicsScene* scene, QWidget* parent)
     setResizeAnchor(QGraphicsView::AnchorViewCenter);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    setSceneRect(-1'000'000, -1'000'000, 1'000'000, 1'000'000);
+    setSceneRect(-1'000'000, -1'000'000, 2'000'000, 2'000'000);
     setMouseTracking(true);
 }
 
@@ -75,7 +75,12 @@ void GridView::drawBackground(QPainter* painter, const QRectF& rect) {
 
 void GridView::wheelEvent(QWheelEvent* event) {
     if (!(event->modifiers() & Qt::ControlModifier)) {
-        event->accept();
+        QPoint last_scroll_pos(horizontalScrollBar()->value(), verticalScrollBar()->value());
+        disable_scrolling_ = true;
+        QGraphicsView::wheelEvent(event);
+        disable_scrolling_ = false;
+        horizontalScrollBar()->setValue(last_scroll_pos.x());
+        verticalScrollBar()->setValue(last_scroll_pos.y());
         return;
     }
 
@@ -86,6 +91,13 @@ void GridView::wheelEvent(QWheelEvent* event) {
     }
 
     event->accept();
+}
+
+void GridView::scrollContentsBy(int dx, int dy) {
+    if (disable_scrolling_) {
+        return;
+    }
+    QGraphicsView::scrollContentsBy(dx, dy);
 }
 
 void GridView::Zoom(qreal mul) {
