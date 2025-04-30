@@ -2,6 +2,9 @@
 
 #include <QWheelEvent>
 #include <QScrollBar>
+#include <QGraphicsScene>
+
+#include <komaru/editor/node.hpp>
 
 namespace komaru::editor {
 
@@ -13,8 +16,21 @@ GridView::GridView(QGraphicsScene* scene, QWidget* parent)
     setResizeAnchor(QGraphicsView::AnchorViewCenter);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
     setSceneRect(-1'000'000, -1'000'000, 2'000'000, 2'000'000);
     setMouseTracking(true);
+
+    // Test nodes
+    auto node1 = std::make_unique<Node>();
+    auto node2 = std::make_unique<Node>();
+    auto node3 = std::make_unique<Node>();
+    node1->setPos(-200, -150);
+    node2->setPos(200, 150);
+    node3->setPos(300, -170);
+
+    scene->addItem(node1.release());
+    scene->addItem(node2.release());
+    scene->addItem(node3.release());
 }
 
 void GridView::SetLineGap(qreal gap) {
@@ -54,7 +70,7 @@ void GridView::drawBackground(QPainter* painter, const QRectF& rect) {
     qreal hor_finish = std::ceil(rect.bottom() / line_gap_) * line_gap_;
 
     auto get_pen = [this](qreal pos) -> QPen {
-        bool is_major = (std::lround(pos / line_gap_) % major_mod_) == 0;
+        bool is_major = (std::lround(std::abs(pos) / line_gap_) % major_mod_) == 0;
         if (is_major) {
             return QPen(base_color_.darker(major_darker_factor_), base_width_ * major_width_mul_);
         }
@@ -81,6 +97,10 @@ void GridView::wheelEvent(QWheelEvent* event) {
         disable_scrolling_ = false;
         horizontalScrollBar()->setValue(last_scroll_pos.x());
         verticalScrollBar()->setValue(last_scroll_pos.y());
+        return;
+    }
+    if (is_panning_) {
+        event->accept();
         return;
     }
 
