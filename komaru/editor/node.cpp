@@ -16,7 +16,6 @@ Node::Node(QGraphicsItem* parent)
     setFlag(QGraphicsItem::ItemIsSelectable);
     setFlag(QGraphicsItem::ItemSendsGeometryChanges);
     setFlag(QGraphicsItem::ItemIsFocusable);
-    setCacheMode(DeviceCoordinateCache);
 
     SetupMainText();
 
@@ -113,13 +112,12 @@ void Node::StopMainTextEditing() {
 }
 
 void Node::UpdateLayout() {
-    const qreal padding = 10.0;
-    QRectF text_rect = main_text_->boundingRect();
+    QRectF main_text_rect = main_text_->boundingRect();
 
     prepareGeometryChange();
-    bounding_rect_ =
-        QRectF(0, 0, text_rect.width() + 2 * padding, text_rect.height() + 2 * padding);
-    main_text_->setPos(padding, padding);
+    bounding_rect_ = QRectF(0, 0, main_text_rect.width() + 2 * kMainTextPadding,
+                            main_text_rect.height() + 2 * kMainTextPadding);
+    main_text_->setPos(kMainTextPadding, kMainTextPadding);
     update();
 }
 

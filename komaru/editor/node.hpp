@@ -30,6 +30,7 @@ private:
     static constexpr QColor kSelectedOutlineColor{5, 119, 227};
     static constexpr qreal kOutlineWidth{2.0};
     static constexpr qreal kRoundingRadius{5.0};
+    static constexpr qreal kMainTextPadding{10.f};
 
     QRectF bounding_rect_{0, 0, 100, 100};
     QGraphicsTextItem* main_text_{nullptr};
