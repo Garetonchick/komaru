@@ -2,6 +2,8 @@
 
 #include <QGraphicsObject>
 
+#include <komaru/editor/pin.hpp>
+
 namespace komaru::editor {
 
 class Node : public QGraphicsObject {
@@ -23,6 +25,11 @@ private:
     void StartMainTextEditing();
     void StopMainTextEditing();
     void UpdateLayout();
+    void SetNewInputPin();
+    bool RemoveInputPin();
+    void AddOutputPin();
+    bool RemoveOutputPin();
+    void PositionPins();
 
 private:
     static constexpr QColor kNodeColor{60, 60, 60};
@@ -34,6 +41,8 @@ private:
 
     QRectF bounding_rect_{0, 0, 100, 100};
     QGraphicsTextItem* main_text_{nullptr};
+    Pin* input_pin_{nullptr};
+    std::vector<Pin*> output_pins_;
 };
 
 }  // namespace komaru::editor

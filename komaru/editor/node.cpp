@@ -19,6 +19,10 @@ Node::Node(QGraphicsItem* parent)
 
     SetupMainText();
 
+    SetNewInputPin();
+    AddOutputPin();
+    AddOutputPin();
+
     connect(main_text_->document(), &QTextDocument::contentsChanged, this, &Node::UpdateLayout);
 }
 
@@ -118,7 +122,59 @@ void Node::UpdateLayout() {
     bounding_rect_ = QRectF(0, 0, main_text_rect.width() + 2 * kMainTextPadding,
                             main_text_rect.height() + 2 * kMainTextPadding);
     main_text_->setPos(kMainTextPadding, kMainTextPadding);
+    PositionPins();
+
     update();
+}
+
+void Node::SetNewInputPin() {
+    RemoveInputPin();
+    input_pin_ = new Pin(this, Pin::Input, this);
+    PositionPins();
+}
+
+bool Node::RemoveInputPin() {
+    if (!input_pin_) {
+        return false;
+    }
+    delete input_pin_;
+    input_pin_ = nullptr;
+    return true;
+}
+
+void Node::AddOutputPin() {
+    output_pins_.push_back(new Pin(this, Pin::Output, this));
+    UpdateLayout();
+}
+
+bool Node::RemoveOutputPin() {
+    if (output_pins_.empty()) {
+        return false;
+    }
+    Pin* pin = output_pins_.back();
+    output_pins_.pop_back();
+    delete pin;
+    return true;
+}
+
+void Node::PositionPins() {
+    if (input_pin_) {
+        input_pin_->setPos(0, bounding_rect_.height() * 0.5);
+        input_pin_->setZValue(this->zValue() + 1);
+    }
+
+    if (output_pins_.empty()) {
+        return;
+    }
+
+    qreal pin_step = bounding_rect_.height() / (output_pins_.size() + 1);
+    qreal pin_y = pin_step;
+
+    for (Pin* output_pin : output_pins_) {
+        output_pin->setPos(bounding_rect_.width(), pin_y);
+        output_pin->setZValue(this->zValue() + 1);
+        pin_y += pin_step;
+    }
 }
 
 }  // namespace komaru::editor
