@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <ranges>
+#include <algorithm>
 
 namespace komaru::util {
 
@@ -28,5 +29,10 @@ bool VecEq(const std::vector<T>& a, const std::vector<T>& b) {
 auto Enumerate(std::ranges::input_range auto&& r) {
     return std::views::zip(std::views::iota(static_cast<size_t>(0)), std::forward<decltype(r)>(r));
 };
+
+template <typename T>
+void UnstableErase(std::vector<T>& v, const T& val) {
+    v.resize(std::remove(v.begin(), v.end(), val) - v.begin());
+}
 
 }  // namespace komaru::util

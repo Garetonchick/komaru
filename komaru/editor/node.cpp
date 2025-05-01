@@ -26,6 +26,16 @@ Node::Node(QGraphicsItem* parent)
     connect(main_text_->document(), &QTextDocument::contentsChanged, this, &Node::UpdateLayout);
 }
 
+Node::~Node() {
+    if (input_pin_) {
+        input_pin_->DestroyConnections();
+    }
+
+    for (Pin* output_pin : output_pins_) {
+        output_pin->DestroyConnections();
+    }
+}
+
 QRectF Node::boundingRect() const {
     return bounding_rect_;
 }
@@ -42,6 +52,14 @@ void Node::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWid
     }
 }
 
+Pin* Node::GetInputPin() {
+    return input_pin_;
+}
+
+std::vector<Pin*>& Node::GetOutputPins() {
+    return output_pins_;
+}
+
 void Node::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
     QPointF local_pos = main_text_->mapFromParent(event->pos());
     if (main_text_->shape().contains(local_pos)) {
@@ -54,7 +72,12 @@ void Node::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
 }
 
 QVariant Node::itemChange(GraphicsItemChange change, const QVariant& value) {
-    if (change == QGraphicsItem::ItemSelectedChange && !value.toBool()) {
+    if (change == ItemPositionHasChanged) {
+        input_pin_->UpdateConnections();
+        for (Pin* pin : output_pins_) {
+            pin->UpdateConnections();
+        }
+    } else if (change == QGraphicsItem::ItemSelectedChange && !value.toBool()) {
         StopMainTextEditing();
     } else if (change == QGraphicsItem::ItemSceneHasChanged) {
         if (value.toBool() && scene()) {
@@ -75,7 +98,7 @@ void Node::focusOutEvent(QFocusEvent* event) {
 }
 
 void Node::SetupMainText() {
-    main_text_ = new QGraphicsTextItem(this);
+    main_text_ = new Text(this);
     main_text_->setDefaultTextColor(Qt::lightGray);
     QFont font = main_text_->font();
     font.setPointSize(20);

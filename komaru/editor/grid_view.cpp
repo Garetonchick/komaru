@@ -5,6 +5,7 @@
 #include <QGraphicsScene>
 
 #include <komaru/editor/node.hpp>
+#include <komaru/editor/connection.hpp>
 
 namespace komaru::editor {
 
@@ -113,31 +114,53 @@ void GridView::Zoom(qreal mul) {
 }
 
 void GridView::mousePressEvent(QMouseEvent* event) {
-    if (event->button() != Qt::RightButton) {
-        QGraphicsView::mousePressEvent(event);
+    QGraphicsItem* item = itemAt(event->pos());
+
+    if (event->button() == Qt::RightButton) {
+        is_panning_ = true;
+        last_pan_pos_ = event->pos();
+        setCursor(Qt::ClosedHandCursor);
+
+        event->accept();
         return;
+    } else if (event->button() == Qt::LeftButton && item) {
+        if (Pin* pin = dynamic_cast<Pin*>(item)) {
+            QPointF pin_pos = pin->mapToScene(0, 0);
+            QPointF cursor_pos = mapToScene(event->pos());
+            conn_start_pin_ = pin;
+
+            pending_conn_ = new QGraphicsLineItem();
+            pending_conn_->setPen(QPen(Qt::yellow, 2));
+            pending_conn_->setLine(QLineF(pin_pos, cursor_pos));
+            pending_conn_->setZValue(1000);
+
+            scene()->addItem(pending_conn_);
+            setCursor(Qt::CrossCursor);
+            event->accept();
+            return;
+        }
     }
 
-    is_panning_ = true;
-    last_pan_pos_ = event->pos();
-    setCursor(Qt::ClosedHandCursor);
-
-    event->accept();
+    QGraphicsView::mousePressEvent(event);
 }
 
 void GridView::mouseMoveEvent(QMouseEvent* event) {
-    if (!is_panning_) {
+    if (is_panning_) {
+        QPoint dlt = event->pos() - last_pan_pos_;
+        horizontalScrollBar()->setValue(horizontalScrollBar()->value() - dlt.x());
+        verticalScrollBar()->setValue(verticalScrollBar()->value() - dlt.y());
+
+        last_pan_pos_ = event->pos();
+
+        event->accept();
+    } else if (pending_conn_) {
+        QPointF cursor_pos = mapToScene(event->pos());
+        QPointF pin_pos = conn_start_pin_->mapToScene(0, 0);
+        pending_conn_->setLine(QLineF(pin_pos, cursor_pos));
+        event->accept();
+    } else {
         QGraphicsView::mouseMoveEvent(event);
-        return;
     }
-
-    QPoint dlt = event->pos() - last_pan_pos_;
-    horizontalScrollBar()->setValue(horizontalScrollBar()->value() - dlt.x());
-    verticalScrollBar()->setValue(verticalScrollBar()->value() - dlt.y());
-
-    last_pan_pos_ = event->pos();
-
-    event->accept();
 }
 
 void GridView::mouseReleaseEvent(QMouseEvent* event) {
@@ -145,9 +168,33 @@ void GridView::mouseReleaseEvent(QMouseEvent* event) {
         is_panning_ = false;
         setCursor(Qt::ArrowCursor);
         event->accept();
-        return;
+    } else if (event->button() == Qt::LeftButton && pending_conn_) {
+        setCursor(Qt::ArrowCursor);
+
+        scene()->removeItem(pending_conn_);
+        delete pending_conn_;
+        pending_conn_ = nullptr;
+
+        QGraphicsItem* item = itemAt(event->pos());
+        Pin* end_pin = dynamic_cast<Pin*>(item);
+
+        if (end_pin && conn_start_pin_->ConnectableTo(end_pin)) {
+            Pin* output_pin = conn_start_pin_;
+            Pin* input_pin = end_pin;
+
+            if (output_pin->GetPinType() != Pin::Output) {
+                std::swap(output_pin, input_pin);
+            }
+
+            Connection* conn = new Connection(output_pin, input_pin);
+            scene()->addItem(conn);
+        }
+
+        conn_start_pin_ = nullptr;
+        event->accept();
+    } else {
+        QGraphicsView::mouseReleaseEvent(event);
     }
-    QGraphicsView::mouseReleaseEvent(event);
 }
 
 void GridView::keyPressEvent(QKeyEvent* event) {
@@ -165,6 +212,10 @@ void GridView::keyPressEvent(QKeyEvent* event) {
             if (Node* node = dynamic_cast<Node*>(item)) {
                 scene()->removeItem(node);
                 delete node;
+            } else if (Connection* conn = dynamic_cast<Connection*>(item)) {
+                conn->Detach();
+                scene()->removeItem(conn);
+                delete conn;
             }
         }
     } else {

@@ -3,6 +3,7 @@
 #include <QGraphicsObject>
 
 #include <komaru/editor/pin.hpp>
+#include <komaru/editor/text.hpp>
 
 namespace komaru::editor {
 
@@ -11,9 +12,13 @@ class Node : public QGraphicsObject {
 
 public:
     explicit Node(QGraphicsItem* parent = nullptr);
+    ~Node();
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+
+    Pin* GetInputPin();
+    std::vector<Pin*>& GetOutputPins();
 
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
@@ -40,7 +45,7 @@ private:
     static constexpr qreal kMainTextPadding{10.f};
 
     QRectF bounding_rect_{0, 0, 100, 100};
-    QGraphicsTextItem* main_text_{nullptr};
+    Text* main_text_{nullptr};
     Pin* input_pin_{nullptr};
     std::vector<Pin*> output_pins_;
 };

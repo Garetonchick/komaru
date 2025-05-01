@@ -4,6 +4,8 @@
 
 namespace komaru::editor {
 
+class Pin;
+
 class GridView : public QGraphicsView {
     Q_OBJECT
 
@@ -42,6 +44,8 @@ private:
     bool is_panning_{false};
     QPoint last_pan_pos_{};
     bool disable_scrolling_{false};
+    QGraphicsLineItem* pending_conn_{nullptr};
+    Pin* conn_start_pin_{nullptr};
 };
 
 }  // namespace komaru::editor
