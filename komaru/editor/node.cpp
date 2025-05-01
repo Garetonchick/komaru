@@ -147,6 +147,14 @@ void Node::UpdateLayout() {
     main_text_->setPos(kMainTextPadding, kMainTextPadding);
     PositionPins();
 
+    if (input_pin_) {
+        input_pin_->UpdateConnections();
+    }
+
+    for (Pin* out_pin : output_pins_) {
+        out_pin->UpdateConnections();
+    }
+
     update();
 }
 

@@ -1,6 +1,11 @@
 #include "connection.hpp"
 
 #include <QPen>
+#include <QFont>
+#include <QTextDocument>
+#include <QTextOption>
+#include <QTextCursor>
+#include <QGraphicsSceneMouseEvent>
 
 namespace komaru::editor {
 
@@ -13,10 +18,14 @@ Connection::Connection(Pin* source, Pin* target, QGraphicsItem* parent)
     setFlag(QGraphicsItem::ItemIsSelectable);
     setAcceptHoverEvents(true);
 
-    UpdateLayout();
-
     source_pin_->AddConnection(this);
     target_pin_->AddConnection(this);
+
+    SetupText();
+    UpdateLayout();
+
+    connect(text_->document(), &QTextDocument::contentsChanged, this, &Connection::PositionText);
+    connect(text_, &Text::FocusedOut, this, &Connection::StopEditing);
 }
 
 bool Connection::HasPin(const Pin* pin) const {
@@ -41,11 +50,56 @@ void Connection::UpdateLayout() {
     path.cubicTo(ctrl1, ctrl2, end);
 
     setPath(path);
+    PositionText();
 }
 
 void Connection::Detach() {
     source_pin_->RemoveConnection(this);
     target_pin_->RemoveConnection(this);
+}
+
+void Connection::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
+    text_->setTextInteractionFlags(Qt::TextEditorInteraction);
+    text_->setFocus();
+
+    QTextCursor cursor = text_->textCursor();
+    cursor.select(QTextCursor::Document);
+    text_->setTextCursor(cursor);
+
+    event->accept();
+}
+
+void Connection::SetupText() {
+    text_ = new Text(this);
+    text_->setPlainText("$");
+    text_->setDefaultTextColor(Qt::black);
+    text_->setTextInteractionFlags(Qt::TextEditorInteraction);
+
+    QFont font = text_->font();
+    font.setPointSize(12);
+    text_->setFont(font);
+    text_->document();
+
+    QTextOption text_option = text_->document()->defaultTextOption();
+    text_option.setAlignment(Qt::AlignCenter);
+    text_->document()->setDefaultTextOption(text_option);
+}
+
+void Connection::PositionText() {
+    QPointF mid_point = shape().pointAtPercent(0.5);
+    QPointF offset(0, -5);
+
+    QRectF text_rect = text_->boundingRect();
+    mid_point = mid_point - QPointF(text_rect.width() / 2, text_rect.height() + 5);
+    text_->setPos(mid_point + offset);
+}
+
+void Connection::StopEditing() {
+    QTextCursor cursor = text_->textCursor();
+    cursor.clearSelection();
+    cursor.setPosition(0);
+    text_->setTextCursor(cursor);
+    text_->update();
 }
 
 }  // namespace komaru::editor
