@@ -8,6 +8,8 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsScene>
 
+#include <algorithm>
+
 namespace komaru::editor {
 
 Node::Node(QGraphicsItem* parent)
@@ -20,7 +22,6 @@ Node::Node(QGraphicsItem* parent)
     SetupMainText();
 
     SetNewInputPin();
-    AddOutputPin();
     AddOutputPin();
 
     connect(main_text_->document(), &QTextDocument::contentsChanged, this, &Node::UpdateLayout);
@@ -104,9 +105,25 @@ void Node::keyPressEvent(QKeyEvent* event) {
         } else {
             SetNewInputPin();
         }
+        event->accept();
+    } else {
+        QGraphicsObject::keyPressEvent(event);
     }
+}
 
-    QGraphicsObject::keyPressEvent(event);
+void Node::wheelEvent(QGraphicsSceneWheelEvent* event) {
+    if (event->modifiers() & Qt::ShiftModifier) {
+        if (event->delta() > 0) {
+            AddOutputPin();
+        } else {
+            RemoveOutputPin();
+        }
+
+        UpdateLayout();
+        event->accept();
+    } else {
+        QGraphicsObject::wheelEvent(event);
+    }
 }
 
 void Node::SetupMainText() {
@@ -152,11 +169,13 @@ void Node::StopMainTextEditing() {
 
 void Node::UpdateLayout() {
     QRectF main_text_rect = main_text_->boundingRect();
+    qreal width = main_text_rect.width() + 2 * kMainTextPadding;
+    qreal height = main_text_rect.height() + 2 * kMainTextPadding;
+    height = std::max(height, output_pins_.size() * kHeightPerPin);
 
     prepareGeometryChange();
-    bounding_rect_ = QRectF(0, 0, main_text_rect.width() + 2 * kMainTextPadding,
-                            main_text_rect.height() + 2 * kMainTextPadding);
-    main_text_->setPos(kMainTextPadding, kMainTextPadding);
+    bounding_rect_ = QRectF(0, 0, width, height);
+    main_text_->setPos(kMainTextPadding, (height - main_text_rect.height()) * 0.5);
     PositionPins();
 
     if (input_pin_) {
@@ -198,6 +217,7 @@ bool Node::RemoveOutputPin() {
     }
     Pin* pin = output_pins_.back();
     output_pins_.pop_back();
+    pin->DestroyConnections();
     scene()->removeItem(pin);
     delete pin;
     return true;

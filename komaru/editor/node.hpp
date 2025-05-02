@@ -25,6 +25,7 @@ protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
     void focusOutEvent(QFocusEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
+    void wheelEvent(QGraphicsSceneWheelEvent* event) override;
 
 private:
     void SetupMainText();
@@ -44,6 +45,7 @@ private:
     static constexpr qreal kOutlineWidth{2.0};
     static constexpr qreal kRoundingRadius{5.0};
     static constexpr qreal kMainTextPadding{10.f};
+    static constexpr qreal kHeightPerPin{30.f};
 
     QRectF bounding_rect_{0, 0, 100, 100};
     Text* main_text_{nullptr};
