@@ -97,6 +97,18 @@ void Node::focusOutEvent(QFocusEvent* event) {
     QGraphicsObject::focusOutEvent(event);
 }
 
+void Node::keyPressEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_I && (event->modifiers() & Qt::ControlModifier)) {
+        if (input_pin_) {
+            RemoveInputPin();
+        } else {
+            SetNewInputPin();
+        }
+    }
+
+    QGraphicsObject::keyPressEvent(event);
+}
+
 void Node::SetupMainText() {
     main_text_ = new Text(this);
     main_text_->setDefaultTextColor(Qt::lightGray);
@@ -168,6 +180,8 @@ bool Node::RemoveInputPin() {
     if (!input_pin_) {
         return false;
     }
+    scene()->removeItem(input_pin_);
+    input_pin_->DestroyConnections();
     delete input_pin_;
     input_pin_ = nullptr;
     return true;
@@ -184,6 +198,7 @@ bool Node::RemoveOutputPin() {
     }
     Pin* pin = output_pins_.back();
     output_pins_.pop_back();
+    scene()->removeItem(pin);
     delete pin;
     return true;
 }
