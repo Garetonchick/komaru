@@ -18,7 +18,7 @@ protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
 
 signals:
-    void FocusedOut();
+    void FocusedOut(Text* text);
 };
 
 }  // namespace komaru::editor

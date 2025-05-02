@@ -23,8 +23,6 @@ Node::Node(QGraphicsItem* parent)
 
     SetNewInputPin();
     AddOutputPin();
-
-    connect(main_text_->document(), &QTextDocument::contentsChanged, this, &Node::UpdateLayout);
 }
 
 Node::~Node() {
@@ -126,7 +124,7 @@ void Node::keyPressEvent(QKeyEvent* event) {
             SetNewInputPin();
         }
         event->accept();
-    } else if (event->key() == Qt::Key_E) {
+    } else if (event->key() == Qt::Key_E && ctrl) {
         if (output_pins_.size() != 1) {
             event->ignore();
             return;
@@ -134,6 +132,17 @@ void Node::keyPressEvent(QKeyEvent* event) {
         EnableLabels();
         Text* text = pin2label_[output_pins_.front()];
         StartPinLabelTextEditing(text);
+        event->accept();
+    } else if (event->key() == Qt::Key_T && ctrl) {
+        if (tag_text_) {
+            StartTagTextEditing();
+            event->accept();
+            return;
+        }
+        SetupTagText();
+        PositionTag();
+        StartTagTextEditing();
+        event->accept();
     } else {
         QGraphicsObject::keyPressEvent(event);
     }
@@ -169,6 +178,9 @@ void Node::SetupMainText() {
     main_text_->document()->setDefaultTextOption(text_option);
     main_text_->document()->setDocumentMargin(4);
     main_text_->setTextInteractionFlags(Qt::NoTextInteraction);
+
+    connect(main_text_->document(), &QTextDocument::contentsChanged, this, &Node::UpdateLayout);
+    connect(main_text_, &Text::FocusedOut, this, &Node::StopMainTextEditing);
 
     UpdateLayout();
 }
@@ -211,6 +223,7 @@ void Node::UpdateLayout() {
     main_text_->setPos(kMainTextPadding, (height - main_text_rect.height()) * 0.5);
     PositionPinLabels();
     PositionPins();
+    PositionTag();
 
     if (input_pin_) {
         input_pin_->UpdateConnections();
@@ -313,6 +326,7 @@ void Node::SetupPinLabelText(Pin* pin) {
     label_text->setTextInteractionFlags(Qt::NoTextInteraction);
 
     connect(label_text->document(), &QTextDocument::contentsChanged, this, &Node::UpdateLayout);
+    connect(label_text, &Text::FocusedOut, this, &Node::StopPinLabelTextEditing);
 }
 
 void Node::StartPinLabelTextEditing(Text* text) {
@@ -340,6 +354,7 @@ void Node::StopPinLabelTextEditing(Text* text) {
 
 void Node::StopAllTextEditingAndUpdate() {
     StopMainTextEditing();
+    StopTagTextEditing();
 
     for (auto [_, label_text] : pin2label_) {
         StopPinLabelTextEditing(label_text);
@@ -365,6 +380,53 @@ void Node::PositionPinLabels() {
                      pin_y - text_rect.height() * 0.5);
         pin_y += pin_step;
     }
+}
+
+void Node::SetupTagText() {
+    tag_text_ = new Text(this);
+    tag_text_->setDefaultTextColor(Qt::black);
+    QFont font = tag_text_->font();
+    font.setPointSize(12);
+    tag_text_->setFont(font);
+    tag_text_->setTextInteractionFlags(Qt::TextEditorInteraction);
+
+    connect(tag_text_->document(), &QTextDocument::contentsChanged, this, &Node::PositionTag);
+    connect(tag_text_, &Text::FocusedOut, this, &Node::StopTagTextEditing);
+}
+
+void Node::StartTagTextEditing() {
+    if (!tag_text_) {
+        return;
+    }
+
+    tag_text_->setTextInteractionFlags(Qt::TextEditorInteraction);
+    tag_text_->setFocus(Qt::MouseFocusReason);
+    tag_text_->setTextInteractionFlags(Qt::TextEditorInteraction);
+
+    QTextCursor text_cursor = tag_text_->textCursor();
+    text_cursor.select(QTextCursor::Document);
+    tag_text_->setTextCursor(text_cursor);
+}
+
+void Node::StopTagTextEditing() {
+    if (!tag_text_) {
+        return;
+    }
+    QTextCursor cursor = tag_text_->textCursor();
+    cursor.clearSelection();
+    cursor.setPosition(0);
+    tag_text_->setTextCursor(cursor);
+    tag_text_->clearFocus();
+    tag_text_->update();
+}
+
+void Node::PositionTag() {
+    if (!tag_text_) {
+        return;
+    }
+    QRectF text_rect = tag_text_->boundingRect();
+    tag_text_->setPos((bounding_rect_.width() - text_rect.width()) * 0.5,
+                      -kTagMargin - text_rect.height());
 }
 
 }  // namespace komaru::editor

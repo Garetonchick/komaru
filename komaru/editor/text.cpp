@@ -17,7 +17,7 @@ void Text::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWid
 
 void Text::focusOutEvent(QFocusEvent* event) {
     QGraphicsTextItem::focusOutEvent(event);
-    emit FocusedOut();
+    emit FocusedOut(this);
 }
 
 void Text::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {

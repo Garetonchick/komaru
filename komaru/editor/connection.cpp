@@ -78,7 +78,6 @@ void Connection::SetupText() {
     QFont font = text_->font();
     font.setPointSize(12);
     text_->setFont(font);
-    text_->document();
 
     QTextOption text_option = text_->document()->defaultTextOption();
     text_option.setAlignment(Qt::AlignCenter);
