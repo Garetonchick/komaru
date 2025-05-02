@@ -19,6 +19,7 @@ public:
 
     Pin* GetInputPin();
     std::vector<Pin*>& GetOutputPins();
+    void EnableLabels();
 
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
@@ -37,6 +38,11 @@ private:
     void AddOutputPin();
     bool RemoveOutputPin();
     void PositionPins();
+    void SetupPinLabelText(Pin* pin);
+    void StartPinLabelTextEditing(Text* text);
+    void StopPinLabelTextEditing(Text* text);
+    void StopAllTextEditingAndUpdate();
+    void PositionPinLabels();
 
 private:
     static constexpr QColor kNodeColor{60, 60, 60};
@@ -46,11 +52,13 @@ private:
     static constexpr qreal kRoundingRadius{5.0};
     static constexpr qreal kMainTextPadding{10.f};
     static constexpr qreal kHeightPerPin{30.f};
+    static constexpr qreal kPinLabelRightPadding{5.f};
 
     QRectF bounding_rect_{0, 0, 100, 100};
     Text* main_text_{nullptr};
     Pin* input_pin_{nullptr};
     std::vector<Pin*> output_pins_;
+    std::unordered_map<Pin*, Text*> pin2label_;
 };
 
 }  // namespace komaru::editor

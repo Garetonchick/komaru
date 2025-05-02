@@ -198,14 +198,15 @@ void GridView::mouseReleaseEvent(QMouseEvent* event) {
 }
 
 void GridView::keyPressEvent(QKeyEvent* event) {
-    if (event->key() == Qt::Key_A && event->modifiers() & Qt::ControlModifier) {
+    bool ctrl = event->modifiers() & Qt::ControlModifier;
+    if (event->key() == Qt::Key_A && ctrl) {
         QPointF cursor_pos = mapToScene(mapFromGlobal(QCursor::pos()));
 
         auto node = std::make_unique<Node>();
         node->setPos(cursor_pos);
         scene()->addItem(node.release());
         event->accept();
-    } else if (event->key() == Qt::Key_D && event->modifiers() & Qt::ControlModifier) {
+    } else if (event->key() == Qt::Key_D && ctrl) {
         QList<QGraphicsItem*> selected = scene()->selectedItems();
 
         for (QGraphicsItem* item : selected) {
