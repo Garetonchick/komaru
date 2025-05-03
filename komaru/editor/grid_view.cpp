@@ -3,6 +3,8 @@
 #include <QWheelEvent>
 #include <QScrollBar>
 #include <QGraphicsScene>
+#include <QPushButton>
+#include <QStyle>
 
 #include <komaru/editor/node.hpp>
 #include <komaru/editor/connection.hpp>
@@ -20,6 +22,8 @@ GridView::GridView(QGraphicsScene* scene, QWidget* parent)
     setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
     setSceneRect(-1'000'000, -1'000'000, 2'000'000, 2'000'000);
     setMouseTracking(true);
+
+    SetupToolbar();
 }
 
 void GridView::SetLineGap(qreal gap) {
@@ -111,6 +115,69 @@ void GridView::scrollContentsBy(int dx, int dy) {
 
 void GridView::Zoom(qreal mul) {
     scale(mul, mul);
+}
+
+void GridView::SetupToolbar() {
+    toolbar_ = new QToolBar(this);
+    toolbar_->setMovable(false);
+    toolbar_->setFloatable(false);
+    toolbar_->setStyleSheet(
+        "QToolBar { background-color: rgba(240, 240, 240, 220); border-radius: 4px; border: 1px "
+        "solid darkgray; }");
+
+    auto* run_button = new QPushButton(toolbar_);
+    auto* save_button = new QPushButton(toolbar_);
+    auto* load_button = new QPushButton(toolbar_);
+
+    run_button->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    save_button->setIcon(style()->standardIcon(QStyle::SP_DialogSaveButton));
+    load_button->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
+
+    run_button->setToolTip("Run");
+    save_button->setToolTip("Save");
+    load_button->setToolTip("Load");
+
+    QString button_style =
+        "QPushButton { min-width: 40px; min-height: 40px; padding: 5px; margin: 2px; "
+        "background-color: #f0f0f0; border: 1px solid #c0c0c0; border-radius: 3px; }"
+        "QPushButton:hover { background-color: #e0e0e0; }"
+        "QPushButton:pressed { background-color: #d0d0d0; }";
+
+    run_button->setStyleSheet(button_style);
+    save_button->setStyleSheet(button_style);
+    load_button->setStyleSheet(button_style);
+
+    run_button->setIconSize(QSize(icon_size_, icon_size_));
+    save_button->setIconSize(QSize(icon_size_, icon_size_));
+    load_button->setIconSize(QSize(icon_size_, icon_size_));
+
+    toolbar_->addWidget(run_button);
+    toolbar_->addWidget(save_button);
+    toolbar_->addWidget(load_button);
+
+    connect(run_button, &QPushButton::clicked, this, &GridView::OnRunAction);
+    connect(save_button, &QPushButton::clicked, this, &GridView::OnSaveAction);
+    connect(load_button, &QPushButton::clicked, this, &GridView::OnLoadAction);
+
+    PositionToolbar();
+}
+
+void GridView::PositionToolbar() {
+    int x = (width() - toolbar_->sizeHint().width()) / 2;
+    toolbar_->move(x, 10);
+    toolbar_->raise();
+}
+
+void GridView::OnRunAction() {
+    std::println("OnRunAction");
+}
+
+void GridView::OnSaveAction() {
+    std::println("OnSaveAction");
+}
+
+void GridView::OnLoadAction() {
+    std::println("OnLoadAction");
 }
 
 void GridView::mousePressEvent(QMouseEvent* event) {
@@ -222,6 +289,11 @@ void GridView::keyPressEvent(QKeyEvent* event) {
     } else {
         QGraphicsView::keyPressEvent(event);
     }
+}
+
+void GridView::resizeEvent(QResizeEvent* event) {
+    QGraphicsView::resizeEvent(event);
+    PositionToolbar();
 }
 
 }  // namespace komaru::editor
