@@ -18,8 +18,10 @@ file(GLOB_RECURSE TRANSLATE_SOURCES komaru/translate/*.cpp komaru/translate/*.hp
 add_library(komarulib ${UTIL_SOURCES} ${LANG_SOURCES} ${TRANSLATE_SOURCES})
 
 # Setup Qt
-list(APPEND CMAKE_PREFIX_PATH "/home/gareton/Qt/6.9.0/gcc_64/lib/cmake/Qt6") # TODO: more elegant solution
+list(APPEND CMAKE_PREFIX_PATH "/home/gareton/Qt/6.9.0/gcc_64/lib/cmake/") # TODO: more elegant solution
+
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+find_package(qtermwidget6 REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -27,7 +29,7 @@ set(CMAKE_AUTORCC ON)
 
 add_executable(editor ${EDITOR_SOURCES})
 
-target_link_libraries(editor PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets komarulib)
+target_link_libraries(editor PRIVATE qtermwidget6 Qt6::Core Qt6::Gui Qt6::Widgets komarulib)
 
 include(FetchContent)
 FetchContent_Declare(
