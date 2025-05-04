@@ -70,8 +70,8 @@ lang::CatProgram MakeIfWithLocalVarProgram(int32_t x) {
     auto less4 = MakeRBindIntLess(4);
     auto mul15 = MakeRBindIntMul(15);
     auto add10 = MakeRBindIntPlus(10);
-    auto y_var =
-        Morphism::WithName("y", Type::Auto(), Type::Int());  // Cheat a bit with the source type
+    auto y_var = Morphism::WithName("y", Type::Singleton(),
+                                    Type::Int());  // Cheat a bit with the source type
 
     auto builder = CatProgramBuilder();
 

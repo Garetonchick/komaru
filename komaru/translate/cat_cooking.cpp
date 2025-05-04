@@ -11,7 +11,7 @@ using CPArrow = lang::CatProgram::Arrow;
 using CPBrancher = CPOutPin::Brancher;
 
 RawNodeID UncookNode(RawCatProgram& raw_program, const CPNode& node);
-void UncookArrow(RawCatProgram& raw_program, const lang::Morphism& morphism, RawNodeID source_id,
+void UncookArrow(RawCatProgram& raw_program, const CPArrow& arrow, RawNodeID source_id,
                  RawNodeID target_id, size_t pin_idx);
 std::string ToString(const CPBrancher& brancher);
 
@@ -31,8 +31,8 @@ RawCatProgram Uncook(const lang::CatProgram& program) {
     for (const auto& node : nodes) {
         for (const auto [pin_idx, out_pin] : util::Enumerate(node.OutPins())) {
             for (const auto& arrow : out_pin.Arrows()) {
-                UncookArrow(raw_program, *arrow.GetMorphism(), node2id[&node],
-                            node2id[&arrow.TargetNode()], pin_idx);
+                UncookArrow(raw_program, arrow, node2id[&node], node2id[&arrow.TargetNode()],
+                            pin_idx);
             }
         }
     }
@@ -59,9 +59,16 @@ RawNodeID UncookNode(RawCatProgram& raw_program, const CPNode& node) {
                                       !node.IncomingArrows().empty());
 }
 
-void UncookArrow(RawCatProgram& raw_program, const lang::Morphism& morphism, RawNodeID source_id,
+void UncookArrow(RawCatProgram& raw_program, const CPArrow& arrow, RawNodeID source_id,
                  RawNodeID target_id, size_t pin_idx) {
-    raw_program.Connect(source_id, target_id, pin_idx, morphism.ToString());
+    std::string morphism_str = arrow.GetMorphism()->ToString();
+
+    if (arrow.SourcePin().GetNode().GetType() != lang::Type::Singleton() &&
+        arrow.GetMorphism()->GetSource() == lang::Type::Singleton()) {
+        morphism_str = "! " + morphism_str;
+    }
+
+    raw_program.Connect(source_id, target_id, pin_idx, morphism_str);
 }
 
 std::string ToString(const CPBrancher& brancher) {

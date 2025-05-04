@@ -197,7 +197,7 @@ std::string BindedMorphism::ToString() const {
     }
 
     auto to_wrapped_str = [&](const Morphism& m) {
-        if (IsFunction(m)) {
+        if (IsOperator(m)) {
             return "(" + m.ToString() + ")";
         }
         return m.ToString();

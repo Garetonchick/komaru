@@ -75,7 +75,7 @@ int main() {
     // PlayWithIO();
     // PlayWithGraphvizRaw();
     // VisualizeProgram(komaru::test::MakeFibProgram(5));
-    VisualizeProgram(komaru::test::MakeIO101Program());
-    // VisualizeProgram(komaru::test::MakeIfWithLocalVarProgram(6));
+    // VisualizeProgram(komaru::test::MakeIO101Program());
+    VisualizeProgram(komaru::test::MakeIfWithLocalVarProgram(6));
     // VisualizeProgram(komaru::test::MakeMegaIfProgram(6));
 }
