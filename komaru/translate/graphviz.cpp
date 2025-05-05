@@ -2,7 +2,7 @@
 
 #include <komaru/util/std_extensions.hpp>
 #include <komaru/util/string.hpp>
-#include <komaru/translate/cat_cooking.hpp>
+#include <komaru/translate/cat_uncooking.hpp>
 
 #include <format>
 

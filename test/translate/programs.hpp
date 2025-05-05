@@ -1,5 +1,6 @@
 #pragma once
 #include <komaru/lang/cat_program.hpp>
+#include <komaru/translate/raw_cat_program.hpp>
 
 namespace komaru::test {
 
@@ -55,6 +56,7 @@ int32_t CalcMegaIfResult(int32_t x);
  * S───>Int───>Int
  */
 lang::CatProgram MakeFibProgram(int32_t x);
+translate::RawCatProgram MakeRawFibProgram(int32_t x);
 
 /*
  *               id         $0
@@ -64,5 +66,6 @@ lang::CatProgram MakeFibProgram(int32_t x);
  *               id         $1
  */
 lang::CatProgram MakeIO101Program();
+translate::RawCatProgram MakeRawIO101Program();
 
 }  // namespace komaru::test

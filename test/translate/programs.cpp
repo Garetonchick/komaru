@@ -260,6 +260,38 @@ lang::CatProgram MakeFibProgram(int32_t x) {
     return builder.Extract();
 }
 
+translate::RawCatProgram MakeRawFibProgram(int32_t x) {
+    translate::RawCatProgram prog;
+
+    // fib
+    auto snode = prog.NewRootNodeWithName("Int", "fib", {"| < 2", "*"});
+    auto branch0_node = prog.NewEndNode("Int");
+    auto branch1_node = prog.NewNodeWithName("Int", "mop");
+    auto minus2_node = prog.NewNode("Int");
+    auto minus1_fib_node = prog.NewNodeWithName("Int", "x");
+    auto minus2_fib_node = prog.NewNode("Int");
+    auto pair_node = prog.NewNodeWithName("Int x Int", "y");
+    auto sum_node = prog.NewEndNode("Int");
+
+    prog.Connect(snode, branch0_node, 0, "id")
+        .Connect(snode, branch1_node, 1, "- 1")
+        .Connect(branch1_node, minus2_node, 0, "- 1")
+        .Connect(branch1_node, minus1_fib_node, 0, "fib")
+        .Connect(minus2_node, minus2_fib_node, 0, "fib")
+        .Connect(minus2_fib_node, pair_node, 0, "$0")
+        .Connect(minus1_fib_node, pair_node, 0, "$1")
+        .Connect(pair_node, sum_node, 0, "+");
+
+    // main
+    auto main_node = prog.NewRootNodeWithName("S", "main");
+    auto val_node = prog.NewNodeWithName("Int", "kek");
+    auto final_node = prog.NewEndNode("Int");
+
+    prog.Connect(main_node, val_node, 0, std::to_string(x)).Connect(val_node, final_node, 0, "fib");
+
+    return prog;
+}
+
 lang::CatProgram MakeIO101Program() {
     auto io = Type::Parameterized("IO", {Type::Auto()});
     auto at = Type::Generic("a");
@@ -300,6 +332,28 @@ lang::CatProgram MakeIO101Program() {
         .Connect(sum_pin, final_node, binded_print);
 
     return builder.Extract();
+}
+
+translate::RawCatProgram MakeRawIO101Program() {
+    translate::RawCatProgram prog;
+
+    auto main_node = prog.NewRootNodeWithName("S", "main");
+    auto read_node = prog.NewNode("IO Int");
+    auto num0_node = prog.NewNode("IO Int");
+    auto num1_node = prog.NewNode("IO Int");
+    auto pair_node = prog.NewNode("IO Int x IO Int");
+    auto sum_node = prog.NewNode("IO Int");
+    auto final_node = prog.NewEndNode("IO S");
+
+    prog.Connect(main_node, read_node, 0, "read")
+        .Connect(read_node, num0_node, 0, "id")
+        .Connect(read_node, num1_node, 0, "id")
+        .Connect(num0_node, pair_node, 0, "$0")
+        .Connect(num1_node, pair_node, 0, "$1")
+        .Connect(pair_node, sum_node, 0, "liftM2 +")
+        .Connect(sum_node, final_node, 0, ">>= print");
+
+    return prog;
 }
 
 }  // namespace komaru::test

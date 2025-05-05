@@ -1,6 +1,8 @@
 #include <komaru/translate/cpp/cpp_translator.hpp>
 #include <komaru/translate/graphviz.hpp>
 #include <komaru/util/filesystem.hpp>
+#include <komaru/translate/cat_cooking.hpp>
+#include <komaru/translate/simple_symbols_registry.hpp>
 #include <test/translate/programs.hpp>
 #include <catlib/cpp/catlib.hpp>
 
@@ -28,44 +30,26 @@ void PlayWithIO() {
 }
 
 void PlayWithGraphvizRaw() {
-    using komaru::translate::RawCatProgram;
-    using NodeID = komaru::translate::RawCatProgram::NodeID;
+    auto raw_fib_program = komaru::test::MakeRawFibProgram(5);
 
-    RawCatProgram prog;
-    // fib
-    NodeID snode = prog.NewRootNodeWithName("Int", "fib", {"| <2", "*"});
-    NodeID branch0_node = prog.NewEndNode("Int");
-    NodeID branch1_node = prog.NewNodeWithName("Int", "mop");
-    NodeID minus2_node = prog.NewNode("Int");
-    NodeID minus1_fib_node = prog.NewNodeWithName("Int", "x");
-    NodeID minus2_fib_node = prog.NewNode("Int");
-    NodeID pair_node = prog.NewNodeWithName("Int x Int", "y");
-    NodeID sum_node = prog.NewEndNode("Int");
-
-    prog.Connect(snode, branch0_node, 0, "id")
-        .Connect(snode, branch1_node, 1, "-1")
-        .Connect(branch1_node, minus2_node, 0, "-1")
-        .Connect(branch1_node, minus1_fib_node, 0, "fib")
-        .Connect(minus2_node, minus2_fib_node, 0, "fib")
-        .Connect(minus2_fib_node, pair_node, 0, "$0")
-        .Connect(minus1_fib_node, pair_node, 0, "$1")
-        .Connect(pair_node, sum_node, 0, "+");
-
-    // main
-    NodeID main_node = prog.NewRootNodeWithName("S", "main");
-    NodeID val_node = prog.NewNodeWithName("Int", "kek");
-    NodeID final_node = prog.NewEndNode("Int");
-
-    prog.Connect(main_node, val_node, 0, "5")
-        .Connect(val_node, final_node, 0, "fib");
-
-    WriteFile("graph.dot", komaru::translate::ToGraphviz(prog));
+    WriteFile("graph.dot", komaru::translate::ToGraphviz(raw_fib_program));
     std::println("Generated graph.dot");
 }
 
 void VisualizeProgram(const komaru::lang::CatProgram& cat_program) {
     WriteFile("graph.dot", komaru::translate::ToGraphviz(cat_program));
     std::println("Generated graph.dot");
+}
+
+void PlayWithCooking() {
+    auto raw_program = komaru::test::MakeRawFibProgram(5);
+    auto maybe_program = Cook(raw_program, komaru::translate::SimpleSymbolsRegistry{});
+
+    if(!maybe_program) {
+        std::println("cooking error: {}", maybe_program.error().Error());
+    }
+    // VisualizeProgram(std::move(maybe_program.value()));
+    SaveCode(std::move(maybe_program.value()));
 }
 
 int main() {
@@ -76,6 +60,7 @@ int main() {
     // PlayWithGraphvizRaw();
     // VisualizeProgram(komaru::test::MakeFibProgram(5));
     // VisualizeProgram(komaru::test::MakeIO101Program());
-    VisualizeProgram(komaru::test::MakeIfWithLocalVarProgram(6));
+    // VisualizeProgram(komaru::test::MakeIfWithLocalVarProgram(6));
     // VisualizeProgram(komaru::test::MakeMegaIfProgram(6));
+    PlayWithCooking();
 }

@@ -407,6 +407,7 @@ CppExpr CppTranslator::MakeExprForMorphism(const lang::BuiltinMorphism& morphism
 
     auto make_binary_expr = [&in_expr](const std::string& op) {
         const auto& subexprs = in_expr.GetSubexprs();
+        assert(subexprs.size() == 2);
         return CppExpr(std::format("{} {} {}", subexprs[0], op, subexprs[1]), 1);
     };
 
