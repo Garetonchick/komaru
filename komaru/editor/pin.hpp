@@ -23,11 +23,13 @@ public:
     void UpdateConnections();
     void DestroyConnections();
 
+    const std::vector<Connection*>& GetConnections() const;
     bool ConnectableTo(const Pin* o) const;
     PinType GetPinType() const;
+    const Node* GetNode() const;
 
 private:
-    [[maybe_unused]] Node* node_;
+    Node* node_;
     PinType type_;
     QRectF bounding_rect_;
     std::vector<Connection*> connections_;

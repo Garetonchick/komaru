@@ -1,18 +1,36 @@
 #include "grid_view.hpp"
 
+#include <komaru/editor/node.hpp>
+#include <komaru/editor/connection.hpp>
+#include <komaru/translate/cat_cooking.hpp>
+#include <komaru/translate/simple_symbols_registry.hpp>
+#include <komaru/translate/cpp/cpp_translator.hpp>
+#include <komaru/translate/exec_program.hpp>
+#include <komaru/util/std_extensions.hpp>
+
 #include <QWheelEvent>
 #include <QScrollBar>
 #include <QGraphicsScene>
 #include <QPushButton>
+#include <QString>
 #include <QStyle>
-
-#include <komaru/editor/node.hpp>
-#include <komaru/editor/connection.hpp>
+#include <qtermwidget6/qtermwidget.h>
 
 namespace komaru::editor {
 
-GridView::GridView(QGraphicsScene* scene, QWidget* parent)
-    : QGraphicsView(scene, parent) {
+std::string ConvString(const QString& qs) {
+    std::string s(qs.size(), ' ');
+
+    for (int64_t i = 0; i < qs.size(); ++i) {
+        QChar c = *(qs.data() + i);
+        s[i] = c.toLatin1();
+    }
+    return s;
+}
+
+GridView::GridView(QGraphicsScene* scene, QTermWidget* terminal, QWidget* parent)
+    : QGraphicsView(scene, parent),
+      terminal_(terminal) {
     setRenderHint(QPainter::Antialiasing);
     setDragMode(QGraphicsView::NoDrag);
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
@@ -168,8 +186,92 @@ void GridView::PositionToolbar() {
     toolbar_->raise();
 }
 
+translate::RawCatProgram GridView::ConvertNodeGraphToRawCatProgram() const {
+    translate::RawCatProgram prog;
+    std::unordered_map<const Node*, size_t> node2id;
+
+    for (Node* node : nodes_) {
+        bool has_input = node->GetInputPin() != nullptr;
+        std::optional<std::string> name;
+        std::string type = ConvString(node->GetMainText()->toPlainText());
+        const Text* tag_text = node->GetTagText();
+
+        if (tag_text && !tag_text->toPlainText().isEmpty()) {
+            name = ConvString(tag_text->toPlainText());
+        }
+
+        std::vector<std::string> branchers;
+
+        auto& out_pins = node->GetOutputPins();
+
+        if (out_pins.size() == 1) {
+            auto* label = node->GetPinLabel(out_pins.front());
+            if (label) {
+                branchers.push_back(ConvString(label->toPlainText()));
+            } else {
+                branchers.push_back("*");
+            }
+        } else {
+            for (Pin* out_pin : out_pins) {
+                branchers.push_back(ConvString(node->GetPinLabel(out_pin)->toPlainText()));
+            }
+        }
+
+        size_t id = prog.NewNodeGeneric(type, name, branchers, has_input);
+        node2id.emplace(node, id);
+    }
+
+    for (Node* node : nodes_) {
+        auto& out_pins = node->GetOutputPins();
+        size_t source_id = node2id[node];
+
+        for (const auto [i, out_pin] : util::Enumerate(out_pins)) {
+            const std::vector<Connection*>& conns = out_pin->GetConnections();
+
+            for (const auto& conn : conns) {
+                size_t target_id = node2id[conn->GetTargetPin()->GetNode()];
+                std::string morphism = ConvString(conn->GetText()->toPlainText());
+
+                prog.Connect(source_id, target_id, i, morphism);
+            }
+        }
+    }
+
+    return prog;
+}
+
 void GridView::OnRunAction() {
-    std::println("OnRunAction");
+    auto raw_program = ConvertNodeGraphToRawCatProgram();
+    auto maybe_cat_program = translate::Cook(raw_program, translate::SimpleSymbolsRegistry{});
+
+    if (!maybe_cat_program) {
+        std::println("cooking error: {}", maybe_cat_program.error().Error());
+        return;
+    }
+
+    auto cat_program = std::move(maybe_cat_program.value());
+    auto translator = translate::cpp::CppTranslator("../../catlib/cpp");
+    auto maybe_program = translator.Translate(cat_program);
+
+    if (!maybe_program) {
+        std::println("translation error: {}", maybe_program.error().Error());
+        return;
+    }
+
+    auto& program = maybe_program.value();
+
+    auto build_res = translate::BuildProgram(*program);
+
+    if (build_res.command_res.Fail()) {
+        std::println("build error: STDOUT: {}\nSTDERR: {}\n", build_res.command_res.Stdout(),
+                     build_res.command_res.Stderr());
+        return;
+    }
+
+    terminal_->sendText(QString::fromStdString(build_res.program_path + "\n"));
+    terminal_->show();
+    terminal_->update();
+    terminal_->setFocus();
 }
 
 void GridView::OnSaveAction() {
@@ -270,6 +372,7 @@ void GridView::keyPressEvent(QKeyEvent* event) {
         QPointF cursor_pos = mapToScene(mapFromGlobal(QCursor::pos()));
 
         auto node = std::make_unique<Node>();
+        nodes_.emplace(node.get());
         node->setPos(cursor_pos);
         scene()->addItem(node.release());
         event->accept();
@@ -279,6 +382,7 @@ void GridView::keyPressEvent(QKeyEvent* event) {
         for (QGraphicsItem* item : selected) {
             if (Node* node = dynamic_cast<Node*>(item)) {
                 scene()->removeItem(node);
+                nodes_.erase(node);
                 delete node;
             } else if (Connection* conn = dynamic_cast<Connection*>(item)) {
                 conn->Detach();

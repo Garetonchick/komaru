@@ -1,17 +1,24 @@
 #pragma once
 
+#include <komaru/translate/raw_cat_program.hpp>
+
 #include <QGraphicsView>
 #include <QToolBar>
+
+#include <unordered_set>
+
+class QTermWidget;
 
 namespace komaru::editor {
 
 class Pin;
+class Node;
 
 class GridView : public QGraphicsView {
     Q_OBJECT
 
 public:
-    explicit GridView(QGraphicsScene* scene, QWidget* parent = nullptr);
+    explicit GridView(QGraphicsScene* scene, QTermWidget* terminal, QWidget* parent = nullptr);
 
     void SetLineGap(qreal gap);
     void SetBaseColor(QColor color);
@@ -35,6 +42,7 @@ private:
     void Zoom(qreal mul);
     void SetupToolbar();
     void PositionToolbar();
+    translate::RawCatProgram ConvertNodeGraphToRawCatProgram() const;
 
 private slots:
     void OnRunAction();
@@ -57,6 +65,8 @@ private:
     QGraphicsLineItem* pending_conn_{nullptr};
     Pin* conn_start_pin_{nullptr};
     QToolBar* toolbar_{nullptr};
+    std::unordered_set<Node*> nodes_;
+    QTermWidget* terminal_;
 };
 
 }  // namespace komaru::editor

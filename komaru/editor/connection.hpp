@@ -16,6 +16,10 @@ public:
     Connection(Pin* source, Pin* target, QGraphicsItem* parent = nullptr);
 
     bool HasPin(const Pin* pin) const;
+    const Text* GetText() const;
+    const Pin* GetSourcePin() const;
+    const Pin* GetTargetPin() const;
+
     void UpdateLayout();
     void Detach();
 

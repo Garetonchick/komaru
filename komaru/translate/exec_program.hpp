@@ -1,5 +1,6 @@
 #pragma once
 #include <komaru/translate/program.hpp>
+#include <komaru/util/cli.hpp>
 
 #include <string>
 
@@ -32,6 +33,12 @@ private:
     int exec_code_{0};
 };
 
+struct ProgramBuildResult {
+    util::CLICommandResult command_res;
+    std::string program_path;
+};
+
+ProgramBuildResult BuildProgram(const IProgram& program, std::string progpath = "");
 ProgramExecResult ExecProgram(const IProgram& program, const std::string& sin = "");
 
 }  // namespace komaru::translate

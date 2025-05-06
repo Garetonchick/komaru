@@ -19,6 +19,9 @@ public:
 
     Pin* GetInputPin();
     std::vector<Pin*>& GetOutputPins();
+    const Text* GetMainText() const;
+    const Text* GetTagText() const;
+    const Text* GetPinLabel(Pin* pin) const;
     void EnableLabels();
 
 protected:

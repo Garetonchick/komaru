@@ -59,6 +59,22 @@ std::vector<Pin*>& Node::GetOutputPins() {
     return output_pins_;
 }
 
+const Text* Node::GetMainText() const {
+    return main_text_;
+}
+
+const Text* Node::GetTagText() const {
+    return tag_text_;
+}
+
+const Text* Node::GetPinLabel(Pin* pin) const {
+    auto it = pin2label_.find(pin);
+    if (it == pin2label_.end()) {
+        return nullptr;
+    }
+    return it->second;
+}
+
 void Node::EnableLabels() {
     if (output_pins_.size() != 1 || !pin2label_.empty()) {
         return;

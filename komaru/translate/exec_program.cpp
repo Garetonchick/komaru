@@ -1,7 +1,6 @@
 #include "exec_program.hpp"
 
 #include <komaru/util/filesystem.hpp>
-#include <komaru/util/cli.hpp>
 
 namespace komaru::translate {
 
@@ -60,9 +59,12 @@ const std::string& ProgramExecResult::CompileError() const {
 ProgramExecResult::ProgramExecResult() {
 }
 
-ProgramExecResult ExecProgram(const IProgram& program, const std::string& sin) {
+ProgramBuildResult BuildProgram(const IProgram& program, std::string progpath) {
     auto sourcepath = util::GenTmpFilepath().string() + program.GetExt();
-    auto progpath = util::GenTmpFilepath().string();
+
+    if (progpath.empty()) {
+        progpath = util::GenTmpFilepath().string();
+    }
 
     if (auto err = util::WriteFile(sourcepath, program.GetSourceCode())) {
         throw std::runtime_error(
@@ -72,13 +74,21 @@ ProgramExecResult ExecProgram(const IProgram& program, const std::string& sin) {
     auto build_command = program.GetBuildCommand(sourcepath, progpath);
     auto build_result = util::PerformCLICommand(build_command);
 
-    if (build_result.Fail()) {
-        auto err =
-            std::format("STDOUT:\n{}\nSTDERR:\n{}", build_result.Stdout(), build_result.Stderr());
-        return ProgramExecResult::CompileErrorResult(build_result.Code(), std::move(err));
+    return ProgramBuildResult{.command_res = build_result,
+                              .program_path = build_result.Success() ? progpath : ""};
+}
+
+ProgramExecResult ExecProgram(const IProgram& program, const std::string& sin) {
+    auto build_result = BuildProgram(program);
+
+    if (build_result.command_res.Fail()) {
+        auto err = std::format("STDOUT:\n{}\nSTDERR:\n{}", build_result.command_res.Stdout(),
+                               build_result.command_res.Stderr());
+        return ProgramExecResult::CompileErrorResult(build_result.command_res.Code(),
+                                                     std::move(err));
     }
 
-    auto exec_result = util::PerformCLICommand(progpath, sin);
+    auto exec_result = util::PerformCLICommand(build_result.program_path, sin);
 
     if (exec_result.Fail()) {
         auto err =

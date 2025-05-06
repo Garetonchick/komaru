@@ -32,6 +32,18 @@ bool Connection::HasPin(const Pin* pin) const {
     return pin == source_pin_ || pin == target_pin_;
 }
 
+const Text* Connection::GetText() const {
+    return text_;
+}
+
+const Pin* Connection::GetSourcePin() const {
+    return source_pin_;
+}
+
+const Pin* Connection::GetTargetPin() const {
+    return target_pin_;
+}
+
 void Connection::UpdateLayout() {
     QPointF start = source_pin_->mapToScene(0, 0);
     QPointF end = target_pin_->mapToScene(0, 0);

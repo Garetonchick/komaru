@@ -14,15 +14,15 @@ MainWindow::MainWindow() {
     QWidget* central_widget = new QWidget(this);
     QVBoxLayout* layout = new QVBoxLayout(central_widget);
     QSplitter* splitter = new QSplitter(Qt::Vertical);
+    term_widget_ = new QTermWidget(0, splitter);
     GridScene* scene = new GridScene(this);
-    GridView* view = new GridView(scene, central_widget);
+    GridView* view = new GridView(scene, term_widget_, central_widget);
 
     layout->addWidget(splitter);
     layout->setContentsMargins(0, 0, 0, 0);
 
     splitter->addWidget(view);
 
-    term_widget_ = new QTermWidget(0, splitter);
     term_widget_->setColorScheme("Linux");
     term_widget_->setTerminalOpacity(0.9);
     term_widget_->setScrollBarPosition(QTermWidget::ScrollBarRight);

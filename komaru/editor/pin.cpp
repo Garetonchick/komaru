@@ -52,6 +52,10 @@ void Pin::DestroyConnections() {
     }
 }
 
+const std::vector<Connection*>& Pin::GetConnections() const {
+    return connections_;
+}
+
 bool Pin::ConnectableTo(const Pin* o) const {
     if (type_ == o->type_) {
         return false;
@@ -66,6 +70,10 @@ bool Pin::ConnectableTo(const Pin* o) const {
 
 Pin::PinType Pin::GetPinType() const {
     return type_;
+}
+
+const Node* Pin::GetNode() const {
+    return node_;
 }
 
 }  // namespace komaru::editor
