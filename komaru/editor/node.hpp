@@ -17,12 +17,20 @@ public:
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
+    void SetMainText(const QString& s);
+    void SetTagText(const QString& s);
+    void SetPinLabel(Pin* pin, const QString& s);
+    void SetNewInputPin();
+    bool RemoveInputPin();
+    void EnableLabels();
+    void AddOutputPin();
+    bool RemoveOutputPin();
+
     Pin* GetInputPin();
     std::vector<Pin*>& GetOutputPins();
     const Text* GetMainText() const;
     const Text* GetTagText() const;
     const Text* GetPinLabel(Pin* pin) const;
-    void EnableLabels();
 
 protected:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
@@ -36,10 +44,6 @@ private:
     void StartMainTextEditing();
     void StopMainTextEditing();
     void UpdateLayout();
-    void SetNewInputPin();
-    bool RemoveInputPin();
-    void AddOutputPin();
-    bool RemoveOutputPin();
     void PositionPins();
     void SetupPinLabelText(Pin* pin);
     void StartPinLabelTextEditing(Text* text);

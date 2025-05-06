@@ -44,6 +44,10 @@ const Pin* Connection::GetTargetPin() const {
     return target_pin_;
 }
 
+void Connection::SetText(const QString& s) {
+    text_->setPlainText(s);
+}
+
 void Connection::UpdateLayout() {
     QPointF start = source_pin_->mapToScene(0, 0);
     QPointF end = target_pin_->mapToScene(0, 0);

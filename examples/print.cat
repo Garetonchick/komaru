@@ -1,0 +1,46 @@
+[
+    {
+        "has_input_pin": true,
+        "id": 0,
+        "main_text": "IO S",
+        "out_pins": [
+        ],
+        "x": 150.43478260869566,
+        "y": 23.478260869565204
+    },
+    {
+        "has_input_pin": true,
+        "id": 1,
+        "main_text": "Int",
+        "out_pins": [
+            {
+                "connections": [
+                    {
+                        "node": 0,
+                        "text": "print"
+                    }
+                ]
+            }
+        ],
+        "x": -7.2279347826086955,
+        "y": 16.359239130434773
+    },
+    {
+        "has_input_pin": false,
+        "id": 2,
+        "main_text": "S",
+        "out_pins": [
+            {
+                "connections": [
+                    {
+                        "node": 1,
+                        "text": "42"
+                    }
+                ]
+            }
+        ],
+        "tag_text": "main",
+        "x": -156.055,
+        "y": 21.612934782608683
+    }
+]

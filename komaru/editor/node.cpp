@@ -51,6 +51,23 @@ void Node::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWid
     }
 }
 
+void Node::SetMainText(const QString& s) {
+    main_text_->setPlainText(s);
+}
+
+void Node::SetTagText(const QString& s) {
+    if (!tag_text_) {
+        SetupTagText();
+    }
+
+    tag_text_->setPlainText(s);
+}
+
+void Node::SetPinLabel(Pin* pin, const QString& s) {
+    EnableLabels();
+    pin2label_[pin]->setPlainText(s);
+}
+
 Pin* Node::GetInputPin() {
     return input_pin_;
 }

@@ -14,6 +14,11 @@
 #include <QPushButton>
 #include <QString>
 #include <QStyle>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QFile>
+#include <QFileDialog>
 #include <qtermwidget6/qtermwidget.h>
 
 namespace komaru::editor {
@@ -240,6 +245,159 @@ translate::RawCatProgram GridView::ConvertNodeGraphToRawCatProgram() const {
     return prog;
 }
 
+QJsonDocument GridView::ToJson() {
+    QJsonDocument json;
+    QJsonArray json_nodes;
+    std::unordered_map<const Node*, qint64> node2id;
+
+    for (auto [i, node] : util::Enumerate(nodes_)) {
+        node2id[node] = i;
+    }
+
+    for (Node* node : nodes_) {
+        QJsonObject json_node;
+        json_node.insert("id", node2id[node]);
+        json_node.insert("x", node->pos().x());
+        json_node.insert("y", node->pos().y());
+        json_node.insert("main_text", node->GetMainText()->toPlainText());
+        const Text* tag_text = node->GetTagText();
+
+        if (tag_text) {
+            json_node.insert("tag_text", tag_text->toPlainText());
+        }
+
+        json_node.insert("has_input_pin", node->GetInputPin() != nullptr);
+
+        QJsonArray json_pins;
+
+        for (Pin* out_pin : node->GetOutputPins()) {
+            QJsonObject json_pin;
+            const Text* pin_label = node->GetPinLabel(out_pin);
+            if (pin_label) {
+                json_pin.insert("label", pin_label->toPlainText());
+            }
+            QJsonArray json_conns;
+
+            for (Connection* conn : out_pin->GetConnections()) {
+                const Node* target_node = conn->GetTargetPin()->GetNode();
+                qint64 target_node_id = node2id[target_node];
+                QJsonObject json_conn;
+
+                json_conn.insert("text", conn->GetText()->toPlainText());
+                json_conn.insert("node", target_node_id);
+
+                json_conns.append(json_conn);
+            }
+
+            json_pin.insert("connections", json_conns);
+
+            json_pins.append(json_pin);
+        }
+
+        json_node.insert("out_pins", json_pins);
+
+        json_nodes.append(json_node);
+    }
+
+    json.setArray(json_nodes);
+
+    return json;
+}
+
+void GridView::FromJson(const QJsonDocument& json) {
+    for (Node* node : nodes_) {
+        scene()->removeItem(node);
+        delete node;
+    }
+
+    nodes_.clear();
+
+    if (!json.isArray()) {
+        std::println("error parsing json expected array of nodes");
+        return;
+    }
+
+    struct ConnectionInfo {
+        Pin* source_pin;
+        qint64 target_node_id;
+        QString text;
+    };
+
+    QJsonArray json_nodes = json.array();
+    std::vector<Node*> id2node(json_nodes.size(), nullptr);
+    std::vector<ConnectionInfo> conn_infos;
+
+    for (auto json_node_ref : json_nodes) {
+        if (!json_node_ref.isObject()) {
+            std::println("error parsing json expected node to be an object");
+            return;
+        }
+
+        QJsonObject json_node = json_node_ref.toObject();
+
+        qint64 node_id = json_node["id"].toInteger();
+        qreal x = json_node["x"].toDouble();
+        qreal y = json_node["y"].toDouble();
+        QString main_text = json_node["main_text"].toString();
+        bool has_input_pin = json_node["has_input_pin"].toBool();
+
+        auto unode = std::make_unique<Node>();
+        Node* node = unode.get();
+        id2node[node_id] = node;
+        nodes_.emplace(node);
+        node->setPos(x, y);
+        scene()->addItem(unode.release());
+
+        node->SetMainText(main_text);
+
+        if (json_node.contains("tag_text")) {
+            node->SetTagText(json_node["tag_text"].toString());
+        }
+
+        if (!has_input_pin) {
+            node->RemoveInputPin();
+        }
+
+        QJsonArray json_out_pins = json_node["out_pins"].toArray();
+
+        if (json_out_pins.empty()) {
+            node->RemoveOutputPin();
+        }
+
+        for (qint64 i = 1; i < json_out_pins.size(); ++i) {
+            node->AddOutputPin();
+        }
+
+        auto& out_pins = node->GetOutputPins();
+
+        for (auto [i, json_out_pin_ref] : util::Enumerate(json_out_pins)) {
+            QJsonObject json_out_pin = json_out_pin_ref.toObject();
+
+            if (json_out_pin.contains("label")) {
+                node->SetPinLabel(out_pins[i], json_out_pin["label"].toString());
+            }
+
+            QJsonArray json_connections = json_out_pin["connections"].toArray();
+
+            for (auto json_conn_ref : json_connections) {
+                QJsonObject json_conn = json_conn_ref.toObject();
+                conn_infos.emplace_back(
+                    ConnectionInfo{.source_pin = out_pins[i],
+                                   .target_node_id = json_conn["node"].toInteger(),
+                                   .text = json_conn["text"].toString()});
+            }
+        }
+    }
+
+    for (auto& conn_info : conn_infos) {
+        Node* target_node = id2node[conn_info.target_node_id];
+        assert(target_node->GetInputPin() != nullptr);
+        Connection* conn = new Connection(conn_info.source_pin, target_node->GetInputPin());
+        scene()->addItem(conn);
+        conn->SetText(conn_info.text);
+    }
+}
+
 void GridView::OnRunAction() {
     auto raw_program = ConvertNodeGraphToRawCatProgram();
     auto maybe_cat_program = translate::Cook(raw_program, translate::SimpleSymbolsRegistry{});
@@ -275,11 +433,44 @@ void GridView::OnRunAction() {
 }
 
 void GridView::OnSaveAction() {
-    std::println("OnSaveAction");
+    QString file_path = QFileDialog::getSaveFileName(this, tr("Save File"), "",
+                                                     tr("All Files (*);;Text Files (*.txt)"));
+
+    if (file_path.isEmpty()) {
+        return;
+    }
+
+    QJsonDocument json = ToJson();
+    QFile file(file_path);
+
+    if (!file.open(QIODevice::WriteOnly)) {
+        std::println("Failed to open file \"{}\" for writing", ConvString(file_path));
+        return;
+    }
+
+    file.write(json.toJson());
+    file.close();
 }
 
 void GridView::OnLoadAction() {
-    std::println("OnLoadAction");
+    QString file_path = QFileDialog::getOpenFileName(this, tr("Load File"), "",
+                                                     tr("All Files (*);;Text Files (*.txt)"));
+
+    if (file_path.isEmpty()) {
+        return;
+    }
+
+    QFile file(file_path);
+
+    if (!file.open(QIODevice::ReadOnly)) {
+        std::println("Failed to open file \"{}\" for reading", ConvString(file_path));
+        return;
+    }
+
+    auto json = QJsonDocument::fromJson(file.readAll());
+    file.close();
+
+    FromJson(json);
 }
 
 void GridView::mousePressEvent(QMouseEvent* event) {

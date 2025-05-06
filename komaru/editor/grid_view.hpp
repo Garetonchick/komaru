@@ -4,6 +4,7 @@
 
 #include <QGraphicsView>
 #include <QToolBar>
+#include <QJsonDocument>
 
 #include <unordered_set>
 
@@ -43,6 +44,8 @@ private:
     void SetupToolbar();
     void PositionToolbar();
     translate::RawCatProgram ConvertNodeGraphToRawCatProgram() const;
+    QJsonDocument ToJson();
+    void FromJson(const QJsonDocument& json);
 
 private slots:
     void OnRunAction();

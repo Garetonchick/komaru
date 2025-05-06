@@ -20,6 +20,7 @@ public:
     const Pin* GetSourcePin() const;
     const Pin* GetTargetPin() const;
 
+    void SetText(const QString& s);
     void UpdateLayout();
     void Detach();
 
