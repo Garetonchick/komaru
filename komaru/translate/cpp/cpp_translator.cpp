@@ -100,9 +100,9 @@ TranslationResult<std::unique_ptr<IProgram>> CppTranslator::Translate(
 }
 
 void CppTranslator::LoadCatlib() {
-    auto at = lang::Type::Generic("a");
-    auto bt = lang::Type::Generic("b");
-    auto ct = lang::Type::Generic("c");
+    auto at = lang::Type::Var("a");
+    auto bt = lang::Type::Var("b");
+    auto ct = lang::Type::Var("c");
     auto io_a = lang::Type::Parameterized("IO", {at});
     auto io_b = lang::Type::Parameterized("IO", {bt});
     auto io_c = lang::Type::Parameterized("IO", {ct});
@@ -266,7 +266,7 @@ CppExpr CppTranslator::MakeExprForIntersectionNode(const CPNode* node) {
 
     if (order.size() == 1) {
         return CppExpr(node2local_name_[order.front().second],
-                       order.front().second->GetType().NumComponents());
+                       order.front().second->GetType().GetComponentsNum());
     }
 
     std::ranges::sort(order);
@@ -290,7 +290,7 @@ CppExpr CppTranslator::MakeExprForIntersectionNode(const CPNode* node) {
 CppExpr CppTranslator::MakeExprForArrow(const CPArrow* arrow) {
     return MakeExprForMorphism(*arrow->GetMorphism(),
                                CppExpr(node2local_name_[&arrow->SourcePin().GetNode()],
-                                       arrow->SourcePin().GetNode().GetType().NumComponents()),
+                                       arrow->SourcePin().GetNode().GetType().GetComponentsNum()),
                                arrow->TargetNode().GetType());
 }
 
@@ -301,9 +301,10 @@ std::vector<std::string> CppTranslator::MakeBranchExprs(const CPNode* node) {
     std::string local_name = node2local_name_[node];
 
     for (const auto& out_pin : node->OutPins()) {
-        exprs.emplace_back(MakeExprForBrancher(out_pin.GetBrancher(),
-                                               CppExpr(local_name, node->GetType().NumComponents()))
-                               .AsWholeExpr());
+        exprs.emplace_back(
+            MakeExprForBrancher(out_pin.GetBrancher(),
+                                CppExpr(local_name, node->GetType().GetComponentsNum()))
+                .AsWholeExpr());
     }
 
     return exprs;
@@ -442,7 +443,7 @@ CppExpr CppTranslator::MakeExprForMorphism(const lang::ValueMorphism& morphism, 
 CppExpr CppTranslator::MakeExprForMorphism(const lang::BindedMorphism& morphism,
                                            const CppExpr& in_expr, lang::Type) {
     std::vector<std::string> exprs;
-    size_t n = morphism.GetUnderlyingMorphism()->GetSource().NumComponents();
+    size_t n = morphism.GetUnderlyingMorphism()->GetSource().GetComponentsNum();
     const auto& mapping = morphism.GetMapping();
     if (n < mapping.size()) {
         throw std::runtime_error("too much binded args");
@@ -494,7 +495,7 @@ CppExpr CppTranslator::MakeExprForMorphism(const lang::NameMorphism& morphism,
         if (in_expr.NumSubexprs() == 0) {
             return CppExpr(ToCppName(morphism.GetName()), 1);
         }
-        size_t n_args = type.GetVariant<lang::FunctionType>().Source().NumComponents();
+        size_t n_args = type.GetVariant<lang::FunctionType>().Source().GetComponentsNum();
 
         auto args_str =
             in_expr.Cook(n_args) | util::JoinStrings(", ") | std::ranges::to<std::string>();
@@ -504,7 +505,7 @@ CppExpr CppTranslator::MakeExprForMorphism(const lang::NameMorphism& morphism,
         }
 
         return CppExpr(std::format("{}({})", ToCppName(morphism.GetName()), args_str),
-                       type.GetVariant<lang::FunctionType>().Target().NumComponents());
+                       type.GetVariant<lang::FunctionType>().Target().GetComponentsNum());
     }
 
     // TODO: Properly check types compatibility

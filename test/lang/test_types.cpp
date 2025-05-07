@@ -7,28 +7,21 @@ using namespace komaru::lang;
 using namespace komaru::util;
 
 TEST(Types, Atom) {
-    std::vector<TypeTag> tags = {TypeTag::Int, TypeTag::Char, TypeTag::Float, TypeTag::Bool};
     std::vector<std::string> names = {"Int", "Char", "Float", "Bool"};
-    std::vector<Type> types;
-
-    for (auto tag : tags) {
-        types.emplace_back(Type::FromTag(tag));
-    }
+    std::vector<Type> types = {Type::Int(), Type::Char(), Type::Float(), Type::Bool()};
 
     for (size_t i = 0; i < types.size(); ++i) {
-        ASSERT_EQ(types[i], Type::FromTag(tags[i]));
-        ASSERT_EQ(types[i].GetTag(), tags[i]);
         ASSERT_EQ(types[i].GetName(), names[i]);
-        ASSERT_TRUE(types[i].Holds<AtomType>());
+        ASSERT_TRUE(types[i].Holds<CommonType>());
         ASSERT_FALSE(types[i].Holds<TupleType>());
 
-        const auto& atom_type = types[i].GetVariant<AtomType>();
-        ASSERT_EQ(atom_type.GetTag(), tags[i]);
+        const auto& common_type = types[i].GetVariant<CommonType>();
+        ASSERT_EQ(common_type.GetMainName(), names[i]);
 
         ASSERT_THROW(types[i].GetVariant<TupleType>(), std::exception);
 
-        types[i].Visit(Overloaded{[&tags, i](const AtomType& atom_type) {
-                                      ASSERT_EQ(atom_type.GetTag(), tags[i]);
+        types[i].Visit(Overloaded{[&names, i](const CommonType& common_type) {
+                                      ASSERT_EQ(common_type.GetMainName(), names[i]);
                                   },
                                   [](const auto&) {
                                       FAIL();
@@ -45,15 +38,15 @@ TEST(Types, Atom) {
 }
 
 TEST(Types, Tuple) {
-    Type tuple_ic1 = Type::TupleFromTags({TypeTag::Int, TypeTag::Char});
-    Type tuple_ic2 = Type::Tuple({Type::FromTag(TypeTag::Int), Type::FromTag(TypeTag::Char)});
-    Type tuple_ib = Type::TupleFromTags({TypeTag::Int, TypeTag::Bool});
+    Type tuple_ic1 = Type::TupleFromSimples({"Int", "Char"});
+    Type tuple_ic2 = Type::Tuple({Type::Int(), Type::Char()});
+    Type tuple_ib = Type::TupleFromSimples({"Int", "Bool"});
 
     ASSERT_EQ(tuple_ic1, tuple_ic2);
     ASSERT_NE(tuple_ic1, tuple_ib);
 
     ASSERT_EQ(tuple_ic2.GetName(), tuple_ic1.GetVariant<TupleType>().GetName());
     ASSERT_EQ(tuple_ic2.GetName(), "Int x Char");
-    ASSERT_TRUE(VecEq(tuple_ic1.GetVariant<TupleType>().GetTupleTypes(),
-                      {Type::FromTag(TypeTag::Int), Type::FromTag(TypeTag::Char)}));
+    ASSERT_TRUE(
+        VecEq(tuple_ic1.GetVariant<TupleType>().GetTupleTypes(), {Type::Int(), Type::Char()}));
 }

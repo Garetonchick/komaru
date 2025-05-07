@@ -19,7 +19,7 @@ private:
     std::string name_;
     std::string body_;
 
-    lang::Type ret_type_{lang::Type::Generic("")};
+    lang::Type ret_type_{lang::Type::Auto()};
     std::vector<std::pair<lang::Type, std::string>> input_params_;
 };
 

@@ -29,11 +29,11 @@ private:
     template <typename T>
     static Type DetermineType() {
         if constexpr (std::is_same_v<T, int32_t>) {
-            return Type::FromTag(TypeTag::Int);
+            return Type::Int();
         } else if constexpr (std::is_same_v<T, bool>) {
-            return Type::FromTag(TypeTag::Bool);
+            return Type::Bool();
         } else if constexpr (std::is_same_v<T, char>) {
-            return Type::FromTag(TypeTag::Char);
+            return Type::Char();
         } else {
             static_assert(false, "Wrong type");
         }

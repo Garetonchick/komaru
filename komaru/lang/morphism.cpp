@@ -216,7 +216,7 @@ std::string BindedMorphism::ToString() const {
             res += " " + to_wrapped_str(*it->second);
         }
     } else {
-        size_t n_comps = morphism_->GetSource().NumComponents();
+        size_t n_comps = morphism_->GetSource().GetComponentsNum();
         res = mname;
         size_t n_mapped = 0;
 

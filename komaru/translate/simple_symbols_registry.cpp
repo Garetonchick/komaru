@@ -18,9 +18,9 @@ SimpleSymbolsRegistry::SimpleSymbolsRegistry() {
          SymbolInfo{.type = lang::Type::Parameterized("IO", {lang::Type::Int()}).Pow(2),
                     .kind = SymbolKind::Type}}};
 
-    auto at = lang::Type::Generic("a");
-    auto bt = lang::Type::Generic("b");
-    auto ct = lang::Type::Generic("c");
+    auto at = lang::Type::Var("a");
+    auto bt = lang::Type::Var("b");
+    auto ct = lang::Type::Var("c");
     auto io_a = lang::Type::Parameterized("IO", {at});
     auto io_b = lang::Type::Parameterized("IO", {bt});
     auto io_c = lang::Type::Parameterized("IO", {ct});

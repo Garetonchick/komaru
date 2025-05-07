@@ -294,9 +294,9 @@ translate::RawCatProgram MakeRawFibProgram(int32_t x) {
 
 lang::CatProgram MakeIO101Program() {
     auto io = Type::Parameterized("IO", {Type::Auto()});
-    auto at = Type::Generic("a");
-    auto bt = Type::Generic("b");
-    auto ct = Type::Generic("c");
+    auto at = Type::Var("a");
+    auto bt = Type::Var("b");
+    auto ct = Type::Var("c");
     auto io_a = Type::Parameterized("IO", {at});
     auto io_b = Type::Parameterized("IO", {bt});
     auto io_c = Type::Parameterized("IO", {ct});

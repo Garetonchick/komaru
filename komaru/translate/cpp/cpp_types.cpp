@@ -2,7 +2,18 @@
 
 #include <komaru/util/std_extensions.hpp>
 
+#include <format>
+
 namespace komaru::translate::cpp {
+
+static const std::unordered_map<lang::Type, CppType> kTypeMap = {
+    {lang::Type::Int(), CppType("int32_t", {})},
+    {lang::Type::Bool(), CppType("bool", {})},
+    {lang::Type::Char(), CppType("char", {})},
+    {lang::Type::Float(), CppType("float", {})},
+    {lang::Type::Double(), CppType("double", {})},
+    {lang::Type::Singleton(), CppType("std::monostate", {})},
+};
 
 CppType::CppType(std::string type_str, std::vector<std::string> template_vars)
     : type_str_(std::move(type_str)),
@@ -17,25 +28,27 @@ const std::vector<std::string>& CppType::GetTemplateVars() const {
     return template_vars_;
 }
 
-static CppType TranslateType(const lang::AtomType& type) {
-    switch (type.GetTag()) {
-        case lang::TypeTag::Int:
-            return CppType("int32_t", {});
-        case lang::TypeTag::Bool:
-            return CppType("bool", {});
-        case lang::TypeTag::Char:
-            return CppType("char", {});
-        case lang::TypeTag::Float:
-            return CppType("float", {});
-        case lang::TypeTag::Singleton:
-            return CppType("std::monostate", {});
-        case lang::TypeTag::Source:
-            return CppType("std::monostate", {});
-        case lang::TypeTag::Target:
-            return CppType("auto", {});
-        default:
-            throw std::runtime_error("unsupported cpp type");
+static CppType TranslateType(const lang::CommonType& type) {
+    auto type_str = type.GetMainName() + "<";
+    std::vector<std::string> template_vars;
+
+    if (!lang::IsConcreteTypeName(type.GetMainName())) {
+        throw std::runtime_error("TODO: add template inside template support");
     }
+
+    for (auto [i, param] : util::Enumerate(type.GetParams())) {
+        auto param_cpp = ToCppType(param);
+        template_vars.append_range(param_cpp.GetTemplateVars());
+
+        type_str += param_cpp.GetTypeStr();
+
+        if (i + 1 != type.GetParams().size()) {
+            type_str += ", ";
+        }
+    }
+
+    type_str += ">";
+    return CppType(std::move(type_str), std::move(template_vars));
 }
 
 static CppType TranslateType(const lang::TupleType& type) {
@@ -62,41 +75,23 @@ static CppType TranslateType(const lang::TupleType& type) {
     return CppType(std::move(type_str), std::move(template_vars));
 }
 
-static CppType TranslateType(const lang::GenericType& type) {
-    auto name = std::string(type.GetName());
-
-    if (name.empty()) {
-        return CppType("auto", {});
-    }
-
-    return CppType(name, {name});
+static CppType TranslateType(const lang::ListType& type) {
+    auto cpp_sub_type = ToCppType(type.Inner());
+    return CppType(std::format("std::vector<{}>", cpp_sub_type.GetTypeStr()),
+                   cpp_sub_type.GetTemplateVars());
 }
 
 static CppType TranslateType(const lang::FunctionType&) {
     throw std::runtime_error("TODO: add function type support");
 }
 
-static CppType TranslateType(const lang::ParameterizedType& type) {
-    auto type_str = std::string(type.GetMainName()) + "<";
-    std::vector<std::string> template_vars;
-
-    for (auto [i, param] : util::Enumerate(type.GetParamTypes())) {
-        auto param_cpp = ToCppType(param);
-        template_vars.append_range(param_cpp.GetTemplateVars());
-
-        type_str += param_cpp.GetTypeStr();
-
-        if (i + 1 != type.GetParamTypes().size()) {
-            type_str += ", ";
-        }
+CppType ToCppType(lang::Type type) {
+    auto it = kTypeMap.find(type);
+    if (it != kTypeMap.end()) {
+        return it->second;
     }
 
-    type_str += ">";
-    return CppType(std::move(type_str), std::move(template_vars));
-}
-
-CppType ToCppType(lang::Type type) {
-    return type.Visit([](const auto& type) {
+    return type.Visit([](const auto& type) -> CppType {
         return TranslateType(type);
     });
 }

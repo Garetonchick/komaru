@@ -313,8 +313,8 @@ CookingResult<lang::MorphismPtr> Cooker<SymbolsRegistry>::CookSimpleMorphism(
         return lang::Morphism::Builtin(lang::MorphismTag::LessEq, lang::Type::Int().Pow(2),
                                        lang::Type::Bool());
     } else if (raw_morphism == "id") {
-        return lang::Morphism::Builtin(lang::MorphismTag::Id, lang::Type::Generic("a"),
-                                       lang::Type::Generic("a"));
+        return lang::Morphism::Builtin(lang::MorphismTag::Id, lang::Type::Var("a"),
+                                       lang::Type::Var("a"));
     }
 
     auto maybe_symbol = FindSymbol(raw_morphism);

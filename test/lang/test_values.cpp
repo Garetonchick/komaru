@@ -10,8 +10,7 @@ TEST(Values, Basic) {
     Value ival = Value::Int(42);
     Value cval = Value::Char('m');
     Value bval = Value::Bool(true);
-    std::vector<Type> types = {Type::FromTag(TypeTag::Int), Type::FromTag(TypeTag::Char),
-                               Type::FromTag(TypeTag::Bool)};
+    std::vector<Type> types = {Type::Int(), Type::Char(), Type::Bool()};
     std::vector<Value> values = {ival, cval, bval};
 
     for (size_t i = 0; i < values.size(); ++i) {

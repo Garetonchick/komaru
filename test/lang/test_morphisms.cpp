@@ -8,8 +8,8 @@ using namespace komaru::lang;
 using namespace komaru::util;
 
 TEST(Morphisms, Builtin) {
-    auto ti = Type::FromTag(TypeTag::Int);
-    auto ti2 = Type::TupleFromTags({TypeTag::Int, TypeTag::Int});
+    auto ti = Type::Int();
+    auto ti2 = Type::Tuple({Type::Int(), Type::Int()});
     auto plus = Morphism::Builtin(MorphismTag::Plus, ti2, ti);
     auto mul = Morphism::Builtin(MorphismTag::Multiply, ti2, ti);
 
@@ -21,21 +21,19 @@ TEST(Morphisms, Builtin) {
 }
 
 TEST(Morphisms, Compound) {
-    auto ti = Type::FromTag(TypeTag::Int);
-    auto ti2 = Type::TupleFromTags({TypeTag::Int, TypeTag::Int});
-    auto start_morphism = Morphism::Builtin(MorphismTag::Id, Type::FromTag(TypeTag::Source),
-                                            Type::FromTag(TypeTag::Singleton));
+    auto ti = Type::Int();
+    auto ti2 = Type::Tuple({Type::Int(), Type::Int()});
+    auto start_morphism = Morphism::Builtin(MorphismTag::Id, Type::Singleton(), Type::Singleton());
     auto value_morphism = Morphism::WithValue("some_value", Value::TupleFromAtoms(9, 42));
     auto plus_morphism = Morphism::Builtin(MorphismTag::Plus, ti2, ti);
-    auto end_morphism = Morphism::Builtin(MorphismTag::Id, Type::FromTag(TypeTag::Int),
-                                          Type::FromTag(TypeTag::Target));
+    auto end_morphism = Morphism::Builtin(MorphismTag::Id, Type::Int(), Type::Int());
     std::vector<MorphismPtr> program_morphisms = {start_morphism, value_morphism, plus_morphism,
                                                   end_morphism};
     auto program_morphism = Morphism::Compound("main", program_morphisms);
 
     ASSERT_EQ(program_morphism->GetName(), "main");
-    ASSERT_EQ(program_morphism->GetSource(), Type::FromTag(TypeTag::Source));
-    ASSERT_EQ(program_morphism->GetTarget(), Type::FromTag(TypeTag::Target));
+    ASSERT_EQ(program_morphism->GetSource(), Type::Singleton());
+    ASSERT_EQ(program_morphism->GetTarget(), Type::Int());
     ASSERT_EQ(program_morphism->GetTag(), MorphismTag::Compound);
 
     program_morphism->Visit(Overloaded{[&](const CompoundMorphism& morphism) {
