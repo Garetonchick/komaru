@@ -109,7 +109,7 @@ Type Type::Function(Type source, Type target) {
 }
 
 // Function with multiple parameters
-Type Type::FunctionChain(std::span<Type> types) {
+Type FunctionChainImpl(std::span<const Type> types) {
     if (types.empty()) {
         return Type::Singleton();
     }
@@ -118,9 +118,13 @@ Type Type::FunctionChain(std::span<Type> types) {
         return types[0];
     }
 
-    Type target = FunctionChain(types.subspan(1));
+    Type target = FunctionChainImpl(types.subspan(1));
 
-    return Function(types[0], target);
+    return Type::Function(types[0], target);
+}
+
+Type Type::FunctionChain(const std::vector<Type>& types) {
+    return FunctionChainImpl(types);
 }
 
 Type Type::List(Type inner_type) {
@@ -202,10 +206,76 @@ size_t Type::GetComponentsNum() const {
                                         }});
 }
 
+size_t Type::GetParamNum() const {
+    return this->Visit(util::Overloaded{[](const FunctionType& t) -> size_t {
+                                            return t.GetParamNum();
+                                        },
+                                        [](const TypeLike auto&) -> size_t {
+                                            return 0;
+                                        }});
+}
+
+bool Type::IsValueType() const {
+    return this->Visit(util::Overloaded{[](const FunctionType& t) -> bool {
+                                            return t.IsValueType();
+                                        },
+                                        [](const TypeLike auto&) -> bool {
+                                            return true;
+                                        }});
+}
+
+std::vector<Type> Type::FlattenFunction() const {
+    return this->Visit(util::Overloaded{[](const FunctionType& t) -> std::vector<Type> {
+                                            std::vector<Type> types;
+                                            types.push_back(t.Source());
+                                            types.insert_range(types.end(),
+                                                               t.Target().FlattenFunction());
+                                            return types;
+                                        },
+                                        [this](const TypeLike auto&) -> std::vector<Type> {
+                                            return {*this};
+                                        }});
+}
+
+bool Type::IsTypeVar() const {
+    return Holds<CommonType>() && !GetVariant<CommonType>().HasTypeParams() && !IsConcrete();
+}
+
+size_t Type::TypeVariantIndex() const {
+    return type_->index();
+}
+
 bool Type::operator==(Type o) const {
     // Because each type in storage is unique and never changes it's location
     // we can just compare pointers
     return type_ == o.type_;
+}
+bool Type::operator<(Type o) const {
+    return type_ < o.type_;
+}
+
+TypeConstructor::TypeConstructor(std::string name, size_t num_params)
+    : name_(std::move(name)),
+      num_params_(num_params) {
+}
+
+const std::string& TypeConstructor::GetName() const {
+    return name_;
+}
+
+size_t TypeConstructor::GetNumParams() const {
+    return num_params_;
+}
+
+bool TypeConstructor::operator==(const TypeConstructor& o) const {
+    return name_ == o.name_ && num_params_ == o.num_params_;
+}
+
+bool TypeConstructor::operator<(const TypeConstructor& o) const {
+    if (num_params_ != o.num_params_) {
+        return num_params_ < o.num_params_;
+    }
+    return name_ < o.name_;
 }
 
 CommonType::CommonType(std::string main_name, std::vector<Type> params)
@@ -244,12 +314,20 @@ const std::string& CommonType::GetMainName() const {
     return main_name_;
 }
 
-const std::vector<Type>& CommonType::GetParams() const {
+const std::vector<Type>& CommonType::GetTypeParams() const {
     return params_;
 }
 
-bool CommonType::HasParams() const {
+size_t CommonType::NumTypeParams() const {
+    return params_.size();
+}
+
+bool CommonType::HasTypeParams() const {
     return !params_.empty();
+}
+
+bool CommonType::IsAuto() const {
+    return name_ == "auto";
 }
 
 bool CommonType::operator==(const CommonType& o) const {
@@ -348,6 +426,17 @@ Type FunctionType::Target() const {
     return target_;
 }
 
+size_t FunctionType::GetParamNum() const {
+    if (Source() == Type::Singleton()) {
+        return 0;
+    }
+    return 1 + target_.GetParamNum();
+}
+
+bool FunctionType::IsValueType() const {
+    return Source() == Type::Singleton();
+}
+
 bool FunctionType::operator==(const FunctionType& o) const {
     return Source() == o.Source() && Target() == o.Target();
 }
@@ -409,6 +498,272 @@ Type operator*(Type t1, Type t2) {
 
 bool IsConcreteTypeName(const std::string& name) {
     return !name.empty() && std::isupper(name.front());
+}
+
+[[nodiscard]] bool MergeMatchMaps(MatchMap& mapping, const MatchMap& sub_mapping) {
+    for (const auto& [type_var_name, type_or_constructor] : sub_mapping) {
+        auto it = mapping.find(type_var_name);
+        if (it != mapping.end()) {
+            if (it->second != type_or_constructor) {
+                return false;
+            }
+        } else {
+            mapping.emplace(type_var_name, type_or_constructor);
+        }
+    }
+    return true;
+}
+
+std::optional<Type> TryDeduceTypes(Type func_type, Type arg_type) {
+    return TryDeduceTypes(func_type, std::map<size_t, Type>{{0, arg_type}});
+}
+
+std::optional<Type> TryDeduceTypes(Type func_type, const std::map<size_t, Type>& arg_mapping) {
+    if (!func_type.Holds<FunctionType>()) {
+        return std::nullopt;
+    }
+
+    auto types = func_type.FlattenFunction();
+    MatchMap match_map;
+
+    for (size_t i = 0; i < types.size(); ++i) {
+        auto it = arg_mapping.find(i);
+        if (it != arg_mapping.end()) {
+            auto maybe_mapping = TryMatchTypes(types[i], it->second);
+            if (!maybe_mapping) {
+                return std::nullopt;
+            }
+
+            if (!MergeMatchMaps(match_map, maybe_mapping.value())) {
+                return std::nullopt;
+            }
+        }
+    }
+
+    return ApplyMatchMap(func_type, match_map);
+}
+
+Type DeduceTypes(Type func_type, Type arg_type) {
+    if (auto deduced = TryDeduceTypes(func_type, arg_type)) {
+        return deduced.value();
+    }
+
+    return func_type;
+}
+
+Type DeduceTypes(Type func_type, const std::map<size_t, Type>& arg_mapping) {
+    if (auto deduced = TryDeduceTypes(func_type, arg_mapping)) {
+        return deduced.value();
+    }
+
+    return func_type;
+}
+
+Type MakeSubstitution(Type func_type, std::map<size_t, Type> arg_mapping) {
+    // Deduce types first
+    func_type = DeduceTypes(func_type, arg_mapping);
+
+    auto types = func_type.FlattenFunction();
+    std::vector<Type> new_types;
+
+    for (size_t i = 0; i + 1 < types.size(); ++i) {
+        if (!arg_mapping.contains(i)) {
+            new_types.push_back(types[i]);
+        }
+    }
+
+    new_types.push_back(types.back());
+
+    Type new_type = Type::FunctionChain(new_types);
+    return new_type;
+}
+
+std::optional<MatchMap> TryMatchTypes(const CommonType& param_type, const CommonType& arg_type) {
+    if (param_type.IsAuto()) {
+        return MatchMap{};
+    }
+
+    if (param_type.NumTypeParams() != arg_type.NumTypeParams()) {
+        return std::nullopt;
+    }
+
+    bool is_param_name_concrete = IsConcreteTypeName(param_type.GetMainName());
+    bool is_arg_name_concrete = IsConcreteTypeName(arg_type.GetMainName());
+
+    if (is_param_name_concrete && is_arg_name_concrete &&
+        param_type.GetMainName() != arg_type.GetMainName()) {
+        return std::nullopt;
+    }
+
+    MatchMap mapping;
+
+    if (!is_param_name_concrete && is_arg_name_concrete) {
+        mapping.emplace(param_type.GetMainName(),
+                        TypeConstructor(arg_type.GetMainName(), arg_type.NumTypeParams()));
+    }
+
+    for (size_t i = 0; i < param_type.NumTypeParams(); ++i) {
+        auto param_type_param = param_type.GetTypeParams()[i];
+        auto arg_type_param = arg_type.GetTypeParams()[i];
+
+        auto maybe_sub_mapping = TryMatchTypes(param_type_param, arg_type_param);
+
+        if (!maybe_sub_mapping) {
+            return std::nullopt;
+        }
+
+        auto sub_mapping = std::move(maybe_sub_mapping.value());
+
+        if (!MergeMatchMaps(mapping, sub_mapping)) {
+            return std::nullopt;
+        }
+    }
+
+    return mapping;
+}
+
+std::optional<MatchMap> TryMatchTypes(const TupleType& param_type, const TupleType& arg_type) {
+    if (param_type.GetTypesNum() != arg_type.GetTypesNum()) {
+        return std::nullopt;
+    }
+
+    MatchMap mapping;
+
+    for (size_t i = 0; i < param_type.GetTypesNum(); ++i) {
+        auto param_type_type = param_type.GetTupleTypes()[i];
+        auto arg_type_type = arg_type.GetTupleTypes()[i];
+
+        auto maybe_sub_mapping = TryMatchTypes(param_type_type, arg_type_type);
+
+        if (!maybe_sub_mapping) {
+            return std::nullopt;
+        }
+
+        if (!MergeMatchMaps(mapping, maybe_sub_mapping.value())) {
+            return std::nullopt;
+        }
+    }
+
+    return mapping;
+}
+
+std::optional<MatchMap> TryMatchTypes(const FunctionType& param_type,
+                                      const FunctionType& arg_type) {
+    if (param_type.GetParamNum() != arg_type.GetParamNum()) {
+        return std::nullopt;
+    }
+
+    auto maybe_source_mapping = TryMatchTypes(param_type.Source(), arg_type.Source());
+    if (!maybe_source_mapping) {
+        return std::nullopt;
+    }
+
+    auto maybe_target_mapping = TryMatchTypes(param_type.Target(), arg_type.Target());
+    if (!maybe_target_mapping) {
+        return std::nullopt;
+    }
+
+    auto mapping = std::move(maybe_source_mapping.value());
+    if (!MergeMatchMaps(mapping, maybe_target_mapping.value())) {
+        return std::nullopt;
+    }
+
+    return mapping;
+}
+
+std::optional<MatchMap> TryMatchTypes(const ListType& param_type, const ListType& arg_type) {
+    auto mapping = TryMatchTypes(param_type.Inner(), arg_type.Inner());
+    if (!mapping) {
+        return std::nullopt;
+    }
+
+    return mapping.value();
+}
+
+std::optional<MatchMap> TryMatchTypes(Type param_type, Type arg_type) {
+    MatchMap mapping;
+
+    if (param_type == Type::Auto() || arg_type.IsTypeVar()) {
+        return mapping;
+    }
+
+    if (param_type.IsTypeVar()) {
+        mapping.emplace(param_type.GetName(), arg_type);
+        return mapping;
+    }
+
+    if (param_type.TypeVariantIndex() != arg_type.TypeVariantIndex()) {
+        return std::nullopt;
+    }
+
+    return param_type.Visit(
+        [&]<TypeLike T>(const T& unboxed_param_type) -> std::optional<MatchMap> {
+            assert(arg_type.Holds<T>());
+            return TryMatchTypes(unboxed_param_type, arg_type.GetVariant<T>());
+        });
+}
+
+MatchMap MatchTypes(Type param_type, Type arg_type) {
+    auto mapping = TryMatchTypes(param_type, arg_type);
+    if (!mapping) {
+        return {};
+    }
+
+    return mapping.value();
+}
+
+Type ApplyMatchMap(const CommonType& type, const MatchMap& mapping) {
+    std::string new_name = type.GetMainName();
+
+    auto it = mapping.find(type.GetMainName());
+    if (it != mapping.end()) {
+        std::visit(
+            [&](const auto& sub) {
+                new_name = sub.GetName();
+            },
+            it->second);
+    }
+
+    std::vector<Type> new_params;
+    for (const auto& param : type.GetTypeParams()) {
+        new_params.push_back(ApplyMatchMap(param, mapping));
+    }
+
+    return Type::Parameterized(std::move(new_name), std::move(new_params));
+}
+
+Type ApplyMatchMap(const TupleType& type, const MatchMap& mapping) {
+    std::vector<Type> new_types;
+    for (const auto& param : type.GetTupleTypes()) {
+        new_types.push_back(ApplyMatchMap(param, mapping));
+    }
+
+    return Type::Tuple(std::move(new_types));
+}
+
+Type ApplyMatchMap(const FunctionType& type, const MatchMap& mapping) {
+    return Type::Function(ApplyMatchMap(type.Source(), mapping),
+                          ApplyMatchMap(type.Target(), mapping));
+}
+
+Type ApplyMatchMap(const ListType& type, const MatchMap& mapping) {
+    return Type::List(ApplyMatchMap(type.Inner(), mapping));
+}
+
+Type ApplyMatchMap(Type type, const MatchMap& mapping) {
+    return type.Visit([&]<TypeLike T>(const T& unboxed_type) -> Type {
+        return ApplyMatchMap(unboxed_type, mapping);
+    });
+}
+
+bool CanBeSubstituted(Type param_type, Type arg_type, const MatchMap& mapping) {
+    auto maybe_mapping = TryMatchTypes(param_type, arg_type);
+    if (!maybe_mapping) {
+        return false;
+    }
+
+    auto new_mapping = std::move(maybe_mapping.value());
+    return MergeMatchMaps(new_mapping, mapping);
 }
 
 }  // namespace komaru::lang

@@ -1,26 +1,57 @@
 #pragma once
 
 #include <komaru/util/derive_variant.hpp>
-#include <komaru/lang/value.hpp>
-
+#include <komaru/lang/morphism.hpp>
 namespace komaru::lang {
 
 class Pattern;
 
-// dummy pattern indicating the '_'
+struct AnyPattern;
+class LiteralPattern;
+class NamePattern;
+class ConstructorPattern;
+class TuplePattern;
+// class ListPattern;
+// class ConsPattern;
+
+// dummy pattern indicating the '*'
 struct AnyPattern {
     std::string ToString() const;
 };
 
-class ValuePattern {
+class LiteralPattern {
 public:
-    explicit ValuePattern(Value value);
+    explicit LiteralPattern(Literal literal);
 
-    const Value& GetValue() const;
+    const Literal& GetLiteral() const;
     std::string ToString() const;
 
 private:
-    Value value_;
+    Literal literal_;
+};
+
+class NamePattern {
+public:
+    explicit NamePattern(std::string name);
+
+    const std::string& GetName() const;
+    std::string ToString() const;
+
+private:
+    std::string name_;
+};
+
+class ConstructorPattern {
+public:
+    explicit ConstructorPattern(std::string name, std::vector<Pattern> patterns);
+
+    const std::string& GetName() const;
+    const std::vector<Pattern>& GetPatterns() const;
+    std::string ToString() const;
+
+private:
+    std::string name_;
+    std::vector<Pattern> patterns_;
 };
 
 class TuplePattern {
@@ -35,12 +66,22 @@ private:
 };
 
 class Pattern : public util::DeriveVariant<Pattern> {
-    using Variant = std::variant<AnyPattern, ValuePattern, TuplePattern>;
+    using Variant =
+        std::variant<AnyPattern, LiteralPattern, NamePattern, ConstructorPattern, TuplePattern>;
 
 public:
-    static Pattern FromValue(Value value);
-    static Pattern TupleFromPatterns(std::vector<Pattern> patterns);
+    static Pattern FromLiteral(Literal literal);
+    static Pattern FromName(std::string name);
+    static Pattern Constructor(std::string name, std::vector<Pattern> patterns);
+    static Pattern Tuple(std::vector<Pattern> patterns);
     static Pattern Any();
+
+    static Pattern Number(int64_t num);
+    static Pattern Real(double real);
+    static Pattern True();
+    static Pattern False();
+    static Pattern Char(char ch);
+    static Pattern String(std::string str);
 
     std::string ToString() const;
 

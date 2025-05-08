@@ -2,7 +2,7 @@
 
 #include <komaru/translate/cpp/cpp_program.hpp>
 #include <komaru/translate/cpp/cpp_function_builder.hpp>
-#include <komaru/translate/cpp/cpp_value.hpp>
+#include <komaru/translate/cpp/cpp_literal.hpp>
 #include <komaru/translate/cpp/cpp_types.hpp>
 #include <komaru/translate/cpp/cpp_body_builder.hpp>
 #include <komaru/util/std_extensions.hpp>
@@ -336,10 +336,18 @@ CppExpr CppTranslator::MakeExprForPattern(const lang::AnyPattern&, const CppExpr
     return CppExpr("true", 1);
 }
 
-CppExpr CppTranslator::MakeExprForPattern(const lang::ValuePattern& pattern,
+CppExpr CppTranslator::MakeExprForPattern(const lang::LiteralPattern& pattern,
                                           const CppExpr& in_expr) {
-    auto cpp_value = ToCppValue(pattern.GetValue());
+    auto cpp_value = ToCppLiteral(pattern.GetLiteral());
     return CppExpr(std::format("{} == {}", cpp_value, in_expr.AsWholeExpr()), 1);
+}
+
+CppExpr CppTranslator::MakeExprForPattern(const lang::NamePattern&, const CppExpr&) {
+    throw std::runtime_error("not implemented");
+}
+
+CppExpr CppTranslator::MakeExprForPattern(const lang::ConstructorPattern&, const CppExpr&) {
+    throw std::runtime_error("not implemented");
 }
 
 CppExpr CppTranslator::MakeExprForPattern(const lang::TuplePattern& pattern,
@@ -375,69 +383,9 @@ CppExpr CppTranslator::MakeExprForMorphism(const lang::Morphism& morphism, const
                          }});
 }
 
-CppExpr CppTranslator::MakeExprForMorphism(const lang::CompoundMorphism&, const CppExpr&,
+CppExpr CppTranslator::MakeExprForMorphism(const lang::LiteralMorphism& morphism, const CppExpr&,
                                            lang::Type) {
-    throw std::runtime_error("compound morphisms are unsupported for now");
-}
-
-CppExpr CppTranslator::MakeExprForMorphism(const lang::BuiltinMorphism& morphism,
-                                           const CppExpr& in_expr, lang::Type) {
-    if (in_expr.NumSubexprs() == 0) {
-        switch (morphism.GetTag()) {
-            case lang::MorphismTag::Plus:
-                return CppExpr({"Plus"});
-            case lang::MorphismTag::Minus:
-                return CppExpr({"Minus"});
-            case lang::MorphismTag::Multiply:
-                return CppExpr({"Multiply"});
-            case lang::MorphismTag::Less:
-                return CppExpr({"Less"});
-            case lang::MorphismTag::LessEq:
-                return CppExpr({"LessEq"});
-            case lang::MorphismTag::Greater:
-                return CppExpr({"Greater"});
-            case lang::MorphismTag::GreaterEq:
-                return CppExpr({"GreaterEq"});
-            case lang::MorphismTag::Id: {
-                return CppExpr({"Id"});
-            }
-            default:
-                throw std::runtime_error("Unsupported builtin morphism for cpp translation");
-        }
-    }
-
-    auto make_binary_expr = [&in_expr](const std::string& op) {
-        const auto& subexprs = in_expr.GetSubexprs();
-        assert(subexprs.size() == 2);
-        return CppExpr(std::format("{} {} {}", subexprs[0], op, subexprs[1]), 1);
-    };
-
-    switch (morphism.GetTag()) {
-        case lang::MorphismTag::Plus:
-            return make_binary_expr("+");
-        case lang::MorphismTag::Minus:
-            return make_binary_expr("-");
-        case lang::MorphismTag::Multiply:
-            return make_binary_expr("*");
-        case lang::MorphismTag::Less:
-            return make_binary_expr("<");
-        case lang::MorphismTag::LessEq:
-            return make_binary_expr("<=");
-        case lang::MorphismTag::Greater:
-            return make_binary_expr(">");
-        case lang::MorphismTag::GreaterEq:
-            return make_binary_expr(">=");
-        case lang::MorphismTag::Id: {
-            return in_expr;
-        }
-        default:
-            throw std::runtime_error("Unsupported builtin morphism for cpp translation");
-    }
-}
-
-CppExpr CppTranslator::MakeExprForMorphism(const lang::ValueMorphism& morphism, const CppExpr&,
-                                           lang::Type) {
-    return CppExpr(ToCppValue(morphism.GetValue()), 1);
+    return CppExpr(ToCppLiteral(morphism.GetLiteral()), 1);
 }
 
 CppExpr CppTranslator::MakeExprForMorphism(const lang::BindedMorphism& morphism,
@@ -474,7 +422,7 @@ CppExpr CppTranslator::MakeExprForMorphism(const lang::BindedMorphism& morphism,
                                lang::Type::Auto());
 }
 
-CppExpr CppTranslator::MakeExprForMorphism(const lang::NameMorphism& morphism,
+CppExpr CppTranslator::MakeExprForMorphism(const lang::CommonMorphism& morphism,
                                            const CppExpr& in_expr, lang::Type out_type) {
     lang::Type type = std::invoke([&, this]() {
         {

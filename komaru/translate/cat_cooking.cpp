@@ -30,7 +30,7 @@ private:
     CookingResult<CookedBrancher> CookBrancher(const std::string& raw_brancher);
     CookingResult<lang::Pattern> CookPattern(std::string raw_pattern);
     CookingResult<lang::Guard> CookGuard(const std::string& raw_guard);
-    CookingResult<lang::Value> CookValue(std::string raw_value);
+    CookingResult<lang::Literal> CookLiteral(std::string raw_literal);
 
     std::optional<SymbolInfo> FindSymbol(const std::string& symbol);
 
@@ -201,13 +201,13 @@ CookingResult<lang::MorphismPtr> Cooker<SymbolsRegistry>::CookMorphism(std::stri
     }
 
     if (raw_morphism[0] == '(') {
-        auto maybe_value = CookValue(raw_morphism);
+        auto maybe_literal = CookLiteral(raw_morphism);
 
-        if (!maybe_value) {
-            return std::unexpected(maybe_value.error());
+        if (!maybe_literal) {
+            return std::unexpected(maybe_literal.error());
         }
 
-        return lang::Morphism::WithValue("", std::move(maybe_value.value()));
+        return lang::Morphism::Literal(std::move(maybe_literal.value()));
     }
 
     if (IsName(raw_morphism)) {
@@ -265,11 +265,11 @@ CookingResult<lang::MorphismPtr> Cooker<SymbolsRegistry>::CookMorphism(std::stri
         return MakeCookingError("TODO: complex morphisms are not supported");
     }
 
-    if (lang::IsOperator(*submorphisms[0])) {
-        return lang::BindMorphism(submorphisms[0], {{1, submorphisms[1]}});
+    if (submorphisms[0]->IsOperator()) {
+        return lang::Morphism::Binded(submorphisms[0], {{1, submorphisms[1]}});
     }
 
-    return lang::BindMorphism(submorphisms[0], {{0, submorphisms[1]}});
+    return lang::Morphism::Binded(submorphisms[0], {{0, submorphisms[1]}});
 }
 
 template <SymbolsRegistryLike SymbolsRegistry>
@@ -282,39 +282,31 @@ CookingResult<lang::MorphismPtr> Cooker<SymbolsRegistry>::CookSimpleMorphism(
     }
 
     if (std::isdigit(raw_morphism.front())) {
-        auto maybe_value = CookValue(raw_morphism);
+        auto maybe_literal = CookLiteral(raw_morphism);
 
-        if (!maybe_value) {
-            return std::unexpected(std::move(maybe_value.error()));
+        if (!maybe_literal) {
+            return std::unexpected(std::move(maybe_literal.error()));
         }
 
-        return lang::Morphism::WithValue("", std::move(maybe_value.value()));
+        return lang::Morphism::Literal(std::move(maybe_literal.value()));
     }
 
     if (raw_morphism == "+") {
-        return lang::Morphism::Builtin(lang::MorphismTag::Plus, lang::Type::Int().Pow(2),
-                                       lang::Type::Int());
+        return lang::Morphism::Plus();
     } else if (raw_morphism == "-") {
-        return lang::Morphism::Builtin(lang::MorphismTag::Minus, lang::Type::Int().Pow(2),
-                                       lang::Type::Int());
+        return lang::Morphism::Minus();
     } else if (raw_morphism == "*") {
-        return lang::Morphism::Builtin(lang::MorphismTag::Multiply, lang::Type::Int().Pow(2),
-                                       lang::Type::Int());
+        return lang::Morphism::Multiply();
     } else if (raw_morphism == ">") {
-        return lang::Morphism::Builtin(lang::MorphismTag::Greater, lang::Type::Int().Pow(2),
-                                       lang::Type::Bool());
+        return lang::Morphism::Greater();
     } else if (raw_morphism == "<") {
-        return lang::Morphism::Builtin(lang::MorphismTag::Less, lang::Type::Int().Pow(2),
-                                       lang::Type::Bool());
+        return lang::Morphism::Less();
     } else if (raw_morphism == ">=") {
-        return lang::Morphism::Builtin(lang::MorphismTag::GreaterEq, lang::Type::Int().Pow(2),
-                                       lang::Type::Bool());
+        return lang::Morphism::GreaterEq();
     } else if (raw_morphism == "<=") {
-        return lang::Morphism::Builtin(lang::MorphismTag::LessEq, lang::Type::Int().Pow(2),
-                                       lang::Type::Bool());
+        return lang::Morphism::LessEq();
     } else if (raw_morphism == "id") {
-        return lang::Morphism::Builtin(lang::MorphismTag::Id, lang::Type::Var("a"),
-                                       lang::Type::Var("a"));
+        return lang::Morphism::Identity();
     }
 
     auto maybe_symbol = FindSymbol(raw_morphism);
@@ -325,11 +317,9 @@ CookingResult<lang::MorphismPtr> Cooker<SymbolsRegistry>::CookSimpleMorphism(
 
     SymbolInfo symbol_info = std::move(maybe_symbol.value());
     if (symbol_info.kind == SymbolKind::Function) {
-        auto& type = symbol_info.type.GetVariant<lang::FunctionType>();
-
-        return lang::Morphism::WithName(raw_morphism, type.Source(), type.Target());
+        return lang::Morphism::CommonWithType(raw_morphism, symbol_info.type);
     } else if (symbol_info.kind == SymbolKind::Value) {
-        return lang::Morphism::WithName(raw_morphism, lang::Type::Singleton(), symbol_info.type);
+        return lang::Morphism::Common(raw_morphism, lang::Type::Singleton(), symbol_info.type);
     }
 
     return MakeCookingError("wrong symbol kind for morphism");
@@ -395,16 +385,16 @@ CookingResult<lang::Pattern> Cooker<SymbolsRegistry>::CookPattern(std::string ra
             return mismatch_error;
         }
 
-        return lang::Pattern::TupleFromPatterns(std::move(subpatterns));
+        return lang::Pattern::Tuple(std::move(subpatterns));
     }
 
-    auto maybe_value = CookValue(std::move(raw_pattern));
+    auto maybe_value = CookLiteral(std::move(raw_pattern));
 
     if (!maybe_value) {
         return std::unexpected(maybe_value.error());
     }
 
-    return lang::Pattern::FromValue(std::move(maybe_value.value()));
+    return lang::Pattern::FromLiteral(std::move(maybe_value.value()));
 }
 
 template <SymbolsRegistryLike SymbolsRegistry>
@@ -426,87 +416,40 @@ CookingResult<lang::Guard> Cooker<SymbolsRegistry>::CookGuard(const std::string&
 }
 
 template <SymbolsRegistryLike SymbolsRegistry>
-CookingResult<lang::Value> Cooker<SymbolsRegistry>::CookValue(std::string raw_value) {
-    raw_value = util::Strip(raw_value);
+CookingResult<lang::Literal> Cooker<SymbolsRegistry>::CookLiteral(std::string raw_literal) {
+    raw_literal = util::Strip(raw_literal);
 
-    if (raw_value[0] == '(') {
-        int64_t balance = 0;
-        size_t last_start_idx = 1;
-        std::vector<lang::Value> subvalues;
-
-        auto mismatch_error =
-            MakeCookingError(std::format("brackets mismatch in pattern \"{}\"", raw_value));
-
-        for (size_t i = 0; i < raw_value.size(); ++i) {
-            bool last = i + 1 == raw_value.size();
-
-            if (raw_value[i] == '(') {
-                ++balance;
-            } else if (raw_value[i] == ')') {
-                --balance;
-            }
-
-            if ((raw_value[i] == ',' && balance == 1) || last) {
-                auto maybe_value = CookValue(raw_value.substr(last_start_idx, i - last_start_idx));
-
-                if (!maybe_value) {
-                    return std::unexpected(maybe_value.error());
-                }
-
-                subvalues.emplace_back(std::move(maybe_value.value()));
-                last_start_idx = i + 1;
-            }
-
-            if (balance == 0 && !last) {
-                return mismatch_error;
-            }
-        }
-
-        if (balance != 0) {
-            return mismatch_error;
-        }
-
-        return lang::Value::Tuple(std::move(subvalues));
-    }
-
-    if (raw_value[0] == '\'') {
-        if (raw_value.back() != '\'' || raw_value.size() < 2) {
+    if (raw_literal[0] == '\'') {
+        if (raw_literal.back() != '\'' || raw_literal.size() < 2) {
             return MakeCookingError(
-                std::format("Missing ending quote in a character \"{}\"", raw_value));
+                std::format("Missing ending quote in a character \"{}\"", raw_literal));
         }
 
-        auto wrong_char_err = MakeCookingError(std::format("Wrong character \"{}\"", raw_value));
+        auto wrong_char_err = MakeCookingError(std::format("Wrong character \"{}\"", raw_literal));
 
-        raw_value = raw_value.substr(1, raw_value.size() - 2);
-        if (raw_value.empty() || raw_value.size() > 3) {
+        raw_literal = raw_literal.substr(1, raw_literal.size() - 2);
+        if (raw_literal.empty() || raw_literal.size() > 3) {
             return wrong_char_err;
         }
 
-        if (raw_value.size() == 1) {
-            return lang::Value::Char(raw_value[0]);
+        if (raw_literal.size() == 1) {
+            return lang::Literal::Char(raw_literal[0]);
         }
 
-        if (raw_value == "\\n") {
-            return lang::Value::Char('\n');
+        if (raw_literal == "\\n") {
+            return lang::Literal::Char('\n');
         }
 
         return wrong_char_err;
     }
 
-    if (raw_value == "True") {
-        return lang::Value::Bool(true);
-    }
-    if (raw_value == "False") {
-        return lang::Value::Bool(false);
-    }
-
-    auto maybe_num = CookNumber(raw_value.c_str());
+    auto maybe_num = CookNumber(raw_literal.c_str());
 
     if (!maybe_num) {
         return std::unexpected(maybe_num.error());
     }
 
-    return lang::Value::Int(maybe_num.value());
+    return lang::Literal::Number(maybe_num.value());
 }
 
 template <SymbolsRegistryLike SymbolsRegistry>

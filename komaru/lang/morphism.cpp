@@ -7,139 +7,57 @@
 
 namespace komaru::lang {
 
-// TODO: better
-static std::string_view TagToName(MorphismTag tag) {
-    switch (tag) {
-        case MorphismTag::Id:
-            return "id";
-        case MorphismTag::Plus:
-            return "+";
-        case MorphismTag::Minus:
-            return "-";
-        case MorphismTag::Multiply:
-            return "*";
-        case MorphismTag::Less:
-            return "<";
-        case MorphismTag::LessEq:
-            return "<=";
-        case MorphismTag::Greater:
-            return ">";
-        case MorphismTag::GreaterEq:
-            return ">=";
-        case MorphismTag::DebugInt:
-            return "debug_int";
-        case MorphismTag::Compound:
-            return "ERROR (Compound)";
-        case MorphismTag::Value:
-            return "ERROR (Value)";
-        case MorphismTag::Position:
-            return "ERROR (Position)";
-        case MorphismTag::Binded:
-            return "ERROR (Binded)";
-        case MorphismTag::Name:
-            return "ERROR (Name)";
-    }
-
-    throw std::logic_error("unknown morphism tag");
-}
-
-BuiltinMorphism::BuiltinMorphism(MorphismTag tag, Type source, Type target)
-    : name_(TagToName(tag)),
-      tag_(tag),
-      source_type_(source),
-      target_type_(target) {
-}
-
-const std::string& BuiltinMorphism::GetName() const {
-    return name_;
-}
-
-Type BuiltinMorphism::GetSource() const {
-    return source_type_;
-}
-
-Type BuiltinMorphism::GetTarget() const {
-    return target_type_;
-}
-
-MorphismTag BuiltinMorphism::GetTag() const {
-    return tag_;
-}
-
-std::string BuiltinMorphism::ToString() const {
-    return GetName();
-}
-
-CompoundMorphism::CompoundMorphism(std::string name, std::vector<MorphismPtr> morphisms)
+CommonMorphism::CommonMorphism(std::string name, Type source, Type target)
     : name_(std::move(name)),
-      morphisms_(std::move(morphisms)) {
+      source_(source),
+      target_(target) {
 }
 
-const std::string& CompoundMorphism::GetName() const {
+std::string CommonMorphism::ToString() const {
     return name_;
 }
 
-Type CompoundMorphism::GetSource() const {
-    return morphisms_.front()->GetSource();
+Type CommonMorphism::GetSource() const {
+    return source_;
 }
 
-Type CompoundMorphism::GetTarget() const {
-    return morphisms_.back()->GetTarget();
+Type CommonMorphism::GetTarget() const {
+    return target_;
 }
 
-MorphismTag CompoundMorphism::GetTag() const {
-    return MorphismTag::Compound;
+Type CommonMorphism::GetType() const {
+    return Type::Function(source_, target_);
 }
 
-std::string CompoundMorphism::ToString() const {
-    return "compound UNIMPLEMENTED";
+size_t CommonMorphism::GetParamNum() const {
+    return GetType().GetParamNum();
 }
 
-const std::vector<MorphismPtr>& CompoundMorphism::GetMorphisms() const {
-    return morphisms_;
+bool CommonMorphism::IsValue() const {
+    return GetType().IsValueType();
 }
 
-ValueMorphism::ValueMorphism(std::string name, Value value, bool strict)
-    : name_(std::move(name)),
-      value_(std::move(value)),
-      strict_(strict) {
+bool CommonMorphism::ShouldBeShielded() const {
+    return IsOperatorName(name_) || GetParamNum() > 0;
 }
 
-const std::string& ValueMorphism::GetName() const {
+bool CommonMorphism::IsOperator() const {
+    return IsOperatorName(name_);
+}
+
+const std::string& CommonMorphism::GetName() const {
     return name_;
-}
-
-Type ValueMorphism::GetSource() const {
-    return strict_ ? Type::Singleton() : Type::Auto();
-}
-
-Type ValueMorphism::GetTarget() const {
-    return value_.GetType();
-}
-
-MorphismTag ValueMorphism::GetTag() const {
-    return MorphismTag::Value;
-}
-
-const Value& ValueMorphism::GetValue() const {
-    return value_;
-}
-
-MorphismPtr ValueMorphism::Unrestricted() const {
-    return Morphism::WithValue(name_, value_, false);
-}
-
-std::string ValueMorphism::ToString() const {
-    return value_.ToString();
 }
 
 PositionMorphism::PositionMorphism(size_t pos)
-    : pos_(pos),
-      name_(std::format("${}", pos_)) {
+    : pos_(pos) {
 }
 
-const std::string& PositionMorphism::GetName() const {
-    return name_;
+std::string PositionMorphism::ToString() const {
+    if (IsNonePosition()) {
+        return "$";
+    }
+    return std::format("${}", pos_);
 }
 
 Type PositionMorphism::GetSource() const {
@@ -150,15 +68,24 @@ Type PositionMorphism::GetTarget() const {
     return Type::Auto();
 }
 
-MorphismTag PositionMorphism::GetTag() const {
-    return MorphismTag::Position;
+Type PositionMorphism::GetType() const {
+    return Type::Function(Type::Auto(), Type::Auto());
 }
 
-std::string PositionMorphism::ToString() const {
-    if (IsNonePosition()) {
-        return "$";
-    }
-    return std::format("${}", pos_);
+size_t PositionMorphism::GetParamNum() const {
+    return 1;
+}
+
+bool PositionMorphism::IsValue() const {
+    return false;
+}
+
+bool PositionMorphism::ShouldBeShielded() const {
+    return false;
+}
+
+bool PositionMorphism::IsOperator() const {
+    return false;
 }
 
 size_t PositionMorphism::GetPosition() const {
@@ -171,67 +98,90 @@ bool PositionMorphism::IsNonePosition() const {
 
 BindedMorphism::BindedMorphism(MorphismPtr morphism, std::map<size_t, MorphismPtr> mapping)
     : morphism_(std::move(morphism)),
-      mapping_(std::move(mapping)) {
-}
+      mapping_(std::move(mapping)),
+      source_(Type::Auto()),
+      target_(Type::Auto()) {
+    size_t param_num = morphism_->GetType().GetParamNum();
+    std::vector<Type> new_types;
 
-const std::string& BindedMorphism::GetName() const {
-    return morphism_->GetName();
-}
+    // Cleanup extra mappings
+    auto it = mapping_.lower_bound(param_num - 1);
+    while (it != mapping_.end()) {
+        it = mapping_.erase(it);
+    }
 
-Type BindedMorphism::GetSource() const {
-    return morphism_->GetSource();
-}
+    assert(!mapping_.empty());
 
-Type BindedMorphism::GetTarget() const {
-    return morphism_->GetTarget();
-}
+    std::map<size_t, Type> type_mapping;
+    for (const auto& [pos, morphism] : mapping_) {
+        type_mapping[pos] = morphism->GetType();
+    }
 
-MorphismTag BindedMorphism::GetTag() const {
-    return MorphismTag::Binded;
+    Type deduced_type = DeduceTypes(morphism_->GetType(), type_mapping);
+    auto types = deduced_type.FlattenFunction();
+
+    for (size_t i = 0; i + 1 < types.size(); ++i) {
+        if (!mapping_.contains(i)) {
+            new_types.push_back(types[i]);
+        }
+    }
+
+    new_types.push_back(types.back());
+
+    const FunctionType& new_type = Type::FunctionChain(new_types).GetVariant<FunctionType>();
+    source_ = new_type.Source();
+    target_ = new_type.Target();
 }
 
 std::string BindedMorphism::ToString() const {
-    std::string mname = morphism_->ToString();
-    if (IsComplex(*morphism_)) {
-        mname = "(" + mname + ")";
+    if (IsOperatorName(morphism_->ToString())) {
+        return ToStringAsOperator();
     }
 
-    auto to_wrapped_str = [&](const Morphism& m) {
-        if (IsOperator(m)) {
-            return "(" + m.ToString() + ")";
-        }
-        return m.ToString();
-    };
+    std::string res = ToStringShielded(*morphism_);
 
-    std::string res;
+    size_t last_idx = mapping_.rbegin()->first;
 
-    if (IsOperator(*morphism_)) {
-        auto it = mapping_.find(0);
+    for (size_t i = 0; i <= last_idx; ++i) {
+        res += " ";
+
+        auto it = mapping_.find(i);
         if (it != mapping_.end()) {
-            res += to_wrapped_str(*it->second) + " ";
-        }
-        res += mname;
-        it = mapping_.find(1);
-        if (it != mapping_.end()) {
-            res += " " + to_wrapped_str(*it->second);
-        }
-    } else {
-        size_t n_comps = morphism_->GetSource().GetComponentsNum();
-        res = mname;
-        size_t n_mapped = 0;
-
-        for (size_t i = 0; i < n_comps && n_mapped < mapping_.size(); ++i) {
-            auto it = mapping_.find(i);
-            if (it != mapping_.end()) {
-                res += " " + to_wrapped_str(*it->second);
-                ++n_mapped;
-            } else {
-                res += " _";
-            }
+            res += ToStringShielded(*it->second);
+        } else {
+            res += "_";
         }
     }
 
     return res;
+}
+
+Type BindedMorphism::GetSource() const {
+    return source_;
+}
+
+Type BindedMorphism::GetTarget() const {
+    return target_;
+}
+
+Type BindedMorphism::GetType() const {
+    return Type::Function(source_, target_);
+}
+
+size_t BindedMorphism::GetParamNum() const {
+    return GetType().GetParamNum();
+}
+
+bool BindedMorphism::IsValue() const {
+    return GetType().IsValueType();
+}
+
+bool BindedMorphism::ShouldBeShielded() const {
+    return true;
+}
+
+bool BindedMorphism::IsOperator() const {
+    return false;
 }
 
 const MorphismPtr& BindedMorphism::GetUnderlyingMorphism() const {
@@ -242,46 +192,88 @@ const std::map<size_t, MorphismPtr>& BindedMorphism::GetMapping() const {
     return mapping_;
 }
 
-NameMorphism::NameMorphism(std::string name, Type source, Type target)
-    : name_(std::move(name)),
-      source_(source),
-      target_(target) {
-}
+std::string BindedMorphism::ToStringAsOperator() const {
+    std::string res;
 
-const std::string& NameMorphism::GetName() const {
-    return name_;
-}
+    auto it = mapping_.find(0);
 
-Type NameMorphism::GetSource() const {
-    return source_;
-}
-
-Type NameMorphism::GetTarget() const {
-    return target_;
-}
-
-MorphismTag NameMorphism::GetTag() const {
-    return MorphismTag::Name;
-}
-
-std::string NameMorphism::ToString() const {
-    return name_;
-}
-
-MorphismPtr Morphism::Builtin(MorphismTag tag, Type source, Type target) {
-    return std::make_shared<Morphism>(PrivateDummy{}, BuiltinMorphism(tag, source, target));
-}
-
-MorphismPtr Morphism::Compound(std::string name, std::vector<MorphismPtr> morphisms) {
-    if (!ValidateCompound(morphisms)) {
-        throw std::runtime_error("Attempt to create invalid compound morphism");
+    if (it != mapping_.end()) {
+        res += ToStringShielded(*it->second);
+        res += " ";
     }
-    return std::make_shared<Morphism>(PrivateDummy{},
-                                      CompoundMorphism(std::move(name), std::move(morphisms)));
+
+    res += morphism_->ToString();
+
+    it = mapping_.find(1);
+    if (it != mapping_.end()) {
+        res += " ";
+        res += it->second->ToString();
+    }
+
+    return res;
 }
 
-MorphismPtr Morphism::WithValue(std::string name, Value value, bool strict) {
-    return std::make_shared<Morphism>(PrivateDummy{}, ValueMorphism(name, value, strict));
+LiteralMorphism::LiteralMorphism(Literal literal)
+    : literal_(std::move(literal)) {
+}
+
+std::string LiteralMorphism::ToString() const {
+    return literal_.ToString();
+}
+
+Type LiteralMorphism::GetSource() const {
+    return Type::Singleton();
+}
+
+Type LiteralMorphism::GetTarget() const {
+    return literal_.GetType();
+}
+
+Type LiteralMorphism::GetType() const {
+    return Type::Function(Type::Singleton(), literal_.GetType());
+}
+
+size_t LiteralMorphism::GetParamNum() const {
+    return 0;
+}
+
+bool LiteralMorphism::IsValue() const {
+    return true;
+}
+
+bool LiteralMorphism::ShouldBeShielded() const {
+    return false;
+}
+
+bool LiteralMorphism::IsOperator() const {
+    return false;
+}
+
+const Literal& LiteralMorphism::GetLiteral() const {
+    return literal_;
+}
+
+MorphismPtr Morphism::Common(std::string name, Type source, Type target) {
+    return std::make_shared<Morphism>(PrivateDummy{},
+                                      CommonMorphism(std::move(name), source, target));
+}
+
+MorphismPtr Morphism::CommonWithType(std::string name, Type type) {
+    return type.Visit(
+        util::Overloaded{[&](const FunctionType& t) -> MorphismPtr {
+                             return Morphism::Common(std::move(name), t.Source(), t.Target());
+                         },
+                         [&](const auto&) -> MorphismPtr {
+                             return Morphism::Common(std::move(name), Type::Singleton(), type);
+                         }});
+}
+
+MorphismPtr Morphism::Value(std::string name, Type type) {
+    return Common(std::move(name), Type::Singleton(), type);
+}
+
+MorphismPtr Morphism::ChainFunction(std::string name, const std::vector<Type>& types) {
+    return Morphism::CommonWithType(std::move(name), Type::FunctionChain(types));
 }
 
 MorphismPtr Morphism::Position(size_t pos) {
@@ -292,14 +284,65 @@ MorphismPtr Morphism::NonePosition() {
     return Position(std::numeric_limits<size_t>::max());
 }
 
-MorphismPtr Morphism::WithName(std::string name, Type source, Type target) {
+MorphismPtr Morphism::Binded(MorphismPtr morphism, std::map<size_t, MorphismPtr> mapping) {
     return std::make_shared<Morphism>(PrivateDummy{},
-                                      NameMorphism(std::move(name), source, target));
+                                      BindedMorphism(std::move(morphism), std::move(mapping)));
 }
 
-const std::string& Morphism::GetName() const {
-    return Visit([](const auto& morphism) -> const std::string& {
-        return morphism.GetName();
+MorphismPtr Morphism::Literal(class Literal literal) {
+    return std::make_shared<Morphism>(PrivateDummy{}, LiteralMorphism(std::move(literal)));
+}
+
+MorphismPtr Morphism::Plus() {
+    return Morphism::ChainFunction(
+        "+", std::vector<Type>{Type::Var("a"), Type::Var("a"), Type::Var("a")});
+}
+
+MorphismPtr Morphism::Minus() {
+    return Morphism::ChainFunction(
+        "-", std::vector<Type>{Type::Var("a"), Type::Var("a"), Type::Var("a")});
+}
+
+MorphismPtr Morphism::Multiply() {
+    return Morphism::ChainFunction(
+        "*", std::vector<Type>{Type::Var("a"), Type::Var("a"), Type::Var("a")});
+}
+
+MorphismPtr Morphism::Greater() {
+    return Morphism::ChainFunction(">",
+                                   std::vector<Type>{Type::Var("a"), Type::Var("a"), Type::Bool()});
+}
+
+MorphismPtr Morphism::Less() {
+    return Morphism::ChainFunction("<",
+                                   std::vector<Type>{Type::Var("a"), Type::Var("a"), Type::Bool()});
+}
+
+MorphismPtr Morphism::GreaterEq() {
+    return Morphism::ChainFunction(">=",
+                                   std::vector<Type>{Type::Var("a"), Type::Var("a"), Type::Bool()});
+}
+
+MorphismPtr Morphism::LessEq() {
+    return Morphism::ChainFunction("<=",
+                                   std::vector<Type>{Type::Var("a"), Type::Var("a"), Type::Bool()});
+}
+
+MorphismPtr Morphism::Identity() {
+    return Morphism::Common("id", Type::Var("a"), Type::Var("a"));
+}
+
+MorphismPtr Morphism::True() {
+    return Morphism::Common("True", Type::Singleton(), Type::Bool());
+}
+
+MorphismPtr Morphism::False() {
+    return Morphism::Common("False", Type::Singleton(), Type::Bool());
+}
+
+std::string Morphism::ToString() const {
+    return Visit([](const auto& morphism) -> std::string {
+        return morphism.ToString();
     });
 }
 
@@ -315,58 +358,53 @@ Type Morphism::GetTarget() const {
     });
 }
 
-MorphismTag Morphism::GetTag() const {
+Type Morphism::GetType() const {
     return Visit([](const auto& morphism) {
-        return morphism.GetTag();
+        return morphism.GetType();
     });
 }
 
-std::string Morphism::ToString() const {
-    return Visit([](const auto& morphism) {
-        return morphism.ToString();
+size_t Morphism::GetParamNum() const {
+    return GetType().GetParamNum();
+}
+
+bool Morphism::IsValue() const {
+    return GetType().IsValueType();
+}
+
+bool Morphism::ShouldBeShielded() const {
+    return Visit([](const auto& morphism) -> bool {
+        return morphism.ShouldBeShielded();
     });
 }
 
-bool Morphism::ValidateCompound(const std::vector<MorphismPtr>& morphisms) {
-    if (morphisms.empty()) {
-        return false;
-    }
-    for (size_t i = 0; i + 1 < morphisms.size(); ++i) {
-        if (morphisms[i]->GetTarget() != morphisms[i + 1]->GetSource()) {
-            return false;
-        }
-    }
-    return true;
+bool Morphism::IsOperator() const {
+    return Visit([](const auto& morphism) -> bool {
+        return morphism.IsOperator();
+    });
 }
 
 const Morphism::Variant* Morphism::GetVariantPointer() const {
     return &morphism_;
 }
 
-MorphismPtr BindMorphism(MorphismPtr morphism, std::map<size_t, MorphismPtr> mapping) {
-    return std::make_shared<Morphism>(Morphism::PrivateDummy{},
-                                      BindedMorphism(std::move(morphism), std::move(mapping)));
+bool IsOperatorName(const std::string& name) {
+    return !name.empty() && !std::isalnum(name.front());
 }
 
-bool IsOperator(const Morphism& morphism) {
-    return morphism.Visit(
-        util::Overloaded{[](const BuiltinMorphism& m) -> bool {
-                             return m.GetTag() != MorphismTag::Id;  // TODO: change later
-                         },
-                         [](const NameMorphism& m) -> bool {
-                             return !m.GetName().empty() && !std::isalpha(m.GetName().front());
-                         },
-                         [](const auto&) -> bool {
-                             return false;
-                         }});
+bool IsFunctionName(const std::string& name) {
+    return !name.empty() && std::isalpha(name.front());
 }
 
-bool IsComplex(const Morphism& morphism) {
-    return morphism.Holds<BindedMorphism>();
+bool IsConstructorName(const std::string& name) {
+    return !name.empty() && std::isalpha(name.front()) && std::isupper(name.front());
 }
 
-bool IsFunction(const Morphism& morphism) {
-    return !morphism.Holds<ValueMorphism>();
+std::string ToStringShielded(const Morphism& morphism) {
+    if (morphism.ShouldBeShielded()) {
+        return std::format("({})", morphism.ToString());
+    }
+    return morphism.ToString();
 }
 
 }  // namespace komaru::lang

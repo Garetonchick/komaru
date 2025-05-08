@@ -36,20 +36,18 @@ private:
     CppExpr MakeExprForGuard(const lang::Guard& guard, const CppExpr& in_expr);
     CppExpr MakeExprForPattern(const lang::Pattern& pattern, const CppExpr& in_expr);
     CppExpr MakeExprForPattern(const lang::AnyPattern& pattern, const CppExpr& in_expr);
-    CppExpr MakeExprForPattern(const lang::ValuePattern& pattern, const CppExpr& in_expr);
+    CppExpr MakeExprForPattern(const lang::LiteralPattern& pattern, const CppExpr& in_expr);
+    CppExpr MakeExprForPattern(const lang::NamePattern& pattern, const CppExpr& in_expr);
+    CppExpr MakeExprForPattern(const lang::ConstructorPattern& pattern, const CppExpr& in_expr);
     CppExpr MakeExprForPattern(const lang::TuplePattern& pattern, const CppExpr& in_expr);
 
     CppExpr MakeExprForMorphism(const lang::Morphism& morphism, const CppExpr& in_expr,
                                 lang::Type out_type);
-    CppExpr MakeExprForMorphism(const lang::CompoundMorphism& morphism, const CppExpr& in_expr,
-                                lang::Type out_type);
-    CppExpr MakeExprForMorphism(const lang::BuiltinMorphism& morphism, const CppExpr& in_expr,
-                                lang::Type out_type);
-    CppExpr MakeExprForMorphism(const lang::ValueMorphism& morphism, const CppExpr& in_expr,
+    CppExpr MakeExprForMorphism(const lang::CommonMorphism& morphism, const CppExpr& in_expr,
                                 lang::Type out_type);
     CppExpr MakeExprForMorphism(const lang::BindedMorphism& morphism, const CppExpr& in_expr,
                                 lang::Type out_type);
-    CppExpr MakeExprForMorphism(const lang::NameMorphism& morphism, const CppExpr& in_expr,
+    CppExpr MakeExprForMorphism(const lang::LiteralMorphism& morphism, const CppExpr& in_expr,
                                 lang::Type out_type);
 
     std::vector<std::string> MakeBranchExprs(const CPNode* node);

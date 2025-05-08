@@ -50,3 +50,36 @@ TEST(Types, Tuple) {
     ASSERT_TRUE(
         VecEq(tuple_ic1.GetVariant<TupleType>().GetTupleTypes(), {Type::Int(), Type::Char()}));
 }
+
+TEST(Types, Function) {
+    Type func_ic = Type::Function(Type::Int(), Type::Char());
+
+    ASSERT_EQ(func_ic.GetName(), "Int -> Char");
+    ASSERT_TRUE(func_ic.Holds<FunctionType>());
+
+    ASSERT_EQ(func_ic.GetVariant<FunctionType>().Source(), Type::Int());
+    ASSERT_EQ(func_ic.GetVariant<FunctionType>().Target(), Type::Char());
+
+    Type func_icc = Type::FunctionChain(std::vector<Type>{Type::Int(), Type::Char(), Type::Char()});
+    ASSERT_EQ(func_icc.GetName(), "Int -> Char -> Char");
+    ASSERT_TRUE(func_icc.Holds<FunctionType>());
+
+    ASSERT_EQ(func_icc.GetVariant<FunctionType>().Source(), Type::Int());
+    ASSERT_EQ(func_icc.GetVariant<FunctionType>().Target(),
+              Type::Function(Type::Char(), Type::Char()));
+}
+
+TEST(Types, List) {
+    Type list_i = Type::List(Type::Int());
+    ASSERT_EQ(list_i.GetName(), "[Int]");
+    ASSERT_TRUE(list_i.Holds<ListType>());
+    ASSERT_EQ(list_i.GetVariant<ListType>().Inner(), Type::Int());
+}
+
+TEST(Types, SimpleDeduction) {
+    Type func_ic = Type::Function(Type::Var("a"), Type::Char());
+    Type arg_i = Type::Int();
+    auto deduced = TryDeduceTypes(func_ic, arg_i);
+    ASSERT_TRUE(deduced.has_value());
+    ASSERT_EQ(deduced.value(), Type::Function(Type::Int(), Type::Char()));
+}

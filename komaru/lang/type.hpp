@@ -8,6 +8,7 @@
 #include <vector>
 #include <deque>
 #include <span>
+#include <map>
 #include <unordered_map>
 
 namespace komaru::lang {
@@ -29,6 +30,10 @@ class Type : public util::DeriveVariant<Type> {
     using Variant = std::variant<CommonType, TupleType, FunctionType, ListType>;
 
 public:
+    Type()
+        : type_(Type::Auto().GetVariantPointer()) {
+    }
+
     explicit Type(const CommonType& type);
     explicit Type(const TupleType& type);
     explicit Type(const FunctionType& type);
@@ -42,9 +47,9 @@ public:
     static Type Tuple(std::vector<Type> types);
     static Type TupleFromSimples(std::vector<std::string> names);
     static Type Function(Type source, Type target);
-    static Type FunctionChain(std::span<Type> types);
-    static Type List(Type inner_type);
+    static Type FunctionChain(const std::vector<Type>& types);
     static Type Var(std::string name);
+    static Type List(Type inner_type);
 
     static Type Auto();
     static Type Singleton();
@@ -60,8 +65,14 @@ public:
     std::uintptr_t GetID() const;
     Type Pow(size_t n) const;
     size_t GetComponentsNum() const;
+    size_t GetParamNum() const;
+    bool IsValueType() const;
+    std::vector<Type> FlattenFunction() const;
+    bool IsTypeVar() const;
+    size_t TypeVariantIndex() const;
 
     bool operator==(Type o) const;
+    bool operator<(Type o) const;  // Used for containers like std::map
 
     // For CRTP
     const Variant* GetVariantPointer() const;
@@ -79,6 +90,21 @@ private:
     const Variant* type_{nullptr};
 };
 
+class TypeConstructor {
+public:
+    TypeConstructor(std::string name, size_t num_params);
+
+    const std::string& GetName() const;
+    size_t GetNumParams() const;
+
+    bool operator==(const TypeConstructor& o) const;
+    bool operator<(const TypeConstructor& o) const;
+
+private:
+    std::string name_;
+    size_t num_params_;
+};
+
 class CommonType {
 public:
     explicit CommonType(std::string main_name, std::vector<Type> params);
@@ -87,8 +113,10 @@ public:
     bool IsConcrete() const;
     std::string GetID() const;
     const std::string& GetMainName() const;
-    const std::vector<Type>& GetParams() const;
-    bool HasParams() const;
+    const std::vector<Type>& GetTypeParams() const;
+    size_t NumTypeParams() const;
+    bool HasTypeParams() const;
+    bool IsAuto() const;
 
     bool operator==(const CommonType& o) const;
 
@@ -128,6 +156,8 @@ public:
     std::string GetID() const;
     Type Source() const;
     Type Target() const;
+    size_t GetParamNum() const;
+    bool IsValueType() const;
 
     bool operator==(const FunctionType& o) const;
 
@@ -164,8 +194,21 @@ static_assert(TypeLike<ListType>);
 
 static_assert(TypeLike<Type>);
 
+using MatchMap = std::map<std::string, std::variant<Type, TypeConstructor>>;
+
 Type operator*(Type t1, Type t2);
 bool IsConcreteTypeName(const std::string& name);
+std::optional<Type> TryDeduceTypes(Type func_type, Type arg_type);
+std::optional<Type> TryDeduceTypes(Type func_type, const std::map<size_t, Type>& arg_mapping);
+Type DeduceTypes(Type func_type, Type arg_type);
+Type DeduceTypes(Type func_type, const std::map<size_t, Type>& arg_mapping);
+// It will automatically deduce types too
+Type MakeSubstitution(Type func_type, const std::map<size_t, Type>& arg_mapping);
+[[nodiscard]] bool MergeMatchMaps(MatchMap& mapping, const MatchMap& sub_mapping);
+std::optional<MatchMap> TryMatchTypes(Type param_type, Type arg_type);
+MatchMap MatchTypes(Type param_type, Type arg_type);
+Type ApplyMatchMap(Type type, const MatchMap& mapping);
+bool CanBeSubstituted(Type param_type, Type arg_type, const MatchMap& mapping = {});
 
 }  // namespace komaru::lang
 

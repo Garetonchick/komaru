@@ -22,24 +22,23 @@ SimpleSymbolsRegistry::SimpleSymbolsRegistry() {
     auto bt = lang::Type::Var("b");
     auto ct = lang::Type::Var("c");
     auto io_a = lang::Type::Parameterized("IO", {at});
-    auto io_b = lang::Type::Parameterized("IO", {bt});
-    auto io_c = lang::Type::Parameterized("IO", {ct});
     auto io_s = lang::Type::Parameterized("IO", {lang::Type::Singleton()});
+    auto ma = lang::Type::Parameterized("m", {at});
+    auto mb = lang::Type::Parameterized("m", {bt});
+    auto mc = lang::Type::Parameterized("m", {ct});
 
-    symbol2info_.emplace("read",
-                         SymbolInfo{.type = lang::Type::Function(
-                                        lang::Type::Singleton(),
-                                        lang::Type::Parameterized("IO", {lang::Type::Auto()})),
+    symbol2info_.emplace("readLn",
+                         SymbolInfo{.type = lang::Type::Function(lang::Type::Singleton(), io_a),
                                     .kind = SymbolKind::Function});
     symbol2info_.emplace("liftM2",
-                         SymbolInfo{.type = lang::Type::Function(
-                                        lang::Type::Function(at * bt, ct) * io_a * io_b, io_c),
+                         SymbolInfo{.type = lang::Type::FunctionChain(
+                                        {lang::Type::FunctionChain({at, bt, ct}), ma, mb, mc}),
                                     .kind = SymbolKind::Function});
     symbol2info_.emplace(
-        ">>=", SymbolInfo{.type = lang::Type::Function(io_a * lang::Type::Function(at, io_b), io_b),
+        ">>=", SymbolInfo{.type = lang::Type::FunctionChain({ma, lang::Type::Function(at, mb), mb}),
                           .kind = SymbolKind::Function});
-    symbol2info_.emplace("print", SymbolInfo{.type = lang::Type::Function(lang::Type::Auto(), io_s),
-                                             .kind = SymbolKind::Function});
+    symbol2info_.emplace(
+        "print", SymbolInfo{.type = lang::Type::Function(at, io_s), .kind = SymbolKind::Function});
 }
 
 std::optional<SymbolInfo> SimpleSymbolsRegistry::FindSymbol(const std::string& name) const {

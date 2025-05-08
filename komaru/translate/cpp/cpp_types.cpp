@@ -36,13 +36,13 @@ static CppType TranslateType(const lang::CommonType& type) {
         throw std::runtime_error("TODO: add template inside template support");
     }
 
-    for (auto [i, param] : util::Enumerate(type.GetParams())) {
+    for (auto [i, param] : util::Enumerate(type.GetTypeParams())) {
         auto param_cpp = ToCppType(param);
         template_vars.append_range(param_cpp.GetTemplateVars());
 
         type_str += param_cpp.GetTypeStr();
 
-        if (i + 1 != type.GetParams().size()) {
+        if (i + 1 != type.GetTypeParams().size()) {
             type_str += ", ";
         }
     }

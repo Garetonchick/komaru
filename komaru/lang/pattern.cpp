@@ -8,16 +8,45 @@ std::string AnyPattern::ToString() const {
     return "*";
 }
 
-ValuePattern::ValuePattern(Value value)
-    : value_(std::move(value)) {
+LiteralPattern::LiteralPattern(Literal literal)
+    : literal_(std::move(literal)) {
 }
 
-const Value& ValuePattern::GetValue() const {
-    return value_;
+const Literal& LiteralPattern::GetLiteral() const {
+    return literal_;
 }
 
-std::string ValuePattern::ToString() const {
-    return value_.ToString();
+std::string LiteralPattern::ToString() const {
+    return literal_.ToString();
+}
+
+NamePattern::NamePattern(std::string name)
+    : name_(std::move(name)) {
+}
+
+const std::string& NamePattern::GetName() const {
+    return name_;
+}
+
+std::string NamePattern::ToString() const {
+    return name_;
+}
+
+ConstructorPattern::ConstructorPattern(std::string name, std::vector<Pattern> patterns)
+    : name_(std::move(name)),
+      patterns_(std::move(patterns)) {
+}
+
+const std::string& ConstructorPattern::GetName() const {
+    return name_;
+}
+
+const std::vector<Pattern>& ConstructorPattern::GetPatterns() const {
+    return patterns_;
+}
+
+std::string ConstructorPattern::ToString() const {
+    throw std::runtime_error("Not implemented");
 }
 
 TuplePattern::TuplePattern(std::vector<Pattern> patterns)
@@ -42,16 +71,48 @@ std::string TuplePattern::ToString() const {
     return s;
 }
 
-Pattern Pattern::FromValue(Value value) {
-    return Pattern(ValuePattern(std::move(value)));
+Pattern Pattern::FromLiteral(Literal literal) {
+    return Pattern(LiteralPattern(std::move(literal)));
 }
 
-Pattern Pattern::TupleFromPatterns(std::vector<Pattern> patterns) {
+Pattern Pattern::FromName(std::string name) {
+    return Pattern(NamePattern(std::move(name)));
+}
+
+Pattern Pattern::Constructor(std::string name, std::vector<Pattern> patterns) {
+    return Pattern(ConstructorPattern(std::move(name), std::move(patterns)));
+}
+
+Pattern Pattern::Tuple(std::vector<Pattern> patterns) {
     return Pattern(TuplePattern(std::move(patterns)));
 }
 
 Pattern Pattern::Any() {
     return Pattern(AnyPattern{});
+}
+
+Pattern Pattern::Number(int64_t num) {
+    return FromLiteral(Literal::Number(num));
+}
+
+Pattern Pattern::Real(double real) {
+    return FromLiteral(Literal::Real(real));
+}
+
+Pattern Pattern::True() {
+    return Constructor("True", {});
+}
+
+Pattern Pattern::False() {
+    return Constructor("False", {});
+}
+
+Pattern Pattern::Char(char ch) {
+    return FromLiteral(Literal::Char(ch));
+}
+
+Pattern Pattern::String(std::string str) {
+    return FromLiteral(Literal::String(std::move(str)));
 }
 
 std::string Pattern::ToString() const {

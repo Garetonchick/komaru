@@ -9,11 +9,11 @@ using namespace komaru::lang;
 namespace komaru::test {
 
 lang::CatProgram MakeAPlusBProgram(int32_t a, int32_t b) {
-    auto val1 = MakeAtomValueMorphism(a);
-    auto val2 = MakeAtomValueMorphism(b);
+    auto val1 = MakeLiteralMorphism(a);
+    auto val2 = MakeLiteralMorphism(b);
     auto pos0 = Morphism::Position(0);
     auto pos1 = Morphism::Position(1);
-    auto plus = MakeIntPlus();
+    auto plus = lang::Morphism::Plus();
 
     auto builder = CatProgramBuilder();
 
@@ -33,7 +33,7 @@ lang::CatProgram MakeAPlusBProgram(int32_t a, int32_t b) {
 }
 
 lang::CatProgram MakeIf101Program(int32_t x) {
-    auto val = MakeAtomValueMorphism(x);
+    auto val = Morphism::Literal(Literal::Number(x));
     auto less4 = MakeRBindIntLess(4);
     auto pos0 = Morphism::Position(0);
     auto none_pos = Morphism::NonePosition();
@@ -50,8 +50,8 @@ lang::CatProgram MakeIf101Program(int32_t x) {
     auto& res0_node = builder.NewNode(Type::Int());
     auto& res1_node = builder.NewNode(Type::Int());
 
-    auto& false_pin = cond_node.AddOutPin(Pattern::FromValue(Value::Atom(false)));
-    auto& true_pin = cond_node.AddOutPin(Pattern::FromValue(Value::Atom(true)));
+    auto& false_pin = cond_node.AddOutPin(Pattern::False());
+    auto& true_pin = cond_node.AddOutPin(Pattern::True());
 
     builder.Connect(start_pin, val_node, val)
         .Connect(val_pin, cond_node, less4)
@@ -66,12 +66,11 @@ lang::CatProgram MakeIf101Program(int32_t x) {
 }
 
 lang::CatProgram MakeIfWithLocalVarProgram(int32_t x) {
-    auto val = MakeAtomValueMorphism(x);
+    auto val = MakeLiteralMorphism(x);
     auto less4 = MakeRBindIntLess(4);
     auto mul15 = MakeRBindIntMul(15);
     auto add10 = MakeRBindIntPlus(10);
-    auto y_var = Morphism::WithName("y", Type::Singleton(),
-                                    Type::Int());  // Cheat a bit with the source type
+    auto y_var = Morphism::Value("y", Type::Int());
 
     auto builder = CatProgramBuilder();
 
@@ -83,8 +82,8 @@ lang::CatProgram MakeIfWithLocalVarProgram(int32_t x) {
     auto& res0_node = builder.NewNode(Type::Int());
     auto& res1_node = builder.NewNode(Type::Int());
 
-    auto& false_pin = cond_node.AddOutPin(Pattern::FromValue(Value::Atom(false)));
-    auto& true_pin = cond_node.AddOutPin(Pattern::FromValue(Value::Atom(true)));
+    auto& false_pin = cond_node.AddOutPin(Pattern::False());
+    auto& true_pin = cond_node.AddOutPin(Pattern::True());
 
     builder.Connect(start_pin, val_node, val)
         .Connect(val_pin, cond_node, less4)
@@ -97,7 +96,7 @@ lang::CatProgram MakeIfWithLocalVarProgram(int32_t x) {
 }
 
 lang::CatProgram MakeGuards101Program(int32_t x) {
-    auto val = MakeAtomValueMorphism(x);
+    auto val = MakeLiteralMorphism(x);
     auto less4_guard = Guard(MakeRBindIntLess(4));
     auto mul15 = MakeRBindIntMul(15);
     auto add10 = MakeRBindIntPlus(10);
@@ -120,8 +119,8 @@ lang::CatProgram MakeGuards101Program(int32_t x) {
 }
 
 lang::CatProgram MakeMegaIfProgram(int32_t x) {
-    auto val = MakeAtomValueMorphism(x);
-    auto plus = MakeIntPlus();
+    auto val = MakeLiteralMorphism(x);
+    auto plus = Morphism::Plus();
     auto plus1 = MakeRBindIntPlus(1);
     auto plus2 = MakeRBindIntPlus(2);
     auto plus3 = MakeRBindIntPlus(3);
@@ -130,7 +129,7 @@ lang::CatProgram MakeMegaIfProgram(int32_t x) {
     auto minus2 = MakeRBindIntMinus(2);
     auto minus5 = MakeRBindIntMinus(5);
     auto minus8 = MakeRBindIntMinus(8);
-    auto mul = MakeIntMul();
+    auto mul = Morphism::Multiply();
     auto mul2 = MakeRBindIntMul(2);
     auto mul3 = MakeRBindIntMul(3);
     auto mul4 = MakeRBindIntMul(4);
@@ -217,14 +216,14 @@ int32_t CalcMegaIfResult(int32_t x) {
 }
 
 lang::CatProgram MakeFibProgram(int32_t x) {
-    auto val = MakeAtomValueMorphism(x);
-    auto fib = Morphism::WithName("fib", Type::Int(), Type::Int());
+    auto val = MakeLiteralMorphism(x);
+    auto fib = Morphism::Common("fib", Type::Int(), Type::Int());
     auto less2 = MakeRBindIntLess(2);
-    auto id = Morphism::Builtin(MorphismTag::Id, Type::Auto(), Type::Auto());
+    auto id = Morphism::Identity();
     auto minus1 = MakeRBindIntMinus(1);
     auto pos0 = Morphism::Position(0);
     auto pos1 = Morphism::Position(1);
-    auto plus = MakeIntPlus();
+    auto plus = Morphism::Plus();
 
     auto builder = CatProgramBuilder();
 
@@ -293,25 +292,27 @@ translate::RawCatProgram MakeRawFibProgram(int32_t x) {
 }
 
 lang::CatProgram MakeIO101Program() {
-    auto io = Type::Parameterized("IO", {Type::Auto()});
     auto at = Type::Var("a");
     auto bt = Type::Var("b");
     auto ct = Type::Var("c");
     auto io_a = Type::Parameterized("IO", {at});
-    auto io_b = Type::Parameterized("IO", {bt});
-    auto io_c = Type::Parameterized("IO", {ct});
     auto io_s = Type::Parameterized("IO", {Type::Singleton()});
+    auto ma = lang::Type::Parameterized("m", {at});
+    auto mb = lang::Type::Parameterized("m", {bt});
+    auto mc = lang::Type::Parameterized("m", {ct});
     auto io_int = Type::Parameterized("IO", {Type::Int()});
     auto io_int2 = io_int.Pow(2);
-    auto read = Morphism::WithName("read", Type::Singleton(), io);
-    auto id = Morphism::Builtin(MorphismTag::Id, Type::Auto(), Type::Auto());
+    auto read = Morphism::Value("readLn", io_a);
+    auto id = Morphism::Identity();
     auto pos0 = Morphism::Position(0);
     auto pos1 = Morphism::Position(1);
-    auto lift_m2 = Morphism::WithName("liftM2", Type::Function(at * bt, ct) * io_a * io_b, io_c);
-    auto lifted_plus = BindMorphism(lift_m2, {{0, MakeIntPlus()}});
-    auto bind = Morphism::WithName(">>=", io_a * Type::Function(at, io_b), io_b);
-    auto print = Morphism::WithName("print", Type::Auto(), io_s);
-    auto binded_print = BindMorphism(bind, {{1, print}});
+
+    auto lift_m2 = lang::Morphism::ChainFunction(
+        "liftM2", {lang::Type::FunctionChain({at, bt, ct}), ma, mb, mc});
+    auto lifted_plus = Morphism::Binded(lift_m2, {{0, Morphism::Plus()}});
+    auto bind = Morphism::ChainFunction(">>=", {ma, lang::Type::Function(at, mb), mb});
+    auto print = lang::Morphism::Common("print", at, io_s);
+    auto binded_print = lang::Morphism::Binded(bind, {{1, print}});
 
     auto builder = CatProgramBuilder();
 

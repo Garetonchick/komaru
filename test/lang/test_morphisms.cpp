@@ -8,43 +8,17 @@ using namespace komaru::lang;
 using namespace komaru::util;
 
 TEST(Morphisms, Builtin) {
-    auto ti = Type::Int();
-    auto ti2 = Type::Tuple({Type::Int(), Type::Int()});
-    auto plus = Morphism::Builtin(MorphismTag::Plus, ti2, ti);
-    auto mul = Morphism::Builtin(MorphismTag::Multiply, ti2, ti);
+    auto plus = Morphism::Plus();
+    auto mul = Morphism::Multiply();
 
-    ASSERT_EQ(plus->GetName(), "+");
-    ASSERT_EQ(plus->GetSource(), ti2);
-    ASSERT_EQ(plus->GetTarget(), ti);
-    ASSERT_EQ(plus->GetTag(), MorphismTag::Plus);
-    ASSERT_EQ(mul->GetTag(), MorphismTag::Multiply);
-}
-
-TEST(Morphisms, Compound) {
-    auto ti = Type::Int();
-    auto ti2 = Type::Tuple({Type::Int(), Type::Int()});
-    auto start_morphism = Morphism::Builtin(MorphismTag::Id, Type::Singleton(), Type::Singleton());
-    auto value_morphism = Morphism::WithValue("some_value", Value::TupleFromAtoms(9, 42));
-    auto plus_morphism = Morphism::Builtin(MorphismTag::Plus, ti2, ti);
-    auto end_morphism = Morphism::Builtin(MorphismTag::Id, Type::Int(), Type::Int());
-    std::vector<MorphismPtr> program_morphisms = {start_morphism, value_morphism, plus_morphism,
-                                                  end_morphism};
-    auto program_morphism = Morphism::Compound("main", program_morphisms);
-
-    ASSERT_EQ(program_morphism->GetName(), "main");
-    ASSERT_EQ(program_morphism->GetSource(), Type::Singleton());
-    ASSERT_EQ(program_morphism->GetTarget(), Type::Int());
-    ASSERT_EQ(program_morphism->GetTag(), MorphismTag::Compound);
-
-    program_morphism->Visit(Overloaded{[&](const CompoundMorphism& morphism) {
-                                           const auto& submorphisms = morphism.GetMorphisms();
-                                           ASSERT_EQ(submorphisms.size(), program_morphisms.size());
-                                           for (size_t i = 0; i < program_morphisms.size(); ++i) {
-                                               ASSERT_EQ(submorphisms[i]->GetName(),
-                                                         program_morphisms[i]->GetName());
-                                           }
-                                       },
-                                       [](const auto&) {
-                                           FAIL();
-                                       }});
+    ASSERT_EQ(plus->ToString(), "+");
+    ASSERT_EQ(mul->ToString(), "*");
+    ASSERT_TRUE(plus->GetSource().IsTypeVar());
+    ASSERT_TRUE(!plus->GetTarget().IsConcrete());
+    ASSERT_TRUE(plus->IsOperator());
+    ASSERT_TRUE(mul->IsOperator());
+    ASSERT_EQ(plus->GetParamNum(), 2);
+    ASSERT_EQ(mul->GetParamNum(), 2);
+    ASSERT_EQ(plus->GetType().FlattenFunction().size(), 3);
+    ASSERT_EQ(mul->GetType().FlattenFunction().size(), 3);
 }
