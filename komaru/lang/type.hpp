@@ -2,12 +2,12 @@
 
 #include <komaru/util/non_copyable_non_movable.hpp>
 #include <komaru/util/derive_variant.hpp>
+#include <komaru/lang/style.hpp>
 
 #include <string>
 #include <variant>
 #include <vector>
 #include <deque>
-#include <span>
 #include <map>
 #include <unordered_map>
 
@@ -22,7 +22,8 @@ class ListType;      // [T]
 
 template <typename T>
 concept TypeLike = requires(const T t) {
-    { t.GetName() } -> std::same_as<const std::string&>;
+    { t.ToString() } -> std::same_as<std::string>;
+    { t.ToString(Style::Komaru) } -> std::same_as<std::string>;
     { t.IsConcrete() } -> std::same_as<bool>;
 } && std::equality_comparable<T>;
 
@@ -60,11 +61,12 @@ public:
     static Type Bool();
     static Type String();
 
-    const std::string& GetName() const;
+    std::string ToString(Style style = Style::Komaru) const;
     bool IsConcrete() const;
     std::uintptr_t GetID() const;
     Type Pow(size_t n) const;
     size_t GetComponentsNum() const;
+    std::vector<Type> GetComponents() const;
     size_t GetParamNum() const;
     bool IsValueType() const;
     std::vector<Type> FlattenFunction() const;
@@ -94,7 +96,7 @@ class TypeConstructor {
 public:
     TypeConstructor(std::string name, size_t num_params);
 
-    const std::string& GetName() const;
+    std::string ToString(Style style = Style::Komaru) const;
     size_t GetNumParams() const;
 
     bool operator==(const TypeConstructor& o) const;
@@ -107,12 +109,12 @@ private:
 
 class CommonType {
 public:
-    explicit CommonType(std::string main_name, std::vector<Type> params);
+    explicit CommonType(std::string name, std::vector<Type> params);
 
-    const std::string& GetName() const;
+    std::string ToString(Style style = Style::Komaru) const;
     bool IsConcrete() const;
     std::string GetID() const;
-    const std::string& GetMainName() const;
+    const std::string& GetName() const;
     const std::vector<Type>& GetTypeParams() const;
     size_t NumTypeParams() const;
     bool HasTypeParams() const;
@@ -123,7 +125,6 @@ public:
     static std::string MakeID(const std::string& name, const std::vector<Type>& params);
 
 private:
-    std::string main_name_;
     std::string name_;
     std::vector<Type> params_;
 };
@@ -132,7 +133,7 @@ class TupleType {
 public:
     explicit TupleType(std::vector<Type> inner_types);
 
-    const std::string& GetName() const;
+    std::string ToString(Style style = Style::Komaru) const;
     bool IsConcrete() const;
     std::string GetID() const;
     const std::vector<Type>& GetTupleTypes() const;
@@ -143,7 +144,10 @@ public:
     static std::string MakeID(const std::vector<Type>& types);
 
 private:
-    std::string name_;
+    std::string ToStringKomaru() const;
+    std::string ToStringHaskell() const;
+
+private:
     std::vector<Type> inner_types_;
 };
 
@@ -151,7 +155,7 @@ class FunctionType {
 public:
     FunctionType(Type source, Type target);
 
-    const std::string& GetName() const;
+    std::string ToString(Style style = Style::Komaru) const;
     bool IsConcrete() const;
     std::string GetID() const;
     Type Source() const;
@@ -166,14 +170,13 @@ public:
 private:
     Type source_;
     Type target_;
-    std::string name_;
 };
 
 class ListType {
 public:
     explicit ListType(Type inner_type);
 
-    const std::string& GetName() const;
+    std::string ToString(Style style = Style::Komaru) const;
     bool IsConcrete() const;
     std::string GetID() const;
     Type Inner() const;
@@ -184,7 +187,6 @@ public:
 
 private:
     Type inner_type_;
-    std::string name_;
 };
 
 static_assert(TypeLike<CommonType>);
@@ -203,12 +205,15 @@ std::optional<Type> TryDeduceTypes(Type func_type, const std::map<size_t, Type>&
 Type DeduceTypes(Type func_type, Type arg_type);
 Type DeduceTypes(Type func_type, const std::map<size_t, Type>& arg_mapping);
 // It will automatically deduce types too
+std::optional<Type> TryMakeSubstitution(Type func_type, const std::map<size_t, Type>& arg_mapping);
 Type MakeSubstitution(Type func_type, const std::map<size_t, Type>& arg_mapping);
 [[nodiscard]] bool MergeMatchMaps(MatchMap& mapping, const MatchMap& sub_mapping);
 std::optional<MatchMap> TryMatchTypes(Type param_type, Type arg_type);
 MatchMap MatchTypes(Type param_type, Type arg_type);
 Type ApplyMatchMap(Type type, const MatchMap& mapping);
 bool CanBeSubstituted(Type param_type, Type arg_type, const MatchMap& mapping = {});
+Type CurryFunction(Type source, Type target);
+std::string ArgMappingToString(const std::map<size_t, Type>& arg_mapping);
 
 }  // namespace komaru::lang
 

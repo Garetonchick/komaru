@@ -1,24 +1,24 @@
-#include "cpp_cond.hpp"
+#include "cond.hpp"
 
 #include <komaru/util/string.hpp>
 
 #include <set>
 
-namespace komaru::translate::cpp {
+namespace komaru::translate::common {
 
-CppCond::CppCond() {
+Cond::Cond() {
 }
 
-CppCond::CppCond(int32_t var_idx) {
+Cond::Cond(int32_t var_idx) {
     formula_ = {1, var_idx >= 0 ? var_idx + 1 : var_idx - 1};
 }
 
-CppCond CppCond::operator|(const CppCond& o) const {
+Cond Cond::operator|(const Cond& o) const {
     auto copy = *this;
     return copy |= o;
 }
 
-CppCond CppCond::operator&(const CppCond& o) const {
+Cond Cond::operator&(const Cond& o) const {
     if (formula_.empty()) {
         return o;
     }
@@ -26,7 +26,7 @@ CppCond CppCond::operator&(const CppCond& o) const {
         return *this;
     }
 
-    CppCond cond;
+    Cond cond;
 
     for (size_t i = 0; i < formula_.size(); i += formula_[i] + 1) {
         int32_t n1 = formula_[i];
@@ -44,7 +44,7 @@ CppCond CppCond::operator&(const CppCond& o) const {
     return cond;
 }
 
-CppCond& CppCond::operator|=(const CppCond& o) {
+Cond& Cond::operator|=(const Cond& o) {
     if (formula_.empty() || o.formula_.empty()) {
         formula_ = {};
         return *this;
@@ -54,11 +54,11 @@ CppCond& CppCond::operator|=(const CppCond& o) {
     return *this;
 }
 
-CppCond& CppCond::operator&=(const CppCond& o) {
+Cond& Cond::operator&=(const Cond& o) {
     return *this = *this & o;
 }
 
-std::string CppCond::ToString() const {
+std::string Cond::ToString() const {
     if (formula_.empty()) {
         return "true";
     }
@@ -95,7 +95,7 @@ std::string CppCond::ToString() const {
     return res;
 }
 
-bool CppCond::DoesImply(const CppCond& o) const {
+bool Cond::DoesImply(const Cond& o) const {
     if (o.formula_.empty()) {
         return true;
     }
@@ -123,4 +123,4 @@ bool CppCond::DoesImply(const CppCond& o) const {
     return false;
 }
 
-}  // namespace komaru::translate::cpp
+}  // namespace komaru::translate::common

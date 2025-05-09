@@ -409,7 +409,7 @@ CookingResult<lang::Guard> Cooker<SymbolsRegistry>::CookGuard(const std::string&
 
     if (morphism->GetTarget() != lang::Type::Bool()) {
         return MakeCookingError(std::format("expected guard to return \"Bool\" but got \"{}\"",
-                                            morphism->GetTarget().GetName()));
+                                            morphism->GetTarget().ToString()));
     }
 
     return lang::Guard(std::move(morphism));

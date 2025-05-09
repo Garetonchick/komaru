@@ -2,22 +2,21 @@
 #include <cstdint>
 #include <vector>
 
-namespace komaru::translate::cpp {
+namespace komaru::translate::common {
 
 // Boolean formula stored as DNF
-// TODO: Unit test
-class CppCond {
+class Cond {
 public:
-    CppCond();
-    explicit CppCond(int32_t var_idx);
+    Cond();
+    explicit Cond(int32_t var_idx);
 
-    CppCond operator|(const CppCond& o) const;
-    CppCond operator&(const CppCond& o) const;
-    CppCond& operator|=(const CppCond& o);
-    CppCond& operator&=(const CppCond& o);
+    Cond operator|(const Cond& o) const;
+    Cond operator&(const Cond& o) const;
+    Cond& operator|=(const Cond& o);
+    Cond& operator&=(const Cond& o);
 
     std::string ToString() const;
-    bool DoesImply(const CppCond& o) const;
+    bool DoesImply(const Cond& o) const;
 
 private:
     // stored in the format {n_1, i_1, i_2, ..., i_{n_1}, n_2, j_1, j_2, ..., j_{n_2}, ...}
@@ -26,4 +25,4 @@ private:
     std::vector<int32_t> formula_;
 };
 
-}  // namespace komaru::translate::cpp
+}  // namespace komaru::translate::common

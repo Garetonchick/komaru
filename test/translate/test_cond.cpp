@@ -1,15 +1,15 @@
 #include <gtest/gtest.h>
 
-#include <komaru/translate/cpp/cpp_cond.hpp>
+#include <komaru/translate/common/cond.hpp>
 
-using komaru::translate::cpp::CppCond;
+using komaru::translate::common::Cond;
 
 TEST(CppCond, Basic) {
-    CppCond truth;
-    CppCond x1 = CppCond(0);
-    CppCond x2 = CppCond(1);
-    CppCond x3 = CppCond(2);
-    CppCond x4 = CppCond(3);
+    Cond truth;
+    Cond x1 = Cond(0);
+    Cond x2 = Cond(1);
+    Cond x3 = Cond(2);
+    Cond x4 = Cond(3);
 
     ASSERT_FALSE(truth.DoesImply(x1));
     ASSERT_FALSE(truth.DoesImply(x2));

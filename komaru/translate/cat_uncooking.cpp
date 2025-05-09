@@ -51,7 +51,7 @@ RawNodeID UncookNode(RawCatProgram& raw_program, const CPNode& node) {
         branchers.emplace_back(ToString(pin.GetBrancher()));
     }
 
-    return raw_program.NewNodeGeneric(std::string(node.GetType().GetName()), maybe_name, branchers,
+    return raw_program.NewNodeGeneric(std::string(node.GetType().ToString()), maybe_name, branchers,
                                       !node.IncomingArrows().empty());
 }
 

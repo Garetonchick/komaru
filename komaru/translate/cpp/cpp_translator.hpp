@@ -2,7 +2,7 @@
 #include <komaru/translate/translator.hpp>
 #include <komaru/translate/cpp/cpp_program_builder.hpp>
 #include <komaru/translate/cpp/cpp_body_builder.hpp>
-#include <komaru/translate/cpp/cpp_cond.hpp>
+#include <komaru/translate/common/cond.hpp>
 #include <komaru/translate/cpp/cpp_expr.hpp>
 
 #include <unordered_map>
@@ -27,7 +27,7 @@ private:
     TranslationResult<CppFunction> TranslateMorphismGraph(const CPNode* root);
 
     bool IsIntersectionNode(const CPNode* node);
-    void AddStatementsForNode(CppBodyBuilder& body_builder, const CppCond& node_cond,
+    void AddStatementsForNode(CppBodyBuilder& body_builder, const common::Cond& node_cond,
                               const CPNode* node, const std::string& local_name);
     CppExpr MakeExprForIntersectionNode(const CPNode* node);
     CppExpr MakeExprForArrow(const CPArrow* arrow);
@@ -49,11 +49,13 @@ private:
                                 lang::Type out_type);
     CppExpr MakeExprForMorphism(const lang::LiteralMorphism& morphism, const CppExpr& in_expr,
                                 lang::Type out_type);
+    CppExpr MakeExprForMorphism(const lang::TupleMorphism& morphism, const CppExpr& in_expr,
+                                lang::Type out_type);
 
     std::vector<std::string> MakeBranchExprs(const CPNode* node);
     std::string MakeStatement(lang::Type type, const std::string& var_name,
                               const std::string& expr);
-    CppCond CalcCppCondForNode(const CPNode* node);
+    common::Cond CalcCppCondForNode(const CPNode* node);
 
     std::optional<TranslationError> CalcRoots(const lang::CatProgram& cat_program);
     std::optional<const CPNode*> GetRootOrCalcIt(const CPNode* node);
@@ -72,7 +74,7 @@ private:
     std::unordered_map<const CPNode*, const CPNode*> node2root_;
     std::unordered_map<const CPNode*, size_t> node2views_;
     std::unordered_map<const CPNode*, std::string> node2local_name_;
-    std::unordered_map<const CPOutPin*, CppCond> pin2cond_;
+    std::unordered_map<const CPOutPin*, common::Cond> pin2cond_;
     std::unordered_map<std::string, lang::Type> local_name2type_;
     std::unordered_map<std::string, lang::Type> global_name2type_;
 

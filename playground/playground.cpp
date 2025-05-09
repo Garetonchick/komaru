@@ -1,4 +1,5 @@
 #include <komaru/translate/cpp/cpp_translator.hpp>
+#include <komaru/translate/haskell/hs_translator.hpp>
 #include <komaru/translate/graphviz.hpp>
 #include <komaru/util/filesystem.hpp>
 #include <komaru/translate/cat_cooking.hpp>
@@ -11,13 +12,27 @@
 
 using komaru::util::WriteFile;
 
-void SaveCode(const komaru::lang::CatProgram& cat_program) {
+void SaveCppCode(const komaru::lang::CatProgram& cat_program) {
     komaru::translate::cpp::CppTranslator translator("../../catlib/cpp");
 
     auto cpp_program = translator.Translate(cat_program);
 
     WriteFile("gen.cpp", cpp_program.value()->GetSourceCode());
     std::println("Generated gen.cpp");
+}
+
+void SaveHaskellCode(const komaru::lang::CatProgram& cat_program) {
+    komaru::translate::hs::HaskellTranslator translator;
+
+    auto haskell_program = translator.Translate(cat_program);
+
+    if(!haskell_program) {
+        std::println("error: {}", haskell_program.error().Error());
+        return;
+    }
+
+    WriteFile("gen.hs", haskell_program.value()->GetSourceCode());
+    std::println("Generated gen.hs");
 }
 
 void PlayWithIO() {
@@ -49,7 +64,7 @@ void PlayWithCooking() {
         std::println("cooking error: {}", maybe_program.error().Error());
     }
     // VisualizeProgram(std::move(maybe_program.value()));
-    SaveCode(std::move(maybe_program.value()));
+    SaveCppCode(std::move(maybe_program.value()));
 }
 
 int main() {
@@ -62,5 +77,7 @@ int main() {
     // VisualizeProgram(komaru::test::MakeIO101Program());
     // VisualizeProgram(komaru::test::MakeIfWithLocalVarProgram(6));
     // VisualizeProgram(komaru::test::MakeMegaIfProgram(6));
-    PlayWithCooking();
+    // PlayWithCooking();
+    DebugCatProgram(komaru::test::MakeAPlusBProgram(4, 42));
+    SaveHaskellCode(komaru::test::MakeAPlusBProgram(4, 42));
 }

@@ -4,6 +4,9 @@
 
 namespace komaru::util {
 
+inline constexpr const char* k4S = "    ";
+inline constexpr const char* k2S = "  ";
+
 inline constexpr bool IsSpace(char c) {
     return c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\t' || c == '\v';
 }
@@ -45,7 +48,7 @@ inline decltype(auto) JoinStrings(const std::string& sep) {
            std::views::join;
 }
 
-std::string Indent(const std::string& s, const std::string& indent);
+std::string Indent(const std::string& s, const std::string& indent = k2S);
 std::string Escape(const std::string& s, const std::string& esc);
 
 }  // namespace komaru::util

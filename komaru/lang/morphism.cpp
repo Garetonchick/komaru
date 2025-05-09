@@ -105,7 +105,7 @@ BindedMorphism::BindedMorphism(MorphismPtr morphism, std::map<size_t, MorphismPt
     std::vector<Type> new_types;
 
     // Cleanup extra mappings
-    auto it = mapping_.lower_bound(param_num - 1);
+    auto it = mapping_.lower_bound(param_num);
     while (it != mapping_.end()) {
         it = mapping_.erase(it);
     }
@@ -127,6 +127,14 @@ BindedMorphism::BindedMorphism(MorphismPtr morphism, std::map<size_t, MorphismPt
     }
 
     new_types.push_back(types.back());
+
+    assert(!new_types.empty());
+
+    if (new_types.size() == 1) {
+        source_ = Type::Singleton();
+        target_ = new_types[0];
+        return;
+    }
 
     const FunctionType& new_type = Type::FunctionChain(new_types).GetVariant<FunctionType>();
     source_ = new_type.Source();
@@ -253,6 +261,60 @@ const Literal& LiteralMorphism::GetLiteral() const {
     return literal_;
 }
 
+TupleMorphism::TupleMorphism(std::vector<MorphismPtr> morphisms)
+    : morphisms_(std::move(morphisms)) {
+    std::vector<Type> types;
+
+    for (const auto& morphism : morphisms_) {
+        if (morphism->GetSource() != Type::Singleton()) {
+            types.push_back(morphism->GetType());
+        } else {
+            types.push_back(morphism->GetTarget());
+        }
+    }
+
+    target_type_ = Type::Tuple(types);
+}
+
+std::string TupleMorphism::ToString() const {
+    std::string res = "(";
+    for (auto [i, morphism] : util::Enumerate(morphisms_)) {
+        res += morphism->ToString();
+        if (i + 1 < morphisms_.size()) {
+            res += ", ";
+        }
+    }
+    return res + ")";
+}
+
+Type TupleMorphism::GetSource() const {
+    return Type::Singleton();
+}
+
+Type TupleMorphism::GetTarget() const {
+    return target_type_;
+}
+
+Type TupleMorphism::GetType() const {
+    return Type::Function(GetSource(), GetTarget());
+}
+
+size_t TupleMorphism::GetParamNum() const {
+    return 0;
+}
+
+bool TupleMorphism::IsValue() const {
+    return true;
+}
+
+bool TupleMorphism::ShouldBeShielded() const {
+    return false;
+}
+
+bool TupleMorphism::IsOperator() const {
+    return false;
+}
+
 MorphismPtr Morphism::Common(std::string name, Type source, Type target) {
     return std::make_shared<Morphism>(PrivateDummy{},
                                       CommonMorphism(std::move(name), source, target));
@@ -291,6 +353,10 @@ MorphismPtr Morphism::Binded(MorphismPtr morphism, std::map<size_t, MorphismPtr>
 
 MorphismPtr Morphism::Literal(class Literal literal) {
     return std::make_shared<Morphism>(PrivateDummy{}, LiteralMorphism(std::move(literal)));
+}
+
+MorphismPtr Morphism::Tuple(std::vector<MorphismPtr> morphisms) {
+    return std::make_shared<Morphism>(PrivateDummy{}, TupleMorphism(std::move(morphisms)));
 }
 
 MorphismPtr Morphism::Plus() {
@@ -338,6 +404,10 @@ MorphismPtr Morphism::True() {
 
 MorphismPtr Morphism::False() {
     return Morphism::Common("False", Type::Singleton(), Type::Bool());
+}
+
+MorphismPtr Morphism::Singleton() {
+    return Morphism::Common("CatSingleton", Type::Singleton(), Type::Singleton());
 }
 
 std::string Morphism::ToString() const {

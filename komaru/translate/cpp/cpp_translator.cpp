@@ -148,7 +148,7 @@ TranslationResult<CppFunction> CppTranslator::TranslateMorphismGraph(const CPNod
         }
 
         bool branch_node = node->OutPins().size() > 1;
-        CppCond node_cond = CalcCppCondForNode(node);
+        common::Cond node_cond = CalcCppCondForNode(node);
 
         if (first_visit && node->OutPins().size() == 1) {
             pin2cond_[&node->OutPins().front()] = node_cond;
@@ -217,8 +217,9 @@ TranslationResult<CppFunction> CppTranslator::TranslateMorphismGraph(const CPNod
     return std::move(func_builder).Extract();
 }
 
-void CppTranslator::AddStatementsForNode(CppBodyBuilder& body_builder, const CppCond& node_cond,
-                                         const CPNode* node, const std::string& local_name) {
+void CppTranslator::AddStatementsForNode(CppBodyBuilder& body_builder,
+                                         const common::Cond& node_cond, const CPNode* node,
+                                         const std::string& local_name) {
     if (IsIntersectionNode(node)) {
         std::string expr = MakeExprForIntersectionNode(node).AsWholeExpr();
         auto statement = MakeStatement(node->GetType(), local_name, expr);
@@ -388,6 +389,10 @@ CppExpr CppTranslator::MakeExprForMorphism(const lang::LiteralMorphism& morphism
     return CppExpr(ToCppLiteral(morphism.GetLiteral()), 1);
 }
 
+CppExpr CppTranslator::MakeExprForMorphism(const lang::TupleMorphism&, const CppExpr&, lang::Type) {
+    throw std::runtime_error("not implemented");
+}
+
 CppExpr CppTranslator::MakeExprForMorphism(const lang::BindedMorphism& morphism,
                                            const CppExpr& in_expr, lang::Type) {
     std::vector<std::string> exprs;
@@ -467,8 +472,8 @@ std::string CppTranslator::MakeStatement(lang::Type type, const std::string& var
     return std::format("{} {} = {}", cpp_type.GetTypeStr(), var_name, expr);
 }
 
-CppCond CppTranslator::CalcCppCondForNode(const CPNode* node) {
-    CppCond node_cond;
+common::Cond CppTranslator::CalcCppCondForNode(const CPNode* node) {
+    common::Cond node_cond;
 
     for (auto [i, arrow] : util::Enumerate(node->IncomingArrows())) {
         const CPOutPin* pin = &arrow->SourcePin();
@@ -553,8 +558,8 @@ TranslationResult<std::vector<const CppTranslator::CPNode*>> CppTranslator::Disc
 
         if (it->second != node.GetType()) {
             return MakeTranslationError(std::format("found 2 conflicting return types {} and {}",
-                                                    it->second.GetName(),
-                                                    node.GetType().GetName()));
+                                                    it->second.ToString(),
+                                                    node.GetType().ToString()));
         }
     }
 

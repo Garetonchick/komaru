@@ -127,4 +127,6 @@ private:
     CatProgram program_;
 };
 
+void DebugCatProgram(const CatProgram& program);
+
 }  // namespace komaru::lang

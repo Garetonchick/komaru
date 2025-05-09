@@ -2,6 +2,8 @@
 #include <vector>
 #include <ranges>
 #include <algorithm>
+#include <map>
+#include <unordered_map>
 
 namespace komaru::util {
 
@@ -33,6 +35,24 @@ auto Enumerate(std::ranges::input_range auto&& r) {
 template <typename T>
 void UnstableErase(std::vector<T>& v, const T& val) {
     v.resize(std::remove(v.begin(), v.end(), val) - v.begin());
+}
+
+template <typename K, typename V>
+V GetOr(const std::unordered_map<K, V>& map, const K& key, const V& val = {}) {
+    auto it = map.find(key);
+    if (it == map.end()) {
+        return val;
+    }
+    return it->second;
+}
+
+template <typename K, typename V>
+V GetOr(const std::map<K, V>& map, const K& key, const V& val = {}) {
+    auto it = map.find(key);
+    if (it == map.end()) {
+        return val;
+    }
+    return it->second;
 }
 
 }  // namespace komaru::util

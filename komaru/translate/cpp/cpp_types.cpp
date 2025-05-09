@@ -29,10 +29,10 @@ const std::vector<std::string>& CppType::GetTemplateVars() const {
 }
 
 static CppType TranslateType(const lang::CommonType& type) {
-    auto type_str = type.GetMainName() + "<";
+    auto type_str = type.GetName() + "<";
     std::vector<std::string> template_vars;
 
-    if (!lang::IsConcreteTypeName(type.GetMainName())) {
+    if (!lang::IsConcreteTypeName(type.GetName())) {
         throw std::runtime_error("TODO: add template inside template support");
     }
 

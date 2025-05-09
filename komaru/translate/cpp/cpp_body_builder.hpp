@@ -1,6 +1,6 @@
 #pragma once
 
-#include <komaru/translate/cpp/cpp_cond.hpp>
+#include <komaru/translate/common/cond.hpp>
 #include <komaru/translate/translator.hpp>
 
 #include <string>
@@ -48,17 +48,17 @@ private:
 
 class CppScope {
 public:
-    explicit CppScope(CppCond cond);
+    explicit CppScope(common::Cond cond);
 
     void GrowBody(const std::string& s);
     void SetBranches(CppBranches branches);
 
-    const CppCond& GetCond() const;
+    const common::Cond& GetCond() const;
     const std::string& GetBody() const;
     const std::optional<CppBranches>& GetBranches() const;
 
 private:
-    CppCond cond_;
+    common::Cond cond_;
     std::string body_;
     std::optional<CppBranches> branches_;
 };
@@ -67,10 +67,10 @@ class CppBodyBuilder {
 public:
     CppBodyBuilder();
 
-    void AddStatement(const CppCond& cond, std::string statement);
-    void AddReturn(const CppCond& cond, std::string statement);
-    std::vector<CppCond> AddBranches(const CppCond& cond,
-                                     const std::vector<std::string>& branch_exprs);
+    void AddStatement(const common::Cond& cond, std::string statement);
+    void AddReturn(const common::Cond& cond, std::string statement);
+    std::vector<common::Cond> AddBranches(const common::Cond& cond,
+                                          const std::vector<std::string>& branch_exprs);
 
     TranslationResult<std::string> Extract();
     void Reset();

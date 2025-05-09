@@ -10,7 +10,7 @@ const std::vector<CppBranches::Branch>& CppBranches::GetBranches() const {
     return branches_;
 }
 
-CppScope::CppScope(CppCond cond)
+CppScope::CppScope(common::Cond cond)
     : cond_(std::move(cond)) {
 }
 
@@ -22,7 +22,7 @@ void CppScope::SetBranches(CppBranches branches) {
     branches_ = std::move(branches);
 }
 
-const CppCond& CppScope::GetCond() const {
+const common::Cond& CppScope::GetCond() const {
     return cond_;
 }
 
@@ -35,11 +35,11 @@ const std::optional<CppBranches>& CppScope::GetBranches() const {
 }
 
 CppBodyBuilder::CppBodyBuilder() {
-    scopes_.emplace_back(CppCond{});
+    scopes_.emplace_back(common::Cond{});
     active_scopes_.push_front(&scopes_[0]);
 }
 
-void CppBodyBuilder::AddStatement(const CppCond& cond, std::string statement) {
+void CppBodyBuilder::AddStatement(const common::Cond& cond, std::string statement) {
     statement += ";\n";
 
     for (auto* scope : active_scopes_) {
@@ -51,7 +51,7 @@ void CppBodyBuilder::AddStatement(const CppCond& cond, std::string statement) {
     }
 }
 
-void CppBodyBuilder::AddReturn(const CppCond& cond, std::string statement) {
+void CppBodyBuilder::AddReturn(const common::Cond& cond, std::string statement) {
     statement += ";\n";
 
     for (auto it = active_scopes_.begin(); it != active_scopes_.end();) {
@@ -66,14 +66,14 @@ void CppBodyBuilder::AddReturn(const CppCond& cond, std::string statement) {
     }
 }
 
-std::vector<CppCond> CppBodyBuilder::AddBranches(const CppCond& cond,
-                                                 const std::vector<std::string>& branch_exprs) {
-    std::vector<CppCond> conds(branch_exprs.size());
+std::vector<common::Cond> CppBodyBuilder::AddBranches(
+    const common::Cond& cond, const std::vector<std::string>& branch_exprs) {
+    std::vector<common::Cond> conds(branch_exprs.size());
 
     int32_t start_branch_id = branch_id_;
 
     for (size_t i = 0; i < branch_exprs.size(); ++i) {
-        conds[i] = cond & CppCond(branch_id_++);
+        conds[i] = cond & common::Cond(branch_id_++);
     }
 
     for (auto it = active_scopes_.begin(); it != active_scopes_.end();) {
@@ -84,7 +84,7 @@ std::vector<CppCond> CppBodyBuilder::AddBranches(const CppCond& cond,
 
             for (size_t i = 0; i < branch_exprs.size(); ++i) {
                 int32_t branch_id = start_branch_id + static_cast<int32_t>(i);
-                scopes_.emplace_back(scope.GetCond() & CppCond(branch_id));
+                scopes_.emplace_back(scope.GetCond() & common::Cond(branch_id));
                 new_scopes.push_back(&scopes_.back());
             }
 

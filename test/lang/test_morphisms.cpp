@@ -22,3 +22,14 @@ TEST(Morphisms, Builtin) {
     ASSERT_EQ(plus->GetType().FlattenFunction().size(), 3);
     ASSERT_EQ(mul->GetType().FlattenFunction().size(), 3);
 }
+
+TEST(Morphisms, Binded) {
+    auto plus = Morphism::Plus();
+
+    auto binded = Morphism::Binded(plus, {{0, Morphism::CommonWithType("a", Type::Int())},
+                                          {1, Morphism::CommonWithType("b", Type::Int())}});
+
+    std::println("{}", Morphism::CommonWithType("a", Type::Int())->GetType().ToString());
+
+    ASSERT_EQ(binded->ToString(), "a + b");
+}

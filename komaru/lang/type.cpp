@@ -177,9 +177,9 @@ Type Type::String() {
     return Type::List(Type::Char());
 }
 
-const std::string& Type::GetName() const {
-    return this->Visit([](const TypeLike auto& t) -> const std::string& {
-        return t.GetName();
+std::string Type::ToString(Style style) const {
+    return this->Visit([style](const TypeLike auto& t) -> std::string {
+        return t.ToString(style);
     });
 }
 
@@ -206,6 +206,15 @@ size_t Type::GetComponentsNum() const {
                                         }});
 }
 
+std::vector<Type> Type::GetComponents() const {
+    return this->Visit(util::Overloaded{[](const TupleType& t) -> std::vector<Type> {
+                                            return t.GetTupleTypes();
+                                        },
+                                        [this](const TypeLike auto&) -> std::vector<Type> {
+                                            return {*this};
+                                        }});
+}
+
 size_t Type::GetParamNum() const {
     return this->Visit(util::Overloaded{[](const FunctionType& t) -> size_t {
                                             return t.GetParamNum();
@@ -227,7 +236,9 @@ bool Type::IsValueType() const {
 std::vector<Type> Type::FlattenFunction() const {
     return this->Visit(util::Overloaded{[](const FunctionType& t) -> std::vector<Type> {
                                             std::vector<Type> types;
-                                            types.push_back(t.Source());
+                                            if (t.Source() != Type::Singleton()) {
+                                                types.push_back(t.Source());
+                                            }
                                             types.insert_range(types.end(),
                                                                t.Target().FlattenFunction());
                                             return types;
@@ -259,7 +270,7 @@ TypeConstructor::TypeConstructor(std::string name, size_t num_params)
       num_params_(num_params) {
 }
 
-const std::string& TypeConstructor::GetName() const {
+std::string TypeConstructor::ToString(Style) const {
     return name_;
 }
 
@@ -278,23 +289,27 @@ bool TypeConstructor::operator<(const TypeConstructor& o) const {
     return name_ < o.name_;
 }
 
-CommonType::CommonType(std::string main_name, std::vector<Type> params)
-    : main_name_(std::move(main_name)),
+CommonType::CommonType(std::string name, std::vector<Type> params)
+    : name_(std::move(name)),
       params_(std::move(params)) {
-    assert(!main_name_.empty());
-
-    name_ = main_name_;
-    for (const auto& param : params_) {
-        name_ += " " + std::string(param.GetName());
-    }
+    assert(!name_.empty());
 }
 
-const std::string& CommonType::GetName() const {
-    return name_;
+std::string CommonType::ToString(Style style) const {
+    if (style == Style::Haskell && name_ == "S") {
+        return "()";
+    }
+
+    std::string res = name_;
+
+    for (const auto& param : params_) {
+        res += " " + param.ToString(style);
+    }
+    return res;
 }
 
 bool CommonType::IsConcrete() const {
-    if (std::islower(main_name_.front())) {
+    if (std::islower(name_.front())) {
         return false;
     }
 
@@ -310,8 +325,8 @@ std::string CommonType::GetID() const {
     return MakeID(name_, params_);
 }
 
-const std::string& CommonType::GetMainName() const {
-    return main_name_;
+const std::string& CommonType::GetName() const {
+    return name_;
 }
 
 const std::vector<Type>& CommonType::GetTypeParams() const {
@@ -344,16 +359,15 @@ std::string CommonType::MakeID(const std::string& name, const std::vector<Type>&
 
 TupleType::TupleType(std::vector<Type> inner_types)
     : inner_types_(std::move(inner_types)) {
-    for (size_t i = 0; i < inner_types_.size(); ++i) {
-        name_ += inner_types_[i].GetName();
-        if (i + 1 != inner_types_.size()) {
-            name_ += " x ";
-        }
-    }
 }
 
-const std::string& TupleType::GetName() const {
-    return name_;
+std::string TupleType::ToString(Style style) const {
+    switch (style) {
+        case Style::Komaru:
+            return ToStringKomaru();
+        case Style::Haskell:
+            return ToStringHaskell();
+    }
 }
 
 bool TupleType::IsConcrete() const {
@@ -400,14 +414,37 @@ std::string TupleType::MakeID(const std::vector<Type>& types) {
     return id + ")";
 }
 
+std::string TupleType::ToStringKomaru() const {
+    std::string res;
+    for (size_t i = 0; i < inner_types_.size(); ++i) {
+        res += inner_types_[i].ToString(Style::Komaru);
+        if (i + 1 != inner_types_.size()) {
+            res += " x ";
+        }
+    }
+    return res;
+}
+
+std::string TupleType::ToStringHaskell() const {
+    std::string res = "(";
+    for (size_t i = 0; i < inner_types_.size(); ++i) {
+        res += inner_types_[i].ToString(Style::Haskell);
+        if (i + 1 != inner_types_.size()) {
+            res += ", ";
+        }
+    }
+    return res + ")";
+}
 FunctionType::FunctionType(Type source, Type target)
     : source_(source),
       target_(target) {
-    name_ = std::format("{} -> {}", Source().GetName(), Target().GetName());
 }
 
-const std::string& FunctionType::GetName() const {
-    return name_;
+std::string FunctionType::ToString(Style style) const {
+    if (style == Style::Haskell && Source() == Type::Singleton()) {
+        return Target().ToString(style);
+    }
+    return std::format("{} -> {}", Source().ToString(style), Target().ToString(style));
 }
 
 bool FunctionType::IsConcrete() const {
@@ -446,12 +483,11 @@ std::string FunctionType::MakeID(Type source, Type target) {
 }
 
 ListType::ListType(Type inner_type)
-    : inner_type_(inner_type),
-      name_(std::format("[{}]", inner_type.GetName())) {
+    : inner_type_(inner_type) {
 }
 
-const std::string& ListType::GetName() const {
-    return name_;
+std::string ListType::ToString(Style style) const {
+    return std::format("[{}]", inner_type_.ToString(style));
 }
 
 bool ListType::IsConcrete() const {
@@ -519,6 +555,13 @@ std::optional<Type> TryDeduceTypes(Type func_type, Type arg_type) {
 }
 
 std::optional<Type> TryDeduceTypes(Type func_type, const std::map<size_t, Type>& arg_mapping) {
+    if (func_type.IsValueType()) {
+        if (arg_mapping.size() == 1 && arg_mapping.begin()->second == Type::Singleton()) {
+            return func_type;
+        }
+        return std::nullopt;
+    }
+
     if (!func_type.Holds<FunctionType>()) {
         return std::nullopt;
     }
@@ -559,8 +602,45 @@ Type DeduceTypes(Type func_type, const std::map<size_t, Type>& arg_mapping) {
     return func_type;
 }
 
-Type MakeSubstitution(Type func_type, std::map<size_t, Type> arg_mapping) {
-    // Deduce types first
+std::optional<Type> TryMakeSubstitution(Type func_type, const std::map<size_t, Type>& arg_mapping) {
+    if (func_type.IsValueType()) {
+        if (arg_mapping.size() == 1 && arg_mapping.begin()->second == Type::Singleton()) {
+            return func_type.FlattenFunction()[0];
+        }
+        return std::nullopt;
+    }
+
+    auto maybe_func_type = TryDeduceTypes(func_type, arg_mapping);
+    if (!maybe_func_type) {
+        return std::nullopt;
+    }
+
+    func_type = maybe_func_type.value();
+
+    auto types = func_type.FlattenFunction();
+    std::vector<Type> new_types;
+
+    for (size_t i = 0; i + 1 < types.size(); ++i) {
+        if (!arg_mapping.contains(i)) {
+            new_types.push_back(types[i]);
+        }
+    }
+
+    new_types.push_back(types.back());
+
+    if (arg_mapping.size() + new_types.size() != types.size()) {
+        return std::nullopt;
+    }
+
+    Type new_type = Type::FunctionChain(new_types);
+    return new_type;
+}
+
+Type MakeSubstitution(Type func_type, const std::map<size_t, Type>& arg_mapping) {
+    if (func_type.IsValueType()) {
+        return func_type.FlattenFunction()[0];
+    }
+
     func_type = DeduceTypes(func_type, arg_mapping);
 
     auto types = func_type.FlattenFunction();
@@ -587,19 +667,19 @@ std::optional<MatchMap> TryMatchTypes(const CommonType& param_type, const Common
         return std::nullopt;
     }
 
-    bool is_param_name_concrete = IsConcreteTypeName(param_type.GetMainName());
-    bool is_arg_name_concrete = IsConcreteTypeName(arg_type.GetMainName());
+    bool is_param_name_concrete = IsConcreteTypeName(param_type.GetName());
+    bool is_arg_name_concrete = IsConcreteTypeName(arg_type.GetName());
 
     if (is_param_name_concrete && is_arg_name_concrete &&
-        param_type.GetMainName() != arg_type.GetMainName()) {
+        param_type.GetName() != arg_type.GetName()) {
         return std::nullopt;
     }
 
     MatchMap mapping;
 
     if (!is_param_name_concrete && is_arg_name_concrete) {
-        mapping.emplace(param_type.GetMainName(),
-                        TypeConstructor(arg_type.GetMainName(), arg_type.NumTypeParams()));
+        mapping.emplace(param_type.GetName(),
+                        TypeConstructor(arg_type.GetName(), arg_type.NumTypeParams()));
     }
 
     for (size_t i = 0; i < param_type.NumTypeParams(); ++i) {
@@ -688,7 +768,7 @@ std::optional<MatchMap> TryMatchTypes(Type param_type, Type arg_type) {
     }
 
     if (param_type.IsTypeVar()) {
-        mapping.emplace(param_type.GetName(), arg_type);
+        mapping.emplace(param_type.ToString(), arg_type);
         return mapping;
     }
 
@@ -713,13 +793,13 @@ MatchMap MatchTypes(Type param_type, Type arg_type) {
 }
 
 Type ApplyMatchMap(const CommonType& type, const MatchMap& mapping) {
-    std::string new_name = type.GetMainName();
+    std::string new_name = type.GetName();
 
-    auto it = mapping.find(type.GetMainName());
+    auto it = mapping.find(type.GetName());
     if (it != mapping.end()) {
         std::visit(
             [&](const auto& sub) {
-                new_name = sub.GetName();
+                new_name = sub.ToString();
             },
             it->second);
     }
@@ -764,6 +844,25 @@ bool CanBeSubstituted(Type param_type, Type arg_type, const MatchMap& mapping) {
 
     auto new_mapping = std::move(maybe_mapping.value());
     return MergeMatchMaps(new_mapping, mapping);
+}
+
+Type CurryFunction(Type source, Type target) {
+    return source.Visit(util::Overloaded{[&](const TupleType& t) -> Type {
+                                             std::vector<Type> new_types = t.GetTupleTypes();
+                                             new_types.push_back(target);
+                                             return Type::FunctionChain(new_types);
+                                         },
+                                         [&](const TypeLike auto&) -> Type {
+                                             return Type::Function(source, target);
+                                         }});
+}
+
+std::string ArgMappingToString(const std::map<size_t, Type>& arg_mapping) {
+    std::string res;
+    for (const auto& [i, type] : arg_mapping) {
+        res += std::format("${}: {}; ", i, type.ToString());
+    }
+    return res;
 }
 
 }  // namespace komaru::lang

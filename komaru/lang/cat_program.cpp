@@ -1,5 +1,9 @@
 #include "cat_program.hpp"
 
+#include <print>
+
+#include <komaru/util/std_extensions.hpp>
+
 namespace komaru::lang {
 
 using CPNode = CatProgram::Node;
@@ -117,6 +121,47 @@ CatProgramBuilder& CatProgramBuilder::Connect(CPOutPin& out_pin, CPNode& node,
 
 CatProgram CatProgramBuilder::Extract() {
     return std::move(program_);
+}
+
+void DebugCatProgram(const CatProgram& program) {
+    std::println("CatProgram: {}", program.GetNodes().size());
+
+    std::unordered_map<const CPNode*, std::string> node2name;
+
+    size_t node_index = 0;
+
+    for (const auto& node : program.GetNodes()) {
+        std::string name = node.GetName();
+        if (name.empty()) {
+            name = "node" + std::to_string(node_index++);
+        }
+        node2name[&node] = name;
+    }
+
+    for (const auto& node : program.GetNodes()) {
+        std::println("Node \"{}\":", node2name[&node]);
+        std::println("  Type \"{}\"", node.GetType().ToString());
+        for (const auto& [i, out_pin] : util::Enumerate(node.OutPins())) {
+            std::println("  OutPin {}:", i);
+            std::visit(util::Overloaded{
+                           [](const Pattern& pattern) {
+                               std::println("    Pattern \"{}\"", pattern.ToString());
+                           },
+                           [](const Guard& guard) {
+                               std::println("    Guard \"{}\"", guard.ToString());
+                           },
+                       },
+                       out_pin.GetBrancher());
+
+            std::println("    Arrows:");
+
+            for (const auto& arrow : out_pin.Arrows()) {
+                std::println("      Arrow \"{}\":", arrow.GetMorphism()->ToString());
+                std::println("        Type \"{}\"", arrow.GetMorphism()->GetType().ToString());
+                std::println("        Target Node \"{}\"", node2name[&arrow.TargetNode()]);
+            }
+        }
+    }
 }
 
 }  // namespace komaru::lang
