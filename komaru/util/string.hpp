@@ -50,5 +50,6 @@ inline decltype(auto) JoinStrings(const std::string& sep) {
 
 std::string Indent(const std::string& s, const std::string& indent = k2S);
 std::string Escape(const std::string& s, const std::string& esc);
+std::string Shield(const std::string& s, bool shield = true);
 
 }  // namespace komaru::util

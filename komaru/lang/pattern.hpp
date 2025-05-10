@@ -2,6 +2,8 @@
 
 #include <komaru/util/derive_variant.hpp>
 #include <komaru/lang/morphism.hpp>
+#include <komaru/lang/style.hpp>
+
 namespace komaru::lang {
 
 class Pattern;
@@ -16,7 +18,7 @@ class TuplePattern;
 
 // dummy pattern indicating the '*'
 struct AnyPattern {
-    std::string ToString() const;
+    std::string ToString(Style style = Style::Komaru) const;
 };
 
 class LiteralPattern {
@@ -24,7 +26,7 @@ public:
     explicit LiteralPattern(Literal literal);
 
     const Literal& GetLiteral() const;
-    std::string ToString() const;
+    std::string ToString(Style style = Style::Komaru) const;
 
 private:
     Literal literal_;
@@ -35,7 +37,7 @@ public:
     explicit NamePattern(std::string name);
 
     const std::string& GetName() const;
-    std::string ToString() const;
+    std::string ToString(Style style = Style::Komaru) const;
 
 private:
     std::string name_;
@@ -47,7 +49,7 @@ public:
 
     const std::string& GetName() const;
     const std::vector<Pattern>& GetPatterns() const;
-    std::string ToString() const;
+    std::string ToString(Style style = Style::Komaru) const;
 
 private:
     std::string name_;
@@ -59,7 +61,7 @@ public:
     explicit TuplePattern(std::vector<Pattern> patterns);
 
     const std::vector<Pattern>& GetPatterns() const;
-    std::string ToString() const;
+    std::string ToString(Style style = Style::Komaru) const;
 
 private:
     std::vector<Pattern> patterns_;
@@ -83,7 +85,7 @@ public:
     static Pattern Char(char ch);
     static Pattern String(std::string str);
 
-    std::string ToString() const;
+    std::string ToString(Style style = Style::Komaru) const;
 
     // For CRTP
     const Variant* GetVariantPointer() const;

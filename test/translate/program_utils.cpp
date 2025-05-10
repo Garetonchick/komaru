@@ -5,29 +5,29 @@
 
 namespace komaru::test {
 
-lang::MorphismPtr MakeRBindIntOp(const lang::MorphismPtr& morphism, int32_t x) {
+lang::MorphismPtr MakeRBindOp(const lang::MorphismPtr& morphism, int32_t x) {
     return lang::Morphism::Binded(morphism,
                                   {{1, lang::Morphism::Literal(lang::Literal::Number(x))}});
 }
 
-lang::MorphismPtr MakeRBindIntPlus(int32_t x) {
-    return MakeRBindIntOp(lang::Morphism::Plus(), x);
+lang::MorphismPtr MakeRBindPlus(int32_t x) {
+    return MakeRBindOp(lang::Morphism::Plus(), x);
 }
 
-lang::MorphismPtr MakeRBindIntMul(int32_t x) {
-    return MakeRBindIntOp(lang::Morphism::Multiply(), x);
+lang::MorphismPtr MakeRBindMul(int32_t x) {
+    return MakeRBindOp(lang::Morphism::Multiply(), x);
 }
 
-lang::MorphismPtr MakeRBindIntMinus(int32_t x) {
-    return MakeRBindIntOp(lang::Morphism::Minus(), x);
+lang::MorphismPtr MakeRBindMinus(int32_t x) {
+    return MakeRBindOp(lang::Morphism::Minus(), x);
 }
 
-lang::MorphismPtr MakeRBindIntLess(int32_t x) {
-    return MakeRBindIntOp(lang::Morphism::Less(), x);
+lang::MorphismPtr MakeRBindLess(int32_t x) {
+    return MakeRBindOp(lang::Morphism::Less(), x);
 }
 
-lang::MorphismPtr MakeRBindIntGreater(int32_t x) {
-    return MakeRBindIntOp(lang::Morphism::Greater(), x);
+lang::MorphismPtr MakeRBindGreater(int32_t x) {
+    return MakeRBindOp(lang::Morphism::Greater(), x);
 }
 
 }  // namespace komaru::test

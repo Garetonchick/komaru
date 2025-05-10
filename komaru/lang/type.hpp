@@ -25,6 +25,7 @@ concept TypeLike = requires(const T t) {
     { t.ToString() } -> std::same_as<std::string>;
     { t.ToString(Style::Komaru) } -> std::same_as<std::string>;
     { t.IsConcrete() } -> std::same_as<bool>;
+    { t.ShouldBeShielded() } -> std::same_as<bool>;
 } && std::equality_comparable<T>;
 
 class Type : public util::DeriveVariant<Type> {
@@ -63,6 +64,7 @@ public:
 
     std::string ToString(Style style = Style::Komaru) const;
     bool IsConcrete() const;
+    bool ShouldBeShielded() const;
     std::uintptr_t GetID() const;
     Type Pow(size_t n) const;
     size_t GetComponentsNum() const;
@@ -72,6 +74,7 @@ public:
     std::vector<Type> FlattenFunction() const;
     bool IsTypeVar() const;
     size_t TypeVariantIndex() const;
+    Type Pure() const;
 
     bool operator==(Type o) const;
     bool operator<(Type o) const;  // Used for containers like std::map
@@ -113,6 +116,7 @@ public:
 
     std::string ToString(Style style = Style::Komaru) const;
     bool IsConcrete() const;
+    bool ShouldBeShielded() const;
     std::string GetID() const;
     const std::string& GetName() const;
     const std::vector<Type>& GetTypeParams() const;
@@ -125,6 +129,9 @@ public:
     static std::string MakeID(const std::string& name, const std::vector<Type>& params);
 
 private:
+    std::string ToStringDebug() const;
+
+private:
     std::string name_;
     std::vector<Type> params_;
 };
@@ -135,6 +142,7 @@ public:
 
     std::string ToString(Style style = Style::Komaru) const;
     bool IsConcrete() const;
+    bool ShouldBeShielded() const;
     std::string GetID() const;
     const std::vector<Type>& GetTupleTypes() const;
     size_t GetTypesNum() const;
@@ -146,6 +154,7 @@ public:
 private:
     std::string ToStringKomaru() const;
     std::string ToStringHaskell() const;
+    std::string ToStringDebug() const;
 
 private:
     std::vector<Type> inner_types_;
@@ -157,6 +166,7 @@ public:
 
     std::string ToString(Style style = Style::Komaru) const;
     bool IsConcrete() const;
+    bool ShouldBeShielded() const;
     std::string GetID() const;
     Type Source() const;
     Type Target() const;
@@ -178,6 +188,7 @@ public:
 
     std::string ToString(Style style = Style::Komaru) const;
     bool IsConcrete() const;
+    bool ShouldBeShielded() const;
     std::string GetID() const;
     Type Inner() const;
 

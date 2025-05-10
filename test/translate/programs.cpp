@@ -34,11 +34,11 @@ lang::CatProgram MakeAPlusBProgram(int32_t a, int32_t b) {
 
 lang::CatProgram MakeIf101Program(int32_t x) {
     auto val = Morphism::Literal(Literal::Number(x));
-    auto less4 = MakeRBindIntLess(4);
+    auto less4 = MakeRBindLess(4);
     auto pos0 = Morphism::Position(0);
     auto none_pos = Morphism::NonePosition();
-    auto mul15 = MakeRBindIntMul(15);
-    auto add10 = MakeRBindIntPlus(10);
+    auto mul15 = MakeRBindMul(15);
+    auto add10 = MakeRBindPlus(10);
 
     auto builder = CatProgramBuilder();
 
@@ -67,10 +67,12 @@ lang::CatProgram MakeIf101Program(int32_t x) {
 
 lang::CatProgram MakeIfWithLocalVarProgram(int32_t x) {
     auto val = MakeLiteralMorphism(x);
-    auto less4 = MakeRBindIntLess(4);
-    auto mul15 = MakeRBindIntMul(15);
-    auto add10 = MakeRBindIntPlus(10);
+    auto less4 = MakeRBindLess(4);
+    auto mul15 = MakeRBindMul(15);
+    auto add10 = MakeRBindPlus(10);
     auto y_var = Morphism::Value("y", Type::Int());
+    auto just = Morphism::Just();
+    auto just_y_var = Morphism::Binded(just, {{1, y_var}});
 
     auto builder = CatProgramBuilder();
 
@@ -87,8 +89,8 @@ lang::CatProgram MakeIfWithLocalVarProgram(int32_t x) {
 
     builder.Connect(start_pin, val_node, val)
         .Connect(val_pin, cond_node, less4)
-        .Connect(false_pin, branch0_node, y_var)
-        .Connect(true_pin, branch1_node, y_var)
+        .Connect(false_pin, branch0_node, just_y_var)
+        .Connect(true_pin, branch1_node, just_y_var)
         .Connect(branch0_pin, res0_node, mul15)
         .Connect(branch1_pin, res1_node, add10);
 
@@ -97,9 +99,9 @@ lang::CatProgram MakeIfWithLocalVarProgram(int32_t x) {
 
 lang::CatProgram MakeGuards101Program(int32_t x) {
     auto val = MakeLiteralMorphism(x);
-    auto less4_guard = Guard(MakeRBindIntLess(4));
-    auto mul15 = MakeRBindIntMul(15);
-    auto add10 = MakeRBindIntPlus(10);
+    auto less4_guard = Guard(MakeRBindLess(4));
+    auto mul15 = MakeRBindMul(15);
+    auto add10 = MakeRBindPlus(10);
 
     auto builder = CatProgramBuilder();
 
@@ -121,25 +123,25 @@ lang::CatProgram MakeGuards101Program(int32_t x) {
 lang::CatProgram MakeMegaIfProgram(int32_t x) {
     auto val = MakeLiteralMorphism(x);
     auto plus = Morphism::Plus();
-    auto plus1 = MakeRBindIntPlus(1);
-    auto plus2 = MakeRBindIntPlus(2);
-    auto plus3 = MakeRBindIntPlus(3);
-    auto plus7 = MakeRBindIntPlus(7);
-    auto plus20 = MakeRBindIntPlus(20);
-    auto minus2 = MakeRBindIntMinus(2);
-    auto minus5 = MakeRBindIntMinus(5);
-    auto minus8 = MakeRBindIntMinus(8);
+    auto plus1 = MakeRBindPlus(1);
+    auto plus2 = MakeRBindPlus(2);
+    auto plus3 = MakeRBindPlus(3);
+    auto plus7 = MakeRBindPlus(7);
+    auto plus20 = MakeRBindPlus(20);
+    auto minus2 = MakeRBindMinus(2);
+    auto minus5 = MakeRBindMinus(5);
+    auto minus8 = MakeRBindMinus(8);
     auto mul = Morphism::Multiply();
-    auto mul2 = MakeRBindIntMul(2);
-    auto mul3 = MakeRBindIntMul(3);
-    auto mul4 = MakeRBindIntMul(4);
-    auto mul5 = MakeRBindIntMul(5);
-    auto mul8 = MakeRBindIntMul(8);
+    auto mul2 = MakeRBindMul(2);
+    auto mul3 = MakeRBindMul(3);
+    auto mul4 = MakeRBindMul(4);
+    auto mul5 = MakeRBindMul(5);
+    auto mul8 = MakeRBindMul(8);
     auto pos0 = Morphism::Position(0);
     auto pos1 = Morphism::Position(1);
-    auto less2 = MakeRBindIntLess(2);
-    auto less_neg_5 = MakeRBindIntLess(-5);
-    auto greater3 = MakeRBindIntGreater(3);
+    auto less2 = MakeRBindLess(2);
+    auto less_neg_5 = MakeRBindLess(-5);
+    auto greater3 = MakeRBindGreater(3);
 
     auto builder = CatProgramBuilder();
 
@@ -218,9 +220,9 @@ int32_t CalcMegaIfResult(int32_t x) {
 lang::CatProgram MakeFibProgram(int32_t x) {
     auto val = MakeLiteralMorphism(x);
     auto fib = Morphism::Common("fib", Type::Int(), Type::Int());
-    auto less2 = MakeRBindIntLess(2);
+    auto less2 = MakeRBindLess(2);
     auto id = Morphism::Identity();
-    auto minus1 = MakeRBindIntMinus(1);
+    auto minus1 = MakeRBindMinus(1);
     auto pos0 = Morphism::Position(0);
     auto pos1 = Morphism::Position(1);
     auto plus = Morphism::Plus();

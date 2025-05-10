@@ -16,8 +16,17 @@ const Morphism& Guard::GetMorphism() const {
     return *morphism_;
 }
 
-std::string Guard::ToString() const {
-    return "| " + morphism_->ToString();
+std::string Guard::ToString(MorphismPtr arg_morphism, Style style) const {
+    auto binded = Morphism::Binded(morphism_, {{0, arg_morphism}});
+
+    switch (style) {
+        case Style::Komaru:
+            return "| " + binded->ToString();
+        case Style::Haskell:
+            return binded->ToString();
+        case Style::Debug:
+            return "Guard{" + binded->ToString() + "}";
+    }
 }
 
 }  // namespace komaru::lang

@@ -4,6 +4,7 @@
 #include <cassert>
 
 #include <komaru/util/std_extensions.hpp>
+#include <komaru/util/string.hpp>
 
 namespace komaru::lang {
 
@@ -189,6 +190,12 @@ bool Type::IsConcrete() const {
     });
 }
 
+bool Type::ShouldBeShielded() const {
+    return this->Visit([](const TypeLike auto& t) -> bool {
+        return t.ShouldBeShielded();
+    });
+}
+
 std::uintptr_t Type::GetID() const {
     return reinterpret_cast<std::uintptr_t>(type_);
 }
@@ -256,6 +263,17 @@ size_t Type::TypeVariantIndex() const {
     return type_->index();
 }
 
+Type Type::Pure() const {
+    std::vector<Type> types = FlattenFunction();
+    if (types.empty()) {
+        return Type::Singleton();
+    }
+    if (types.size() == 1) {
+        return types[0];
+    }
+    return Type::FunctionChain(types);
+}
+
 bool Type::operator==(Type o) const {
     // Because each type in storage is unique and never changes it's location
     // we can just compare pointers
@@ -296,6 +314,9 @@ CommonType::CommonType(std::string name, std::vector<Type> params)
 }
 
 std::string CommonType::ToString(Style style) const {
+    if (style == Style::Debug) {
+        return ToStringDebug();
+    }
     if (style == Style::Haskell && name_ == "S") {
         return "()";
     }
@@ -303,8 +324,9 @@ std::string CommonType::ToString(Style style) const {
     std::string res = name_;
 
     for (const auto& param : params_) {
-        res += " " + param.ToString(style);
+        res += " " + util::Shield(param.ToString(style), param.ShouldBeShielded());
     }
+
     return res;
 }
 
@@ -319,6 +341,10 @@ bool CommonType::IsConcrete() const {
         }
     }
     return true;
+}
+
+bool CommonType::ShouldBeShielded() const {
+    return !params_.empty();
 }
 
 std::string CommonType::GetID() const {
@@ -357,6 +383,16 @@ std::string CommonType::MakeID(const std::string& name, const std::vector<Type>&
     return id;
 }
 
+std::string CommonType::ToStringDebug() const {
+    std::string res;
+    res += "Common{" + name_ + ":";
+    for (const auto& param : params_) {
+        res += " " + param.ToString(Style::Debug);
+    }
+    res += "}";
+    return res;
+}
+
 TupleType::TupleType(std::vector<Type> inner_types)
     : inner_types_(std::move(inner_types)) {
 }
@@ -367,6 +403,8 @@ std::string TupleType::ToString(Style style) const {
             return ToStringKomaru();
         case Style::Haskell:
             return ToStringHaskell();
+        case Style::Debug:
+            return ToStringDebug();
     }
 }
 
@@ -377,6 +415,10 @@ bool TupleType::IsConcrete() const {
         }
     }
     return true;
+}
+
+bool TupleType::ShouldBeShielded() const {
+    return false;
 }
 
 const std::vector<Type>& TupleType::GetTupleTypes() const {
@@ -417,7 +459,8 @@ std::string TupleType::MakeID(const std::vector<Type>& types) {
 std::string TupleType::ToStringKomaru() const {
     std::string res;
     for (size_t i = 0; i < inner_types_.size(); ++i) {
-        res += inner_types_[i].ToString(Style::Komaru);
+        res += util::Shield(inner_types_[i].ToString(Style::Komaru),
+                            inner_types_[i].ShouldBeShielded());
         if (i + 1 != inner_types_.size()) {
             res += " x ";
         }
@@ -435,6 +478,18 @@ std::string TupleType::ToStringHaskell() const {
     }
     return res + ")";
 }
+
+std::string TupleType::ToStringDebug() const {
+    std::string res = "Tuple{";
+    for (size_t i = 0; i < inner_types_.size(); ++i) {
+        res += inner_types_[i].ToString(Style::Debug);
+        if (i + 1 != inner_types_.size()) {
+            res += ", ";
+        }
+    }
+    return res + "}";
+}
+
 FunctionType::FunctionType(Type source, Type target)
     : source_(source),
       target_(target) {
@@ -444,11 +499,19 @@ std::string FunctionType::ToString(Style style) const {
     if (style == Style::Haskell && Source() == Type::Singleton()) {
         return Target().ToString(style);
     }
-    return std::format("{} -> {}", Source().ToString(style), Target().ToString(style));
+
+    std::string source_str = util::Shield(Source().ToString(style), Source().ShouldBeShielded());
+    std::string target_str = Target().ToString(style);
+
+    return std::format("{} -> {}", source_str, target_str);
 }
 
 bool FunctionType::IsConcrete() const {
     return Source().IsConcrete() && Target().IsConcrete();
+}
+
+bool FunctionType::ShouldBeShielded() const {
+    return true;
 }
 
 std::string FunctionType::GetID() const {
@@ -492,6 +555,10 @@ std::string ListType::ToString(Style style) const {
 
 bool ListType::IsConcrete() const {
     return inner_type_.IsConcrete();
+}
+
+bool ListType::ShouldBeShielded() const {
+    return false;
 }
 
 std::string ListType::GetID() const {
@@ -797,11 +864,12 @@ Type ApplyMatchMap(const CommonType& type, const MatchMap& mapping) {
 
     auto it = mapping.find(type.GetName());
     if (it != mapping.end()) {
-        std::visit(
-            [&](const auto& sub) {
-                new_name = sub.ToString();
-            },
-            it->second);
+        if (std::holds_alternative<Type>(it->second)) {
+            assert(type.NumTypeParams() == 0);
+            return std::get<Type>(it->second);
+        } else {
+            new_name = std::get<TypeConstructor>(it->second).ToString();
+        }
     }
 
     std::vector<Type> new_params;

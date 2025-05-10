@@ -4,8 +4,15 @@
 
 namespace komaru::lang {
 
-std::string AnyPattern::ToString() const {
-    return "*";
+std::string AnyPattern::ToString(Style style) const {
+    switch (style) {
+        case Style::Komaru:
+            return "*";
+        case Style::Haskell:
+            return "_";
+        case Style::Debug:
+            return "Any";
+    }
 }
 
 LiteralPattern::LiteralPattern(Literal literal)
@@ -16,7 +23,7 @@ const Literal& LiteralPattern::GetLiteral() const {
     return literal_;
 }
 
-std::string LiteralPattern::ToString() const {
+std::string LiteralPattern::ToString(Style) const {
     return literal_.ToString();
 }
 
@@ -28,7 +35,7 @@ const std::string& NamePattern::GetName() const {
     return name_;
 }
 
-std::string NamePattern::ToString() const {
+std::string NamePattern::ToString(Style) const {
     return name_;
 }
 
@@ -45,8 +52,14 @@ const std::vector<Pattern>& ConstructorPattern::GetPatterns() const {
     return patterns_;
 }
 
-std::string ConstructorPattern::ToString() const {
-    throw std::runtime_error("Not implemented");
+std::string ConstructorPattern::ToString(Style style) const {
+    std::string res = name_;
+
+    for (const auto& pattern : patterns_) {
+        res += " " + pattern.ToString(style);
+    }
+
+    return res;
 }
 
 TuplePattern::TuplePattern(std::vector<Pattern> patterns)
@@ -57,11 +70,11 @@ const std::vector<Pattern>& TuplePattern::GetPatterns() const {
     return patterns_;
 }
 
-std::string TuplePattern::ToString() const {
+std::string TuplePattern::ToString(Style style) const {
     std::string s = "(";
 
     for (const auto& [i, pattern] : util::Enumerate(patterns_)) {
-        s += pattern.ToString();
+        s += pattern.ToString(style);
         if (i + 1 != patterns_.size()) {
             s += ", ";
         }
@@ -115,9 +128,9 @@ Pattern Pattern::String(std::string str) {
     return FromLiteral(Literal::String(std::move(str)));
 }
 
-std::string Pattern::ToString() const {
-    return Visit([](const auto& pattern) {
-        return pattern.ToString();
+std::string Pattern::ToString(Style style) const {
+    return Visit([style](const auto& pattern) {
+        return pattern.ToString(style);
     });
 }
 

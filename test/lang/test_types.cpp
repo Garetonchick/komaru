@@ -110,3 +110,41 @@ TEST(Types, MatchDoesNotLoseInformation) {
     auto deduced_type = ApplyMatchMap(param_type, match_map);
     ASSERT_EQ(deduced_type.ToString(), param_type.ToString());
 }
+
+TEST(Types, TrivialMatch) {
+    Type io_int = Type::Parameterized("IO", {Type::Int()});
+
+    auto maybe_match_map = TryMatchTypes(io_int, io_int);
+    ASSERT_TRUE(maybe_match_map.has_value());
+    ASSERT_TRUE(maybe_match_map.value().empty());
+}
+
+TEST(Types, ParameterizedMatch) {
+    Type io_int = Type::Parameterized("IO", {Type::Int()});
+    Type at = Type::Var("a");
+
+    auto match_map = TryMatchTypes(at, io_int).value();
+    ASSERT_EQ(match_map.size(), 1);
+    ASSERT_TRUE(match_map.contains("a"));
+
+    auto& match = match_map["a"];
+
+    ASSERT_TRUE(std::holds_alternative<Type>(match));
+
+    auto match_type = std::get<Type>(match);
+    ASSERT_EQ(match_type, io_int) << "match_map[\"a\"] in debug style: "
+                                  << match_type.ToString(Style::Debug);
+
+    auto deduced_type = ApplyMatchMap(at, match_map);
+    ASSERT_EQ(deduced_type, io_int)
+        << "deduced type in debug style: " << deduced_type.ToString(Style::Debug);
+}
+
+TEST(Types, ParameterizedSubstitution) {
+    Type io_int = Type::Parameterized("IO", {Type::Int()});
+    Type id_type = Morphism::Identity()->GetType();
+
+    Type deduced = TryMakeSubstitution(id_type, {{0, io_int}}).value();
+    ASSERT_EQ(deduced.ToString(), "IO Int");
+    ASSERT_EQ(deduced, io_int) << "deduced type in debug style: " << deduced.ToString(Style::Debug);
+}

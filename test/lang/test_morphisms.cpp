@@ -29,7 +29,14 @@ TEST(Morphisms, Binded) {
     auto binded = Morphism::Binded(plus, {{0, Morphism::CommonWithType("a", Type::Int())},
                                           {1, Morphism::CommonWithType("b", Type::Int())}});
 
-    std::println("{}", Morphism::CommonWithType("a", Type::Int())->GetType().ToString());
-
     ASSERT_EQ(binded->ToString(), "a + b");
+    ASSERT_EQ(binded->GetType().ToString(), "S -> Int");
+}
+
+TEST(Morphisms, RBind) {
+    auto plus = Morphism::Plus();
+    auto binded = Morphism::Binded(plus, {{1, Morphism::Literal(Literal::Number(42))}});
+
+    ASSERT_EQ(binded->ToString(), "+ 42");
+    ASSERT_EQ(binded->GetType().ToString(), "a -> a");
 }

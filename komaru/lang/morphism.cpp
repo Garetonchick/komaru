@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <format>
+#include <print>
 
 #include <komaru/util/std_extensions.hpp>
 
@@ -114,7 +115,7 @@ BindedMorphism::BindedMorphism(MorphismPtr morphism, std::map<size_t, MorphismPt
 
     std::map<size_t, Type> type_mapping;
     for (const auto& [pos, morphism] : mapping_) {
-        type_mapping[pos] = morphism->GetType();
+        type_mapping[pos] = morphism->GetType().Pure();
     }
 
     Type deduced_type = DeduceTypes(morphism_->GetType(), type_mapping);
@@ -133,12 +134,15 @@ BindedMorphism::BindedMorphism(MorphismPtr morphism, std::map<size_t, MorphismPt
     if (new_types.size() == 1) {
         source_ = Type::Singleton();
         target_ = new_types[0];
-        return;
+    } else {
+        const FunctionType& new_type = Type::FunctionChain(new_types).GetVariant<FunctionType>();
+        source_ = new_type.Source();
+        target_ = new_type.Target();
     }
 
-    const FunctionType& new_type = Type::FunctionChain(new_types).GetVariant<FunctionType>();
-    source_ = new_type.Source();
-    target_ = new_type.Target();
+    if (morphism_->Holds<BindedMorphism>()) {
+        Flatten();
+    }
 }
 
 std::string BindedMorphism::ToString() const {
@@ -146,7 +150,12 @@ std::string BindedMorphism::ToString() const {
         return ToStringAsOperator();
     }
 
-    std::string res = ToStringShielded(*morphism_);
+    std::string res = std::invoke([&]() {
+        if (morphism_->Holds<CommonMorphism>()) {
+            return morphism_->ToString();
+        }
+        return ToStringShielded(*morphism_);
+    });
 
     size_t last_idx = mapping_.rbegin()->first;
 
@@ -203,6 +212,14 @@ const std::map<size_t, MorphismPtr>& BindedMorphism::GetMapping() const {
 std::string BindedMorphism::ToStringAsOperator() const {
     std::string res;
 
+    std::string inner_str = morphism_->ToString();
+
+    if (inner_str == "!" && mapping_.size() == 2) {
+        auto it = mapping_.find(1);
+        assert(it != mapping_.end());
+        return it->second->ToString();
+    }
+
     auto it = mapping_.find(0);
 
     if (it != mapping_.end()) {
@@ -210,7 +227,7 @@ std::string BindedMorphism::ToStringAsOperator() const {
         res += " ";
     }
 
-    res += morphism_->ToString();
+    res += inner_str;
 
     it = mapping_.find(1);
     if (it != mapping_.end()) {
@@ -219,6 +236,32 @@ std::string BindedMorphism::ToStringAsOperator() const {
     }
 
     return res;
+}
+
+void BindedMorphism::Flatten() {
+    assert(morphism_->Holds<BindedMorphism>());
+    auto& inner = morphism_->GetVariant<BindedMorphism>();
+    morphism_ = inner.morphism_;
+
+    std::map<size_t, MorphismPtr> new_mapping = inner.mapping_;
+
+    size_t old_idx = 0;
+
+    for (size_t i = 0; !mapping_.empty(); ++i) {
+        if (!new_mapping.contains(i)) {
+            ++old_idx;
+        }
+
+        if (old_idx > 0) {
+            auto it = mapping_.find(old_idx - 1);
+            if (it != mapping_.end()) {
+                new_mapping.emplace(i, it->second);
+            }
+            mapping_.erase(it);
+        }
+    }
+
+    mapping_ = std::move(new_mapping);
 }
 
 LiteralMorphism::LiteralMorphism(Literal literal)
@@ -408,6 +451,11 @@ MorphismPtr Morphism::False() {
 
 MorphismPtr Morphism::Singleton() {
     return Morphism::Common("CatSingleton", Type::Singleton(), Type::Singleton());
+}
+
+MorphismPtr Morphism::Just() {
+    return Morphism::CommonWithType(
+        "!", Type::FunctionChain({Type::Var("a"), Type::Var("b"), Type::Var("b")}));
 }
 
 std::string Morphism::ToString() const {

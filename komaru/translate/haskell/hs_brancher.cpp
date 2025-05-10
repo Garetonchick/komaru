@@ -1,5 +1,7 @@
 #include "hs_brancher.hpp"
 
+#include <komaru/util/std_extensions.hpp>
+
 namespace komaru::translate::hs {
 
 TranslationResult<HaskellBrancher> HaskellBrancher::Make(std::string name, lang::Type type,
@@ -8,12 +10,17 @@ TranslationResult<HaskellBrancher> HaskellBrancher::Make(std::string name, lang:
     return HaskellBrancher(std::move(name), std::move(type), std::move(brancher));
 }
 
-std::string HaskellBrancher::ToString() const {
-    return std::visit(
-        [](const auto& brancher) -> std::string {
-            return brancher.ToString();
-        },
-        brancher_);
+std::string HaskellBrancher::ToString(lang::MorphismPtr arg_morphism) const {
+    return std::visit(util::Overloaded{
+                          [&](const lang::Pattern& pattern) -> std::string {
+                              return pattern.ToString(lang::Style::Haskell) + " <- " +
+                                     arg_morphism->ToString();
+                          },
+                          [&](const lang::Guard& guard) -> std::string {
+                              return guard.ToString(std::move(arg_morphism), lang::Style::Haskell);
+                          },
+                      },
+                      brancher_);
 }
 
 HaskellBrancher::HaskellBrancher(std::string name, lang::Type type, Brancher brancher)

@@ -49,4 +49,11 @@ std::string Escape(const std::string& s, const std::string& esc) {
     return res;
 }
 
+std::string Shield(const std::string& s, bool shield) {
+    if (shield) {
+        return "(" + s + ")";
+    }
+    return s;
+}
+
 }  // namespace komaru::util

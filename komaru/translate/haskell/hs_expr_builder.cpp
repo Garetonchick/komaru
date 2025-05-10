@@ -64,6 +64,8 @@ std::vector<common::Cond> HaskellExprBuilder::AddBranches(
         conds[i] = cond & common::Cond(branch_id_++);
     }
 
+    std::vector<Scope*> new_scopes;
+
     for (auto it = active_scopes_.begin(); it != active_scopes_.end();) {
         Scope& scope = **it;
 
@@ -78,10 +80,14 @@ std::vector<common::Cond> HaskellExprBuilder::AddBranches(
             int32_t branch_id = start_branch_id + static_cast<int32_t>(i);
             scopes_.emplace_back(scope.GetCond() & common::Cond(branch_id));
             branches.emplace_back(&scopes_.back(), branchers[i]);
+            new_scopes.push_back(&scopes_.back());
         }
 
         scope.SetBranches(branches);
+        it = active_scopes_.erase(it);
     }
+
+    active_scopes_.insert_range(active_scopes_.begin(), new_scopes);
 
     return conds;
 }
@@ -126,7 +132,10 @@ TranslationResult<HaskellExpr> HaskellExprBuilder::ExtractImpl(const Scope& scop
 
     lang::Type type = lang::Type::Auto();
 
-    for (const auto& branch : branches) {
+    auto branch_arg_morphism =
+        lang::Morphism::CommonWithType(definitions.back().GetName(), lang::Type::Auto());
+
+    for (auto [i, branch] : util::Enumerate(branches)) {
         auto maybe_subexpr = ExtractImpl(*branch.scope);
         if (!maybe_subexpr) {
             return maybe_subexpr;
@@ -136,8 +145,12 @@ TranslationResult<HaskellExpr> HaskellExprBuilder::ExtractImpl(const Scope& scop
             type = maybe_subexpr.value().GetType();
         }
 
-        ss << indent << "| " << branch.brancher.ToString() << " ->\n";
+        ss << indent << "| " << branch.brancher.ToString(branch_arg_morphism) << " ->\n";
         ss << util::Indent(maybe_subexpr.value().ToString(), indent + util::k2S);
+
+        if (i + 1 != branches.size()) {
+            ss << "\n";
+        }
     }
 
     return HaskellExpr::Simple(type, ss.str());

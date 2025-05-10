@@ -31,6 +31,10 @@ std::string HaskellExpr::ToString() const {
 
     const auto& names = std::get<std::vector<std::string>>(expr_);
 
+    if (names.size() == 1) {
+        return names[0];
+    }
+
     std::string res = "(";
     for (auto [i, name] : util::Enumerate(names)) {
         res += name;

@@ -85,6 +85,7 @@ public:
 
 private:
     std::string ToStringAsOperator() const;
+    void Flatten();
 
 private:
     MorphismPtr morphism_;
@@ -164,6 +165,7 @@ public:
     static MorphismPtr True();
     static MorphismPtr False();
     static MorphismPtr Singleton();
+    static MorphismPtr Just();
 
     std::string ToString() const;
     Type GetSource() const;

@@ -78,6 +78,13 @@ int main() {
     // VisualizeProgram(komaru::test::MakeIfWithLocalVarProgram(6));
     // VisualizeProgram(komaru::test::MakeMegaIfProgram(6));
     // PlayWithCooking();
-    DebugCatProgram(komaru::test::MakeAPlusBProgram(4, 42));
-    SaveHaskellCode(komaru::test::MakeAPlusBProgram(4, 42));
+    // DebugCatProgram(komaru::test::MakeAPlusBProgram(4, 42));
+    // SaveHaskellCode(komaru::test::MakeAPlusBProgram(4, 42));
+    // DebugCatProgram(komaru::test::MakeIf101Program(4));
+    // SaveHaskellCode(komaru::test::MakeIf101Program(6));
+    // SaveHaskellCode(komaru::test::MakeIfWithLocalVarProgram(6));
+    // SaveHaskellCode(komaru::test::MakeGuards101Program(6));
+    // SaveHaskellCode(komaru::test::MakeMegaIfProgram(6));
+    // SaveHaskellCode(komaru::test::MakeFibProgram(6));
+    SaveHaskellCode(komaru::test::MakeIO101Program());
 }

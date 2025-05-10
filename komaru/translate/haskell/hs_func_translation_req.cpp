@@ -5,7 +5,6 @@
 #include <queue>
 #include <format>
 #include <cassert>
-#include <print>
 
 namespace komaru::translate::hs {
 
@@ -118,8 +117,6 @@ std::optional<TranslationError> HaskellFuncTranslationRequest::DeduceConnType(
     }
 
     deduced_dst_type = lang::ApplyMatchMap(dst_type, maybe_match_map.value());
-    std::println("original dst_type: {}, deduced dst_type: {}", dst_type.ToString(),
-                 deduced_dst_type.ToString());
     node2deduced_type_[dst_node] = deduced_dst_type;
 
     lang::Type conn_type = lang::CurryFunction(src_type, deduced_dst_type);
@@ -156,6 +153,12 @@ TranslationResult<HaskellExpr> HaskellFuncTranslationRequest::TranslateExpr() {
     std::queue<const CPNode*> branch_q;
 
     normal_q.push(&root_);
+
+    if (root_.GetType() != lang::Type::Singleton()) {
+        expr_builder_.AddDefinition(
+            {}, HaskellDefinition::Normal("catArgs", {}, root_.GetType(),
+                                          HaskellExpr::NamesTuple(root_.GetType(), param_names_)));
+    }
 
     while (!normal_q.empty() || !branch_q.empty()) {
         const CPNode* node = nullptr;
@@ -317,6 +320,10 @@ std::optional<TranslationError> HaskellFuncTranslationRequest::AddDefinitionsFor
         node2unpack_[node] = names;
         expr_builder_.AddDefinition(
             node_cond, HaskellDefinition::Unpack(local_name, std::move(names), node->GetType()));
+    } else {
+        if (node_type != lang::Type::Singleton()) {
+            node2unpack_[node] = {local_name};
+        }
     }
 
     return std::nullopt;
@@ -343,6 +350,11 @@ std::string HaskellFuncTranslationRequest::NameNode(const CPNode* node) {
         std::string name = "catVar" + std::to_string(var_idx_++);
         node2local_name_[node] = name;
         return name;
+    }
+
+    if (node == &root_) {
+        node2local_name_[node] = "catArgs";
+        return "catArgs";
     }
 
     node2local_name_[node] = node->GetName();

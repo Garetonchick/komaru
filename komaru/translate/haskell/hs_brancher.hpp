@@ -12,7 +12,7 @@ public:
     static TranslationResult<HaskellBrancher> Make(std::string name, lang::Type type,
                                                    Brancher brancher);
 
-    std::string ToString() const;
+    std::string ToString(lang::MorphismPtr arg_morphism) const;
 
 private:
     HaskellBrancher(std::string name, lang::Type type, Brancher brancher);

@@ -9,10 +9,10 @@ lang::MorphismPtr MakeLiteralMorphism(const T& value) {
     return lang::Morphism::Literal(lang::Literal::Make(value));
 }
 
-lang::MorphismPtr MakeRBindIntPlus(int32_t x);
-lang::MorphismPtr MakeRBindIntMul(int32_t x);
-lang::MorphismPtr MakeRBindIntMinus(int32_t x);
-lang::MorphismPtr MakeRBindIntLess(int32_t x);
-lang::MorphismPtr MakeRBindIntGreater(int32_t x);
+lang::MorphismPtr MakeRBindPlus(int32_t x);
+lang::MorphismPtr MakeRBindMul(int32_t x);
+lang::MorphismPtr MakeRBindMinus(int32_t x);
+lang::MorphismPtr MakeRBindLess(int32_t x);
+lang::MorphismPtr MakeRBindGreater(int32_t x);
 
 }  // namespace komaru::test

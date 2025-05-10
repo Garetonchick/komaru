@@ -21,6 +21,7 @@ public:
 
 private:
     std::vector<const CPNode*> DiscoverFunctions();
+    lang::Type FindReturnType(const CPNode* node);
 
 private:
     const lang::CatProgram& cat_prog_;
@@ -30,13 +31,14 @@ ResultProgram HaskellTranslationRequest::Translate() && {
     HaskellProgramBuilder builder;
 
     builder.AddPragma("MultiWayIf");
+    builder.AddImport("Control.Monad");
 
     lang::Type main_type = lang::Type::Parameterized("IO", {lang::Type::Singleton()});
     bool is_interpreter_mode = false;
 
     auto roots = DiscoverFunctions();
     for (const auto& root : roots) {
-        if (root->GetName() == "main" && root->GetType() != main_type) {
+        if (root->GetName() == "main" && FindReturnType(root) != main_type) {
             is_interpreter_mode = true;
         }
 
@@ -84,6 +86,14 @@ std::vector<const CPNode*> HaskellTranslationRequest::DiscoverFunctions() {
     }
 
     return std::vector<const CPNode*>(roots.begin(), roots.end());
+}
+
+lang::Type HaskellTranslationRequest::FindReturnType(const CPNode* node) {
+    while (!node->OutPins().empty() && !node->OutPins().front().Arrows().empty()) {
+        node = &node->OutPins().front().Arrows().front().TargetNode();
+    }
+
+    return node->GetType();
 }
 
 HaskellTranslator::HaskellTranslator() {
