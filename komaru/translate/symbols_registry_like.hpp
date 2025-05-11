@@ -8,12 +8,7 @@
 
 namespace komaru::translate {
 
-enum class SymbolKind { Function, Value, Type };
-
-struct SymbolInfo {
-    lang::Type type;
-    SymbolKind kind;
-};
+using SymbolInfo = std::variant<lang::Type, lang::TypeConstructor>;
 
 template <typename T>
 concept SymbolsRegistryLike = requires(const T reg, std::string s) {

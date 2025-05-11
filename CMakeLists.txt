@@ -13,9 +13,10 @@ include_directories(.)
 file(GLOB EDITOR_SOURCES komaru/editor/*.cpp komaru/editor/*.hpp)
 file(GLOB UTIL_SOURCES komaru/util/*.cpp komaru/util/*.hpp)
 file(GLOB LANG_SOURCES komaru/lang/*.cpp komaru/lang/*.hpp)
+file(GLOB PARSERS_SOURCES komaru/parsers/*.cpp komaru/parsers/*.hpp)
 file(GLOB_RECURSE TRANSLATE_SOURCES komaru/translate/*.cpp komaru/translate/*.hpp)
 
-add_library(komarulib ${UTIL_SOURCES} ${LANG_SOURCES} ${TRANSLATE_SOURCES})
+add_library(komarulib ${UTIL_SOURCES} ${LANG_SOURCES} ${TRANSLATE_SOURCES} ${PARSERS_SOURCES})
 
 # Setup Qt
 list(APPEND CMAKE_PREFIX_PATH "/home/gareton/Qt/6.9.0/gcc_64/lib/cmake/") # TODO: more elegant solution

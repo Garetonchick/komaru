@@ -5,19 +5,15 @@
 
 #include <komaru/translate/program.hpp>
 #include <komaru/translate/haskell/hs_definition.hpp>
+#include <komaru/translate/haskell/hs_import.hpp>
 
 namespace komaru::translate::hs {
 
 class HaskellProgramBuilder {
-    struct Import {
-        std::string module_name;
-        std::string ref_name;
-        std::vector<std::string> symbols;
-    };
-
 public:
     HaskellProgramBuilder() = default;
 
+    void AddImport(HaskellImport import);
     void AddImport(std::string module_name, std::vector<std::string> symbols = {});
     void AddQualifiedImport(std::string module_name, std::string ref_name,
                             std::vector<std::string> symbols = {});
@@ -29,7 +25,7 @@ public:
 
 private:
     std::deque<HaskellDefinition> definitions_;
-    std::vector<Import> imports_;
+    std::vector<HaskellImport> imports_;
     std::vector<std::string> pragmas_;
 };
 

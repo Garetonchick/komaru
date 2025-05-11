@@ -7,8 +7,12 @@
 
 namespace komaru::translate::hs {
 
+void HaskellProgramBuilder::AddImport(HaskellImport import) {
+    imports_.push_back(std::move(import));
+}
+
 void HaskellProgramBuilder::AddImport(std::string module_name, std::vector<std::string> symbols) {
-    imports_.emplace_back(Import{
+    imports_.emplace_back(HaskellImport{
         .module_name = std::move(module_name),
         .ref_name = "",
         .symbols = std::move(symbols),
@@ -17,7 +21,7 @@ void HaskellProgramBuilder::AddImport(std::string module_name, std::vector<std::
 
 void HaskellProgramBuilder::AddQualifiedImport(std::string module_name, std::string ref_name,
                                                std::vector<std::string> symbols) {
-    imports_.emplace_back(Import{
+    imports_.emplace_back(HaskellImport{
         .module_name = std::move(module_name),
         .ref_name = std::move(ref_name),
         .symbols = std::move(symbols),
@@ -52,28 +56,7 @@ std::unique_ptr<IProgram> HaskellProgramBuilder::Extract() {
     ss << "\n";
 
     for (const auto& import : imports_) {
-        ss << "import ";
-        if (!import.ref_name.empty()) {
-            ss << "qualified ";
-        }
-
-        ss << import.module_name << " ";
-
-        if (!import.ref_name.empty()) {
-            ss << "as " << import.ref_name << " ";
-        }
-
-        if (!import.symbols.empty()) {
-            ss << "(";
-            for (auto [i, symbol] : util::Enumerate(import.symbols)) {
-                if (i > 0) {
-                    ss << ", ";
-                }
-                ss << symbol;
-            }
-            ss << ")";
-        }
-        ss << "\n";
+        ss << import.ToString() << "\n";
     }
 
     ss << "\n";

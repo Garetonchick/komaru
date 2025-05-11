@@ -4,6 +4,8 @@
 #include <komaru/util/filesystem.hpp>
 #include <komaru/translate/cat_cooking.hpp>
 #include <komaru/translate/simple_symbols_registry.hpp>
+#include <komaru/util/cli_program_manipulator.hpp>
+#include <komaru/util/string.hpp>
 #include <test/translate/programs.hpp>
 #include <catlib/cpp/catlib.hpp>
 
@@ -67,6 +69,36 @@ void PlayWithCooking() {
     SaveCppCode(std::move(maybe_program.value()));
 }
 
+void PlayWithGHCIFixed() {
+    komaru::util::CLIProgramManipulator ghci(
+        {"ghci", "-package" ,"OpenGL", "-package", "GLUT"}, "ghci> "
+    );
+
+    for(const std::string& input : {
+        "import           Graphics.Rendering.OpenGL\n",
+        "import qualified Graphics.UI.GLUT          as GLUT\n",
+        ":t GLUT.getArgsAndInitialize\n"
+    }) {
+        std::string response = ghci.Interact(input);
+        std::println("input: \"{}\"\nresponse: \"{}\"", input, response);
+    }
+}
+
+void PlayWithGHCI() {
+    komaru::util::CLIProgramManipulator ghci(
+        {"ghci", "-package" ,"OpenGL", "-package", "GLUT"}, "ghci> "
+    );
+
+    std::string input;
+
+    std::print("ghci> ");
+
+    while(std::getline(std::cin, input)) {
+        std::string response = ghci.Interact(input + "\n");
+        std::print("{}", response);
+    }
+}
+
 int main() {
     // Choose your fighter (or code whatever you wish yourself)
     // SaveCode(komaru::test::MakeFibProgram(5));
@@ -86,5 +118,7 @@ int main() {
     // SaveHaskellCode(komaru::test::MakeGuards101Program(6));
     // SaveHaskellCode(komaru::test::MakeMegaIfProgram(6));
     // SaveHaskellCode(komaru::test::MakeFibProgram(6));
-    SaveHaskellCode(komaru::test::MakeIO101Program());
+    // SaveHaskellCode(komaru::test::MakeIO101Program());
+    // PlayWithGHCIFixed();
+    PlayWithGHCI();
 }
