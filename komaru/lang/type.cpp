@@ -54,6 +54,10 @@ const Type::Variant* Type::GetVariantPointer() const {
     return type_;
 }
 
+Type Type::Common(std::string name) {
+    return Parameterized(std::move(name), {});
+}
+
 Type Type::Simple(std::string name) {
     assert(!name.empty() && IsConcreteTypeName(name) && std::isalpha(name[0]));
     return Parameterized(std::move(name), {});

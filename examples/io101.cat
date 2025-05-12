@@ -7,32 +7,27 @@
             {
                 "connections": [
                     {
-                        "node": 5,
-                        "text": ">>= print"
+                        "node": 4,
+                        "text": "id"
+                    },
+                    {
+                        "node": 3,
+                        "text": "id"
                     }
                 ]
             }
         ],
-        "x": 404.8,
-        "y": -34.49999999999999
+        "x": -246,
+        "y": -33
     },
     {
-        "has_input_pin": false,
+        "has_input_pin": true,
         "id": 1,
-        "main_text": "S",
+        "main_text": "IO S",
         "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 6,
-                        "text": "read"
-                    }
-                ]
-            }
         ],
-        "tag_text": "main",
-        "x": -365.00000000000006,
-        "y": -30.150000000000006
+        "x": 607.9475,
+        "y": -37.02999999999997
     },
     {
         "has_input_pin": true,
@@ -42,8 +37,8 @@
             {
                 "connections": [
                     {
-                        "node": 0,
-                        "text": "liftM2 +"
+                        "node": 6,
+                        "text": "liftM2 (+)"
                     }
                 ]
             }
@@ -86,13 +81,22 @@
         "y": -115
     },
     {
-        "has_input_pin": true,
+        "has_input_pin": false,
         "id": 5,
-        "main_text": "IO S",
+        "main_text": "S",
         "out_pins": [
+            {
+                "connections": [
+                    {
+                        "node": 0,
+                        "text": "readLn"
+                    }
+                ]
+            }
         ],
-        "x": 607.9475,
-        "y": -37.02999999999997
+        "tag_text": "main",
+        "x": -365.00000000000006,
+        "y": -30.150000000000006
     },
     {
         "has_input_pin": true,
@@ -102,17 +106,13 @@
             {
                 "connections": [
                     {
-                        "node": 4,
-                        "text": "id"
-                    },
-                    {
-                        "node": 3,
-                        "text": "id"
+                        "node": 1,
+                        "text": ">>= print"
                     }
                 ]
             }
         ],
-        "x": -246,
-        "y": -33
+        "x": 404.8,
+        "y": -34.49999999999999
     }
 ]

@@ -44,6 +44,7 @@ public:
     Type(const Type& o) = default;
     Type& operator=(const Type& o) = default;
 
+    static Type Common(std::string name);
     static Type Simple(std::string name);
     static Type Parameterized(std::string name, std::vector<Type> params);
     static Type Tuple(std::vector<Type> types);

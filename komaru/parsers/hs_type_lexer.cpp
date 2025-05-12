@@ -4,9 +4,13 @@
 
 namespace komaru::parsers {
 
+namespace {
+
 bool CanBeIdentifier(char c) {
     return std::isalnum(c) || c == '.';
 }
+
+}  // namespace
 
 ParserResult<std::vector<HsTypeToken>> TokenizeHsType(const std::string& raw) {
     std::vector<HsTypeToken> tokens;
@@ -52,6 +56,7 @@ ParserResult<std::vector<HsTypeToken>> TokenizeHsType(const std::string& raw) {
 
                 return MakeParserError(
                     std::format("expected arrow head but got: \'{}\'", raw[i + 1]));
+            default:
         }
 
         if (i != was_i) {
@@ -97,7 +102,7 @@ std::string ToString(HsTypeTokenType type) {
 }
 
 std::string ToString(const HsTypeToken& token) {
-    return std::format("{}: {}", ToString(token.type), token.raw);
+    return std::format("{}: \"{}\"", ToString(token.type), token.raw);
 }
 
 }  // namespace komaru::parsers

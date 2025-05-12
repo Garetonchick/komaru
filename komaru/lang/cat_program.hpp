@@ -86,6 +86,7 @@ public:
         const std::deque<OutPin>& OutPins() const;
         const std::string& GetName() const;
 
+        std::deque<OutPin>& OutPins();
         OutPin& AddOutPin();
         OutPin& AddOutPin(Pattern pattern);
         OutPin& AddOutPin(Guard guard);

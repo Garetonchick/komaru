@@ -72,6 +72,10 @@ const std::string& CPNode::GetName() const {
     return name_;
 }
 
+std::deque<CPOutPin>& CPNode::OutPins() {
+    return out_pins_;
+}
+
 CPOutPin& CPNode::AddOutPin() {
     return out_pins_.emplace_back(CPOutPin(*this));
 }

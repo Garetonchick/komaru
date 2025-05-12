@@ -348,12 +348,12 @@ translate::RawCatProgram MakeRawIO101Program() {
     auto sum_node = prog.NewNode("IO Int");
     auto final_node = prog.NewEndNode("IO S");
 
-    prog.Connect(main_node, read_node, 0, "read")
+    prog.Connect(main_node, read_node, 0, "readLn")
         .Connect(read_node, num0_node, 0, "id")
         .Connect(read_node, num1_node, 0, "id")
         .Connect(num0_node, pair_node, 0, "$0")
         .Connect(num1_node, pair_node, 0, "$1")
-        .Connect(pair_node, sum_node, 0, "liftM2 +")
+        .Connect(pair_node, sum_node, 0, "liftM2 (+)")
         .Connect(sum_node, final_node, 0, ">>= print");
 
     return prog;

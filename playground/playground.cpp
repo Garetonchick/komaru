@@ -1,9 +1,10 @@
 #include <komaru/translate/cpp/cpp_translator.hpp>
 #include <komaru/translate/haskell/hs_translator.hpp>
 #include <komaru/translate/graphviz.hpp>
+#include <komaru/translate/haskell/ghci.hpp>
 #include <komaru/util/filesystem.hpp>
 #include <komaru/translate/cat_cooking.hpp>
-#include <komaru/translate/simple_symbols_registry.hpp>
+#include <komaru/translate/haskell/hs_symbols_registry.hpp>
 #include <komaru/util/cli_program_manipulator.hpp>
 #include <komaru/util/string.hpp>
 #include <test/translate/programs.hpp>
@@ -59,14 +60,23 @@ void VisualizeProgram(const komaru::lang::CatProgram& cat_program) {
 }
 
 void PlayWithCooking() {
-    auto raw_program = komaru::test::MakeRawFibProgram(5);
-    auto maybe_program = Cook(raw_program, komaru::translate::SimpleSymbolsRegistry{});
+    auto raw_program = komaru::test::MakeRawIO101Program();
+    komaru::translate::hs::HaskellSymbolsRegistry symbols_registry({}, {
+        komaru::translate::hs::HaskellImport{
+            .module_name = "Control.Monad",
+            .ref_name = "",
+            .symbols = {}
+        }
+    });
+    auto maybe_program = komaru::translate::Cook(raw_program, symbols_registry);
 
     if(!maybe_program) {
         std::println("cooking error: {}", maybe_program.error().Error());
+        return;
     }
+    // DebugCatProgram(maybe_program.value());
     // VisualizeProgram(std::move(maybe_program.value()));
-    SaveCppCode(std::move(maybe_program.value()));
+    SaveHaskellCode(maybe_program.value());
 }
 
 void PlayWithGHCIFixed() {
@@ -109,10 +119,10 @@ int main() {
     // VisualizeProgram(komaru::test::MakeIO101Program());
     // VisualizeProgram(komaru::test::MakeIfWithLocalVarProgram(6));
     // VisualizeProgram(komaru::test::MakeMegaIfProgram(6));
-    // PlayWithCooking();
+    PlayWithCooking();
     // DebugCatProgram(komaru::test::MakeAPlusBProgram(4, 42));
     // SaveHaskellCode(komaru::test::MakeAPlusBProgram(4, 42));
-    // DebugCatProgram(komaru::test::MakeIf101Program(4));
+    // DebugCatProgram(komaru::test::MakeIO101Program());
     // SaveHaskellCode(komaru::test::MakeIf101Program(6));
     // SaveHaskellCode(komaru::test::MakeIfWithLocalVarProgram(6));
     // SaveHaskellCode(komaru::test::MakeGuards101Program(6));
@@ -120,5 +130,5 @@ int main() {
     // SaveHaskellCode(komaru::test::MakeFibProgram(6));
     // SaveHaskellCode(komaru::test::MakeIO101Program());
     // PlayWithGHCIFixed();
-    PlayWithGHCI();
+    // PlayWithGHCI();
 }

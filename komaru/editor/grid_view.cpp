@@ -3,8 +3,8 @@
 #include <komaru/editor/node.hpp>
 #include <komaru/editor/connection.hpp>
 #include <komaru/translate/cat_cooking.hpp>
-#include <komaru/translate/simple_symbols_registry.hpp>
-#include <komaru/translate/cpp/cpp_translator.hpp>
+#include <komaru/translate/haskell/hs_translator.hpp>
+#include <komaru/translate/haskell/hs_symbols_registry.hpp>
 #include <komaru/translate/exec_program.hpp>
 #include <komaru/util/std_extensions.hpp>
 
@@ -400,7 +400,10 @@ void GridView::FromJson(const QJsonDocument& json) {
 
 void GridView::OnRunAction() {
     auto raw_program = ConvertNodeGraphToRawCatProgram();
-    auto maybe_cat_program = translate::Cook(raw_program, translate::SimpleSymbolsRegistry{});
+    translate::hs::HaskellSymbolsRegistry symbols_registry(
+        {}, {translate::hs::HaskellImport{
+                .module_name = "Control.Monad", .ref_name = "", .symbols = {}}});
+    auto maybe_cat_program = translate::Cook(raw_program, symbols_registry);
 
     if (!maybe_cat_program) {
         std::println("cooking error: {}", maybe_cat_program.error().Error());
@@ -408,7 +411,7 @@ void GridView::OnRunAction() {
     }
 
     auto cat_program = std::move(maybe_cat_program.value());
-    auto translator = translate::cpp::CppTranslator("../../catlib/cpp");
+    auto translator = translate::hs::HaskellTranslator();
     auto maybe_program = translator.Translate(cat_program);
 
     if (!maybe_program) {

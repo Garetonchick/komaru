@@ -69,7 +69,7 @@ lang::Type HsTypeParser::ParseParameterizedType() {
     std::vector<lang::Type> params;
     while (true) {
         if (Peek().type == HsTypeTokenType::Identifier) {
-            params.push_back(lang::Type::Simple(Consume().raw));
+            params.push_back(lang::Type::Common(Consume().raw));
         } else if (CanBeTypeBegining()) {
             auto type = ParseType(true);
             params.push_back(type);

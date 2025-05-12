@@ -55,4 +55,7 @@ V GetOr(const std::map<K, V>& map, const K& key, const V& val = {}) {
     return it->second;
 }
 
+std::optional<int64_t> ReadInteger(const std::string& s);
+std::optional<double> ReadReal(const std::string& s);
+
 }  // namespace komaru::util
