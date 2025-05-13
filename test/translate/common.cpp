@@ -24,7 +24,11 @@ void CheckRunCppProgram(const lang::CatProgram& program, const std::string& expe
 }
 
 void CheckRunHaskellProgram(const lang::CatProgram& program, const std::string& expected_output) {
-    translate::hs::HaskellTranslator translator;
+    translate::hs::HaskellTranslator translator({}, {translate::hs::HaskellImport{
+                                                        .module_name = "Control.Monad",
+                                                        .ref_name = "",
+                                                        .symbols = {},
+                                                    }});
     auto maybe_program = translator.Translate(program);
 
     ASSERT_TRUE(maybe_program.has_value()) << maybe_program.error().Error();

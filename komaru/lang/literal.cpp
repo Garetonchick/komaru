@@ -2,6 +2,8 @@
 
 #include <komaru/util/std_extensions.hpp>
 
+#include <format>
+
 namespace komaru::lang {
 
 Literal Literal::Number(int32_t value) {
@@ -44,10 +46,10 @@ std::string Literal::ToString() const {
                                            return std::to_string(val);
                                        },
                                        [](char val) -> std::string {
-                                           return std::string(1, val);
+                                           return std::format("\'{}\'", val);
                                        },
                                        [](std::string val) -> std::string {
-                                           return val;
+                                           return std::format("\"{}\"", val);
                                        }},
                       value_);
 }

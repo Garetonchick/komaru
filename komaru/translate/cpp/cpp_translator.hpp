@@ -51,6 +51,8 @@ private:
                                 lang::Type out_type);
     CppExpr MakeExprForMorphism(const lang::TupleMorphism& morphism, const CppExpr& in_expr,
                                 lang::Type out_type);
+    CppExpr MakeExprForMorphism(const lang::ListMorphism& morphism, const CppExpr& in_expr,
+                                lang::Type out_type);
 
     std::vector<std::string> MakeBranchExprs(const CPNode* node);
     std::string MakeStatement(lang::Type type, const std::string& var_name,

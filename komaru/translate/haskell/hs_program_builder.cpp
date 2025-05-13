@@ -32,6 +32,10 @@ void HaskellProgramBuilder::AddPragma(std::string pragma) {
     pragmas_.push_back(std::move(pragma));
 }
 
+void HaskellProgramBuilder::AddPackage(std::string package) {
+    packages_.emplace_back(std::move(package));
+}
+
 const HaskellDefinition* HaskellProgramBuilder::AddDefinition(HaskellDefinition definition) {
     return &definitions_.emplace_back(std::move(definition));
 }
@@ -65,7 +69,7 @@ std::unique_ptr<IProgram> HaskellProgramBuilder::Extract() {
         ss << definition.ToString() << "\n\n";
     }
 
-    return std::make_unique<HaskellProgram>(ss.str());
+    return std::make_unique<HaskellProgram>(ss.str(), std::move(packages_));
 }
 
 }  // namespace komaru::translate::hs

@@ -66,6 +66,11 @@ lang::Type HsTypeParser::ParseType(bool stop_on_arrow) {
 
 lang::Type HsTypeParser::ParseParameterizedType() {
     std::string name = Expect(HsTypeTokenType::Identifier).raw;
+
+    if (name == "String") {
+        name = "Str";
+    }
+
     std::vector<lang::Type> params;
     while (true) {
         if (Peek().type == HsTypeTokenType::Identifier) {

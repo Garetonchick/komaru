@@ -18,6 +18,7 @@ public:
     void AddQualifiedImport(std::string module_name, std::string ref_name,
                             std::vector<std::string> symbols = {});
     void AddPragma(std::string pragma);
+    void AddPackage(std::string package);
     const HaskellDefinition* AddDefinition(HaskellDefinition definition);
     void ChangeDefinitionName(const std::string& old_name, std::string new_name);
 
@@ -27,6 +28,7 @@ private:
     std::deque<HaskellDefinition> definitions_;
     std::vector<HaskellImport> imports_;
     std::vector<std::string> pragmas_;
+    std::vector<std::string> packages_;
 };
 
 }  // namespace komaru::translate::hs

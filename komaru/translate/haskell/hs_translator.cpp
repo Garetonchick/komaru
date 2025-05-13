@@ -13,8 +13,12 @@ using CPArrow = lang::CatProgram::Arrow;
 
 class HaskellTranslationRequest {
 public:
-    explicit HaskellTranslationRequest(const lang::CatProgram& cat_prog)
-        : cat_prog_(cat_prog) {
+    explicit HaskellTranslationRequest(const lang::CatProgram& cat_prog,
+                                       std::vector<std::string> packages,
+                                       std::vector<HaskellImport> imports)
+        : cat_prog_(cat_prog),
+          packages_(std::move(packages)),
+          imports_(std::move(imports)) {
     }
 
     ResultProgram Translate() &&;
@@ -25,13 +29,22 @@ private:
 
 private:
     const lang::CatProgram& cat_prog_;
+    std::vector<std::string> packages_;
+    std::vector<HaskellImport> imports_;
 };
 
 ResultProgram HaskellTranslationRequest::Translate() && {
     HaskellProgramBuilder builder;
 
+    for (const auto& package : packages_) {
+        builder.AddPackage(package);
+    }
+
     builder.AddPragma("MultiWayIf");
-    builder.AddImport("Control.Monad");
+
+    for (const auto& import : imports_) {
+        builder.AddImport(import);
+    }
 
     lang::Type main_type = lang::Type::Parameterized("IO", {lang::Type::Singleton()});
     bool is_interpreter_mode = false;
@@ -96,11 +109,14 @@ lang::Type HaskellTranslationRequest::FindReturnType(const CPNode* node) {
     return node->GetType();
 }
 
-HaskellTranslator::HaskellTranslator() {
+HaskellTranslator::HaskellTranslator(std::vector<std::string> packages,
+                                     std::vector<HaskellImport> imports)
+    : packages_(std::move(packages)),
+      imports_(std::move(imports)) {
 }
 
 ResultProgram HaskellTranslator::Translate(const lang::CatProgram& cat_prog) {
-    return HaskellTranslationRequest(cat_prog).Translate();
+    return HaskellTranslationRequest(cat_prog, packages_, imports_).Translate();
 }
 
 }  // namespace komaru::translate::hs

@@ -393,6 +393,10 @@ CppExpr CppTranslator::MakeExprForMorphism(const lang::TupleMorphism&, const Cpp
     throw std::runtime_error("not implemented");
 }
 
+CppExpr CppTranslator::MakeExprForMorphism(const lang::ListMorphism&, const CppExpr&, lang::Type) {
+    throw std::runtime_error("not implemented");
+}
+
 CppExpr CppTranslator::MakeExprForMorphism(const lang::BindedMorphism& morphism,
                                            const CppExpr& in_expr, lang::Type) {
     std::vector<std::string> exprs;

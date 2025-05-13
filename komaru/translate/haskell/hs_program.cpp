@@ -4,8 +4,9 @@
 
 namespace komaru::translate::hs {
 
-HaskellProgram::HaskellProgram(std::string source_code)
-    : source_code_(std::move(source_code)) {
+HaskellProgram::HaskellProgram(std::string source_code, std::vector<std::string> packages)
+    : source_code_(std::move(source_code)),
+      packages_(std::move(packages)) {
 }
 
 const std::string& HaskellProgram::GetSourceCode() const {
@@ -18,7 +19,13 @@ const char* HaskellProgram::GetExt() const {
 
 std::vector<std::string> HaskellProgram::GetBuildCommand(const std::string& filename,
                                                          const std::string& outname) const {
-    return {"ghc", filename, "-o", outname};
+    std::vector<std::string> command = {"ghc", filename, "-o", outname};
+
+    for (const auto& package : packages_) {
+        command.emplace_back("-package");
+        command.emplace_back(package);
+    }
+    return command;
 }
 
 }  // namespace komaru::translate::hs

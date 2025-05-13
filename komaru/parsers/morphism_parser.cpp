@@ -151,7 +151,25 @@ lang::MorphismPtr MorphismParser::ParseTupleExpr() {
 }
 
 lang::MorphismPtr MorphismParser::ParseListExpr() {
-    throw std::runtime_error("not implemented");
+    Expect(MorphismTokenType::LBracket);
+    std::vector<lang::MorphismPtr> morphisms;
+    std::vector<lang::Type> types;
+
+    while (Peek().type != MorphismTokenType::RBracket) {
+        auto expr = ParseExprInCurrentScope();
+        morphisms.push_back(expr);
+        types.push_back(expr->GetType());
+        if (Peek().type != MorphismTokenType::RBracket) {
+            Expect(MorphismTokenType::Comma);
+        }
+    }
+    Expect(MorphismTokenType::RBracket);
+
+    if (!lang::FindCommonType(types).has_value()) {
+        throw std::runtime_error("conflicting types in list");
+    }
+
+    return lang::Morphism::List(std::move(morphisms));
 }
 
 lang::MorphismPtr MorphismParser::ParseIdentifier() {

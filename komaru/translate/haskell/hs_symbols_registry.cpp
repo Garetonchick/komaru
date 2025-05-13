@@ -73,6 +73,8 @@ std::optional<lang::TypeConstructor> HaskellSymbolsRegistry::FindTypeConstructor
     const std::string& name) const {
     if (name == "S") {
         return lang::TypeConstructor("S", 0);
+    } else if (name == "Str") {
+        return lang::TypeConstructor("Str", 0);
     }
 
     return ghci_->GetTypeConstructor(name);

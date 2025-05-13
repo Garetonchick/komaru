@@ -308,7 +308,7 @@ CookingResult<CookedBrancher> Cooker::CookBrancher(const std::string& raw) {
 }
 
 CookingResult<lang::Pattern> Cooker::CookPattern(const std::string& raw) {
-    auto maybe_pattern = parsers::PatternParser(raw).Parse();
+    auto maybe_pattern = parsers::PatternParser(raw, symbols_registry_).Parse();
     if (!maybe_pattern) {
         return std::unexpected(CookingError::From(maybe_pattern.error()));
     }

@@ -15,7 +15,7 @@ class PositionMorphism;
 class BindedMorphism;
 class LiteralMorphism;
 class TupleMorphism;
-// class ListMorphism;
+class ListMorphism;
 
 template <typename T>
 concept MorphismLike = requires(const T t) {
@@ -132,9 +132,28 @@ private:
     Type target_type_;
 };
 
+// Always: S -> [*Some type*]
+class ListMorphism {
+public:
+    explicit ListMorphism(std::vector<MorphismPtr> morphisms);
+
+    std::string ToString() const;
+    Type GetSource() const;
+    Type GetTarget() const;
+    Type GetType() const;
+    size_t GetParamNum() const;
+    bool IsValue() const;
+    bool ShouldBeShielded() const;
+    bool IsOperator() const;
+
+private:
+    std::vector<MorphismPtr> morphisms_;
+    Type target_type_;
+};
+
 class Morphism : public util::DeriveVariant<Morphism> {
     using Variant = std::variant<CommonMorphism, PositionMorphism, BindedMorphism, LiteralMorphism,
-                                 TupleMorphism>;
+                                 TupleMorphism, ListMorphism>;
 
     struct PrivateDummy {};
 
@@ -153,6 +172,7 @@ public:
     static MorphismPtr Binded(MorphismPtr morphism, std::map<size_t, MorphismPtr> mapping);
     static MorphismPtr Literal(Literal literal);
     static MorphismPtr Tuple(std::vector<MorphismPtr> morphisms);
+    static MorphismPtr List(std::vector<MorphismPtr> morphisms);
 
     static MorphismPtr Plus();
     static MorphismPtr Minus();
@@ -191,6 +211,7 @@ static_assert(MorphismLike<PositionMorphism>);
 static_assert(MorphismLike<BindedMorphism>);
 static_assert(MorphismLike<LiteralMorphism>);
 static_assert(MorphismLike<TupleMorphism>);
+static_assert(MorphismLike<ListMorphism>);
 static_assert(MorphismLike<Morphism>);
 
 bool IsOperatorName(const std::string& name);

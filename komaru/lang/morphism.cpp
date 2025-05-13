@@ -358,6 +358,64 @@ bool TupleMorphism::IsOperator() const {
     return false;
 }
 
+ListMorphism::ListMorphism(std::vector<MorphismPtr> morphisms)
+    : morphisms_(std::move(morphisms)) {
+    if (morphisms_.empty()) {
+        target_type_ = Type::List(Type::Var("a"));
+        return;
+    }
+
+    std::vector<Type> types;
+
+    for (const auto& m : morphisms) {
+        types.push_back(m->GetType());
+    }
+
+    auto maybe_type = FindCommonType(types);
+    assert(maybe_type.has_value());
+
+    target_type_ = maybe_type.value();
+}
+
+std::string ListMorphism::ToString() const {
+    std::string res = "[";
+    for (size_t i = 0; i < morphisms_.size(); ++i) {
+        res += morphisms_[i]->ToString();
+        if (i + 1 != morphisms_.size()) {
+            res += ", ";
+        }
+    }
+    return res + "]";
+}
+
+Type ListMorphism::GetSource() const {
+    return Type::Singleton();
+}
+
+Type ListMorphism::GetTarget() const {
+    return target_type_;
+}
+
+Type ListMorphism::GetType() const {
+    return Type::Function(GetSource(), GetTarget());
+}
+
+size_t ListMorphism::GetParamNum() const {
+    return 0;
+}
+
+bool ListMorphism::IsValue() const {
+    return true;
+}
+
+bool ListMorphism::ShouldBeShielded() const {
+    return false;
+}
+
+bool ListMorphism::IsOperator() const {
+    return false;
+}
+
 MorphismPtr Morphism::Common(std::string name, Type source, Type target) {
     return std::make_shared<Morphism>(PrivateDummy{},
                                       CommonMorphism(std::move(name), source, target));
@@ -400,6 +458,10 @@ MorphismPtr Morphism::Literal(class Literal literal) {
 
 MorphismPtr Morphism::Tuple(std::vector<MorphismPtr> morphisms) {
     return std::make_shared<Morphism>(PrivateDummy{}, TupleMorphism(std::move(morphisms)));
+}
+
+MorphismPtr Morphism::List(std::vector<MorphismPtr> morphisms) {
+    return std::make_shared<Morphism>(PrivateDummy{}, ListMorphism(std::move(morphisms)));
 }
 
 MorphismPtr Morphism::Plus() {

@@ -5,6 +5,7 @@
 #include <queue>
 #include <format>
 #include <cassert>
+#include <print>
 
 namespace komaru::translate::hs {
 
@@ -100,9 +101,9 @@ std::optional<TranslationError> HaskellFuncTranslationRequest::DeduceConnType(
     if (!maybe_deduced_dst_type.has_value()) {
         return TranslationError(
             std::format("failed to deduce destination type for arrow {}"
-                        "\narrow type: {}, type mapping: {}",
+                        "\narrow type: {}, type mapping: {}, morphism: {}",
                         lang::CurryFunction(src_type, dst_type).ToString(), arrow_type.ToString(),
-                        lang::ArgMappingToString(arg_mapping)));
+                        lang::ArgMappingToString(arg_mapping), arrow->GetMorphism()->ToString()));
     }
 
     lang::Type deduced_dst_type = maybe_deduced_dst_type.value();
@@ -111,9 +112,9 @@ std::optional<TranslationError> HaskellFuncTranslationRequest::DeduceConnType(
     if (!maybe_match_map.has_value()) {
         return TranslationError(
             std::format("failed to match types for arrow {} -> {}"
-                        "\ndestination type: {}, deduced destination type: {}",
+                        "\ndestination type: {}, deduced destination type: {}, morphism {}",
                         src_type.ToString(), dst_type.ToString(), dst_type.ToString(),
-                        deduced_dst_type.ToString()));
+                        deduced_dst_type.ToString(), arrow->GetMorphism()->ToString()));
     }
 
     deduced_dst_type = lang::ApplyMatchMap(dst_type, maybe_match_map.value());
@@ -250,7 +251,10 @@ std::optional<TranslationError> HaskellFuncTranslationRequest::AddDefinitionsFor
 
 std::optional<TranslationError> HaskellFuncTranslationRequest::AddDefinitionsForIntersectionNode(
     const CPNode* node, const common::Cond& node_cond, const std::string& local_name) {
+    std::println("adding definitions for intersection node \"{}\", type \"{}\"", local_name,
+                 node->GetType().ToString());
     std::vector<std::string> names(node->IncomingArrows().size());
+    std::vector<lang::Type> types(node->IncomingArrows().size());
 
     for (const CPArrow* arrow : node->IncomingArrows()) {
         assert(arrow->GetMorphism()->Holds<lang::PositionMorphism>());
@@ -266,10 +270,12 @@ std::optional<TranslationError> HaskellFuncTranslationRequest::AddDefinitionsFor
         }
 
         names[pos] = node2local_name_[&arrow->SourcePin().GetNode()];
+        types[pos] = node2deduced_type_[&arrow->SourcePin().GetNode()];
     }
 
     while (!names.empty() && names.back().empty()) {
         names.pop_back();
+        types.pop_back();
     }
 
     if (names.empty()) {
@@ -283,6 +289,19 @@ std::optional<TranslationError> HaskellFuncTranslationRequest::AddDefinitionsFor
     }
 
     lang::Type node_type = node2deduced_type_[node];
+
+    if (node_type.Holds<lang::ListType>()) {
+        std::vector<lang::MorphismPtr> morphisms;
+        for (size_t i = 0; i < names.size(); ++i) {
+            morphisms.emplace_back(lang::Morphism::CommonWithType(names[i], types[i]));
+        }
+        auto expr =
+            HaskellExpr::Simple(node_type, lang::Morphism::List(std::move(morphisms))->ToString());
+        expr_builder_.AddDefinition(
+            node_cond, HaskellDefinition::Normal(local_name, {}, node_type, std::move(expr)));
+        node2unpack_[node] = {local_name};
+        return std::nullopt;
+    }
 
     if (node_type.GetComponentsNum() != names.size()) {
         return TranslationError("positional morphisms don't form full tuple");

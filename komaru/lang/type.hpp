@@ -226,6 +226,7 @@ Type ApplyMatchMap(Type type, const MatchMap& mapping);
 bool CanBeSubstituted(Type param_type, Type arg_type, const MatchMap& mapping = {});
 Type CurryFunction(Type source, Type target);
 std::string ArgMappingToString(const std::map<size_t, Type>& arg_mapping);
+std::optional<Type> FindCommonType(const std::vector<Type>& types);
 
 }  // namespace komaru::lang
 

@@ -64,6 +64,11 @@ Type Type::Simple(std::string name) {
 }
 
 Type Type::Parameterized(std::string name, std::vector<Type> params) {
+    if (name == "[]") {
+        assert(params.size() == 1);
+        return Type::List(params[0]);
+    }
+
     auto id = CommonType::MakeID(name, params);
     auto it = GetIndex().find(id);
     if (it != GetIndex().end()) {
@@ -323,6 +328,9 @@ std::string CommonType::ToString(Style style) const {
     }
     if (style == Style::Haskell && name_ == "S") {
         return "()";
+    }
+    if (style == Style::Haskell && name_ == "Str") {
+        return "String";
     }
 
     std::string res = name_;
@@ -773,6 +781,34 @@ std::optional<MatchMap> TryMatchTypes(const CommonType& param_type, const Common
     return mapping;
 }
 
+std::optional<MatchMap> TryMatchTypes(const CommonType& param_type, const ListType& arg_type) {
+    if (param_type.IsAuto()) {
+        return MatchMap{};
+    }
+
+    if (IsConcreteTypeName(param_type.GetName())) {
+        return std::nullopt;
+    }
+
+    if (param_type.NumTypeParams() == 0) {
+        return MatchMap{{param_type.GetName(), lang::Type(arg_type)}};
+    }
+    if (param_type.NumTypeParams() == 1) {
+        auto maybe_match_map = TryMatchTypes(param_type.GetTypeParams()[0], arg_type.Inner());
+        if (!maybe_match_map) {
+            return std::nullopt;
+        }
+        auto match_map = std::move(maybe_match_map.value());
+        if (!MergeMatchMaps(match_map,
+                            MatchMap{{param_type.GetName(), TypeConstructor("[]", 1)}})) {
+            return std::nullopt;
+        }
+        return match_map;
+    }
+
+    return std::nullopt;
+}
+
 std::optional<MatchMap> TryMatchTypes(const TupleType& param_type, const TupleType& arg_type) {
     if (param_type.GetTypesNum() != arg_type.GetTypesNum()) {
         return std::nullopt;
@@ -841,6 +877,10 @@ std::optional<MatchMap> TryMatchTypes(Type param_type, Type arg_type) {
     if (param_type.IsTypeVar()) {
         mapping.emplace(param_type.ToString(), arg_type);
         return mapping;
+    }
+
+    if (param_type.Holds<CommonType>() && arg_type.Holds<ListType>()) {
+        return TryMatchTypes(param_type.GetVariant<CommonType>(), arg_type.GetVariant<ListType>());
     }
 
     if (param_type.TypeVariantIndex() != arg_type.TypeVariantIndex()) {
@@ -935,6 +975,29 @@ std::string ArgMappingToString(const std::map<size_t, Type>& arg_mapping) {
         res += std::format("${}: {}; ", i, type.ToString());
     }
     return res;
+}
+
+std::optional<Type> FindCommonType(const std::vector<Type>& types) {
+    if (types.empty()) {
+        return Type::Var("a");
+    }
+
+    lang::Type type = types[0];
+
+    for (lang::Type t : types) {
+        auto maybe_match_map = TryMatchTypes(type, t);
+        if (maybe_match_map.has_value()) {
+            type = ApplyMatchMap(type, maybe_match_map.value());
+            continue;
+        }
+        maybe_match_map = TryMatchTypes(t, type);
+        if (!maybe_match_map) {
+            return std::nullopt;
+        }
+        type = ApplyMatchMap(t, maybe_match_map.value());
+    }
+
+    return type;
 }
 
 }  // namespace komaru::lang

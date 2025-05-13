@@ -400,9 +400,21 @@ void GridView::FromJson(const QJsonDocument& json) {
 
 void GridView::OnRunAction() {
     auto raw_program = ConvertNodeGraphToRawCatProgram();
-    translate::hs::HaskellSymbolsRegistry symbols_registry(
-        {}, {translate::hs::HaskellImport{
-                .module_name = "Control.Monad", .ref_name = "", .symbols = {}}});
+    std::vector<std::string> packages = {"GLUT", "OpenGL"};
+    std::vector<translate::hs::HaskellImport> imports = {
+        {
+            .module_name = "Graphics.Rendering.OpenGL",
+            .ref_name = "",
+            .symbols = {},
+        },
+        {
+            .module_name = "Graphics.UI.GLUT",
+            .ref_name = "GLUT",
+            .symbols = {},
+        },
+        {.module_name = "Control.Monad", .ref_name = "", .symbols = {}}};
+
+    translate::hs::HaskellSymbolsRegistry symbols_registry(packages, imports);
     auto maybe_cat_program = translate::Cook(raw_program, symbols_registry);
 
     if (!maybe_cat_program) {
@@ -411,7 +423,7 @@ void GridView::OnRunAction() {
     }
 
     auto cat_program = std::move(maybe_cat_program.value());
-    auto translator = translate::hs::HaskellTranslator();
+    auto translator = translate::hs::HaskellTranslator(packages, imports);
     auto maybe_program = translator.Translate(cat_program);
 
     if (!maybe_program) {

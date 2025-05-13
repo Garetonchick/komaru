@@ -1,4 +1,4 @@
-#include "morphism_lexer.hpp"
+#include "pattern_lexer.hpp"
 
 #include <komaru/util/std_extensions.hpp>
 
@@ -6,37 +6,33 @@
 
 namespace komaru::parsers {
 
-std::string ToString(MorphismTokenType type) {
+std::string ToString(PatternTokenType type) {
     switch (type) {
-        case MorphismTokenType::Identifier:
+        case PatternTokenType::Identifier:
             return "Identifier";
-        case MorphismTokenType::Operator:
-            return "Operator";
-        case MorphismTokenType::IntLiteral:
+        case PatternTokenType::Any:
+            return "Any";
+        case PatternTokenType::IntLiteral:
             return "IntLiteral";
-        case MorphismTokenType::RealLiteral:
+        case PatternTokenType::RealLiteral:
             return "RealLiteral";
-        case MorphismTokenType::StringLiteral:
+        case PatternTokenType::StringLiteral:
             return "StringLiteral";
-        case MorphismTokenType::CharLiteral:
+        case PatternTokenType::CharLiteral:
             return "CharLiteral";
-        case MorphismTokenType::LParen:
+        case PatternTokenType::LParen:
             return "LParen";
-        case MorphismTokenType::RParen:
+        case PatternTokenType::RParen:
             return "RParen";
-        case MorphismTokenType::LBracket:
+        case PatternTokenType::LBracket:
             return "LBracket";
-        case MorphismTokenType::RBracket:
+        case PatternTokenType::RBracket:
             return "RBracket";
-        case MorphismTokenType::Comma:
+        case PatternTokenType::Comma:
             return "Comma";
-        case MorphismTokenType::End:
+        case PatternTokenType::End:
             return "End";
     }
-}
-
-std::string ToString(const MorphismToken& token) {
-    return std::format("{}: \"{}\"", ToString(token.type), token.raw);
 }
 
 namespace {
@@ -46,18 +42,17 @@ bool CanStartIdentifier(char c) {
 }
 
 bool CanBeInIdentifier(char c) {
-    return std::isalnum(c) || c == '\'' || c == '.' || c == '_';
-}
-
-bool CanBeInOperator(char c) {
-    return c == '+' || c == '-' || c == '*' || c == '/' || c == '%' || c == '=' || c == '>' ||
-           c == '<' || c == '&' || c == '|' || c == '^' || c == '~' || c == '.' || c == '$';
+    return std::isalnum(c) || c == '\'' || c == '.';
 }
 
 }  // namespace
 
-ParserResult<std::vector<MorphismToken>> TokenizeMorphism(const std::string& raw) {
-    std::vector<MorphismToken> tokens;
+std::string ToString(const PatternToken& token) {
+    return std::format("{}: \"{}\"", ToString(token.type), token.raw);
+}
+
+ParserResult<std::vector<PatternToken>> TokenizePattern(const std::string& raw) {
+    std::vector<PatternToken> tokens;
 
     auto add_number_token = [&](size_t& i) -> std::optional<ParserError> {
         size_t end = i;
@@ -90,7 +85,7 @@ ParserResult<std::vector<MorphismToken>> TokenizeMorphism(const std::string& raw
             }
 
             tokens.push_back(
-                {.type = MorphismTokenType::RealLiteral, .raw = snum, .val = maybe_real.value()});
+                {.type = PatternTokenType::RealLiteral, .raw = snum, .val = maybe_real.value()});
         } else {
             auto maybe_int = util::ReadInteger(snum);
             if (!maybe_int) {
@@ -98,7 +93,7 @@ ParserResult<std::vector<MorphismToken>> TokenizeMorphism(const std::string& raw
             }
 
             tokens.push_back(
-                {.type = MorphismTokenType::IntLiteral, .raw = snum, .val = maybe_int.value()});
+                {.type = PatternTokenType::IntLiteral, .raw = snum, .val = maybe_int.value()});
         }
 
         i = end;
@@ -115,27 +110,9 @@ ParserResult<std::vector<MorphismToken>> TokenizeMorphism(const std::string& raw
             ++end;
         }
 
-        tokens.push_back({.type = MorphismTokenType::Identifier,
+        tokens.push_back({.type = PatternTokenType::Identifier,
                           .raw = raw.substr(i, end - i),
                           .val = std::monostate{}});
-        i = end;
-        return std::nullopt;
-    };
-
-    auto add_operator_token = [&](size_t& i) -> std::optional<ParserError> {
-        size_t end = i;
-        if (!CanBeInOperator(raw[end])) {
-            return ParserError(std::format("failed to tokenize an operator, char {}", raw[end]));
-        }
-        while (end < raw.size() && CanBeInOperator(raw[end])) {
-            ++end;
-        }
-
-        tokens.push_back({
-            .type = MorphismTokenType::Operator,
-            .raw = raw.substr(i, end - i),
-            .val = std::monostate{},
-        });
         i = end;
         return std::nullopt;
     };
@@ -151,7 +128,7 @@ ParserResult<std::vector<MorphismToken>> TokenizeMorphism(const std::string& raw
         switch (raw[i]) {
             case '(':
                 tokens.push_back({
-                    .type = MorphismTokenType::LParen,
+                    .type = PatternTokenType::LParen,
                     .raw = "(",
                     .val = std::monostate{},
                 });
@@ -159,7 +136,7 @@ ParserResult<std::vector<MorphismToken>> TokenizeMorphism(const std::string& raw
                 break;
             case ')':
                 tokens.push_back({
-                    .type = MorphismTokenType::RParen,
+                    .type = PatternTokenType::RParen,
                     .raw = ")",
                     .val = std::monostate{},
                 });
@@ -167,12 +144,12 @@ ParserResult<std::vector<MorphismToken>> TokenizeMorphism(const std::string& raw
                 break;
             case '[':
                 tokens.push_back(
-                    {.type = MorphismTokenType::LBracket, .raw = "[", .val = std::monostate{}});
+                    {.type = PatternTokenType::LBracket, .raw = "[", .val = std::monostate{}});
                 ++i;
                 break;
             case ']':
                 tokens.push_back({
-                    .type = MorphismTokenType::RBracket,
+                    .type = PatternTokenType::RBracket,
                     .raw = "]",
                     .val = std::monostate{},
                 });
@@ -180,8 +157,16 @@ ParserResult<std::vector<MorphismToken>> TokenizeMorphism(const std::string& raw
                 break;
             case ',':
                 tokens.push_back({
-                    .type = MorphismTokenType::Comma,
+                    .type = PatternTokenType::Comma,
                     .raw = ",",
+                    .val = std::monostate{},
+                });
+                ++i;
+                break;
+            case '*':
+                tokens.push_back({
+                    .type = PatternTokenType::Any,
+                    .raw = "*",
                     .val = std::monostate{},
                 });
                 ++i;
@@ -198,7 +183,7 @@ ParserResult<std::vector<MorphismToken>> TokenizeMorphism(const std::string& raw
                 return MakeParserError("error while tokenizing char literal");
             }
 
-            tokens.push_back({.type = MorphismTokenType::CharLiteral,
+            tokens.push_back({.type = PatternTokenType::CharLiteral,
                               .raw = std::string(1, raw[i + 1]),
                               .val = raw[i + 1]});
             i += 3;
@@ -212,7 +197,7 @@ ParserResult<std::vector<MorphismToken>> TokenizeMorphism(const std::string& raw
                 return MakeParserError("double quotes mismatch");
             }
 
-            tokens.push_back({.type = MorphismTokenType::StringLiteral,
+            tokens.push_back({.type = PatternTokenType::StringLiteral,
                               .raw = raw.substr(i, end_pos - i + 1),
                               .val = raw.substr(i + 1, end_pos - i - 1)});
             i = end_pos + 1;
@@ -236,14 +221,11 @@ ParserResult<std::vector<MorphismToken>> TokenizeMorphism(const std::string& raw
             continue;
         }
 
-        auto maybe_err = add_operator_token(i);
-        if (maybe_err) {
-            return std::unexpected(maybe_err.value());
-        }
+        return MakeParserError("unexpected symbol in pattern lexer");
     }
 
     tokens.push_back({
-        .type = MorphismTokenType::End,
+        .type = PatternTokenType::End,
         .raw = "",
         .val = std::monostate{},
     });

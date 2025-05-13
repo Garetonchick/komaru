@@ -2,11 +2,13 @@
 
 #include <komaru/translate/program.hpp>
 
+#include <vector>
+
 namespace komaru::translate::hs {
 
 class HaskellProgram : public IProgram {
 public:
-    explicit HaskellProgram(std::string source_code);
+    explicit HaskellProgram(std::string source_code, std::vector<std::string> packages);
 
     const std::string& GetSourceCode() const override;
     const char* GetExt() const override;
@@ -15,6 +17,7 @@ public:
 
 private:
     std::string source_code_;
+    std::vector<std::string> packages_;
 };
 
 }  // namespace komaru::translate::hs

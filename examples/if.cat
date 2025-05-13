@@ -1,0 +1,169 @@
+[
+    {
+        "has_input_pin": true,
+        "id": 0,
+        "main_text": "IO S",
+        "out_pins": [
+        ],
+        "tag_text": "",
+        "x": 88.17785814087289,
+        "y": 236.94583710035351
+    },
+    {
+        "has_input_pin": true,
+        "id": 1,
+        "main_text": "IO Int",
+        "out_pins": [
+            {
+                "connections": [
+                    {
+                        "node": 0,
+                        "text": ">>= print"
+                    }
+                ]
+            }
+        ],
+        "x": -98.99404536862002,
+        "y": 238.02759924385634
+    },
+    {
+        "has_input_pin": false,
+        "id": 2,
+        "main_text": "S",
+        "out_pins": [
+            {
+                "connections": [
+                    {
+                        "node": 3,
+                        "text": "readLn"
+                    }
+                ]
+            }
+        ],
+        "tag_text": "main",
+        "x": -543.7954220432317,
+        "y": 233.93987014054414
+    },
+    {
+        "has_input_pin": true,
+        "id": 3,
+        "main_text": "IO Int",
+        "out_pins": [
+            {
+                "connections": [
+                    {
+                        "node": 1,
+                        "text": "fmap  simpleIf"
+                    }
+                ]
+            }
+        ],
+        "x": -405.4113668118683,
+        "y": 236.47588148269898
+    },
+    {
+        "has_input_pin": true,
+        "id": 4,
+        "main_text": "Int",
+        "out_pins": [
+        ],
+        "x": 193.19999999999993,
+        "y": 63.25
+    },
+    {
+        "has_input_pin": true,
+        "id": 5,
+        "main_text": "Int",
+        "out_pins": [
+            {
+                "connections": [
+                    {
+                        "node": 4,
+                        "text": "+10"
+                    }
+                ]
+            }
+        ],
+        "x": 40.56720226843098,
+        "y": 64.13241965973533
+    },
+    {
+        "has_input_pin": true,
+        "id": 6,
+        "main_text": "Int",
+        "out_pins": [
+            {
+                "connections": [
+                    {
+                        "node": 7,
+                        "text": "*15"
+                    }
+                ]
+            }
+        ],
+        "x": 32.9110586011342,
+        "y": -316.8572778827978
+    },
+    {
+        "has_input_pin": true,
+        "id": 7,
+        "main_text": "Int",
+        "out_pins": [
+        ],
+        "x": 203.40869565217395,
+        "y": -317.6164461247638
+    },
+    {
+        "has_input_pin": true,
+        "id": 8,
+        "main_text": "Bool",
+        "out_pins": [
+            {
+                "connections": [
+                    {
+                        "node": 6,
+                        "text": "$"
+                    }
+                ],
+                "label": "False"
+            },
+            {
+                "connections": [
+                    {
+                        "node": 5,
+                        "text": "$"
+                    }
+                ],
+                "label": "True"
+            }
+        ],
+        "x": -147.37429550445017,
+        "y": -145.2164883381759
+    },
+    {
+        "has_input_pin": false,
+        "id": 9,
+        "main_text": "Int",
+        "out_pins": [
+            {
+                "connections": [
+                    {
+                        "node": 8,
+                        "text": "<4"
+                    },
+                    {
+                        "node": 6,
+                        "text": "$0"
+                    },
+                    {
+                        "node": 5,
+                        "text": "$0"
+                    }
+                ]
+            }
+        ],
+        "tag_text": "simpleIf",
+        "x": -495.98176905736676,
+        "y": -138.30634892360467
+    }
+]
