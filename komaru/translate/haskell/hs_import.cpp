@@ -93,6 +93,7 @@ std::optional<HaskellImport> ParseHaskellImport(std::string s) {
 
         for (size_t i = 0; i < s.size();) {
             if (std::isspace(s[i])) {
+                ++i;
                 continue;
             }
 
@@ -113,6 +114,7 @@ std::optional<HaskellImport> ParseHaskellImport(std::string s) {
 
             symbols.push_back(s.substr(i, end - i));
             i = end;
+            expect_comma = true;
         }
     }
 
