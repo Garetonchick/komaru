@@ -40,9 +40,15 @@ Type Literal::GetType() const {
 
 std::string Literal::ToString() const {
     return std::visit(util::Overloaded{[](int64_t val) -> std::string {
+                                           if (val < 0) {
+                                               return std::format("({})", val);
+                                           }
                                            return std::to_string(val);
                                        },
                                        [](double val) -> std::string {
+                                           if (val < 0) {
+                                               return std::format("({})", val);
+                                           }
                                            return std::to_string(val);
                                        },
                                        [](char val) -> std::string {

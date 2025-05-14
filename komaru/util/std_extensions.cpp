@@ -1,5 +1,7 @@
 #include "std_extensions.hpp"
 
+#include <print>
+
 namespace komaru::util {
 
 std::optional<int64_t> ReadInteger(const std::string& s) {
@@ -15,7 +17,7 @@ std::optional<int64_t> ReadInteger(const std::string& s) {
 std::optional<double> ReadReal(const std::string& s) {
     char* end = nullptr;
     errno = 0;
-    int64_t num = strtod(s.data(), &end);
+    double num = strtod(s.data(), &end);
     if (errno != 0 || end != s.data() + s.size()) {
         return std::nullopt;
     }

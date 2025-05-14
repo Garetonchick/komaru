@@ -7,6 +7,7 @@
 #include <komaru/translate/haskell/hs_symbols_registry.hpp>
 #include <komaru/translate/exec_program.hpp>
 #include <komaru/util/std_extensions.hpp>
+#include <komaru/util/filesystem.hpp>
 
 #include <QWheelEvent>
 #include <QScrollBar>
@@ -503,6 +504,8 @@ void GridView::OnRunAction() {
         }
 
         auto& program = maybe_program.value();
+
+        util::WriteFile("gen.hs", program->GetSourceCode());
 
         auto build_res = translate::BuildProgram(*program);
 

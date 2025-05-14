@@ -64,7 +64,7 @@ ParserResult<std::vector<MorphismToken>> TokenizeMorphism(const std::string& raw
         size_t end = i;
         bool is_real = false;
 
-        if (end == '-') {
+        if (raw[end] == '-') {
             ++end;
         }
         while (end < raw.size() && std::isdigit(raw[end])) {
