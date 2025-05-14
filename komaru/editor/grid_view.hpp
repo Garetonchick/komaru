@@ -1,6 +1,7 @@
 #pragma once
 
 #include <komaru/translate/raw_cat_program.hpp>
+#include <komaru/translate/haskell/hs_import.hpp>
 
 #include <QGraphicsView>
 #include <QToolBar>
@@ -9,6 +10,7 @@
 #include <unordered_set>
 
 class QTermWidget;
+class QListWidget;
 
 namespace komaru::editor {
 
@@ -19,7 +21,8 @@ class GridView : public QGraphicsView {
     Q_OBJECT
 
 public:
-    explicit GridView(QGraphicsScene* scene, QTermWidget* terminal, QWidget* parent = nullptr);
+    GridView(QGraphicsScene* scene, QTermWidget* terminal, QListWidget* packages_list,
+             QListWidget* imports_list, QWidget* parent = nullptr);
 
     void SetLineGap(qreal gap);
     void SetBaseColor(QColor color);
@@ -47,6 +50,9 @@ private:
     QJsonDocument ToJson();
     void FromJson(const QJsonDocument& json);
 
+    std::vector<std::string> GetPackages();
+    std::vector<translate::hs::HaskellImport> GetImports();
+
 private slots:
     void OnRunAction();
     void OnSaveAction();
@@ -70,6 +76,8 @@ private:
     QToolBar* toolbar_{nullptr};
     std::unordered_set<Node*> nodes_;
     QTermWidget* terminal_;
+    QListWidget* packages_list_;
+    QListWidget* imports_list_;
 };
 
 }  // namespace komaru::editor

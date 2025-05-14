@@ -1,118 +1,125 @@
-[
-    {
-        "has_input_pin": true,
-        "id": 0,
-        "main_text": "IO Int",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 4,
-                        "text": "id"
-                    },
-                    {
-                        "node": 3,
-                        "text": "id"
-                    }
-                ]
-            }
-        ],
-        "x": -246,
-        "y": -33
-    },
-    {
-        "has_input_pin": true,
-        "id": 1,
-        "main_text": "IO S",
-        "out_pins": [
-        ],
-        "x": 607.9475,
-        "y": -37.02999999999997
-    },
-    {
-        "has_input_pin": true,
-        "id": 2,
-        "main_text": "IO Int x IO Int",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 6,
-                        "text": "liftM2 (+)"
-                    }
-                ]
-            }
-        ],
-        "x": 117,
-        "y": -30
-    },
-    {
-        "has_input_pin": true,
-        "id": 3,
-        "main_text": "IO Int",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 2,
-                        "text": "$1"
-                    }
-                ]
-            }
-        ],
-        "x": -80,
-        "y": 29
-    },
-    {
-        "has_input_pin": true,
-        "id": 4,
-        "main_text": "IO Int",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 2,
-                        "text": "$0"
-                    }
-                ]
-            }
-        ],
-        "x": -77,
-        "y": -115
-    },
-    {
-        "has_input_pin": false,
-        "id": 5,
-        "main_text": "S",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 0,
-                        "text": "readLn"
-                    }
-                ]
-            }
-        ],
-        "tag_text": "main",
-        "x": -365.00000000000006,
-        "y": -30.150000000000006
-    },
-    {
-        "has_input_pin": true,
-        "id": 6,
-        "main_text": "IO Int",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 1,
-                        "text": ">>= print"
-                    }
-                ]
-            }
-        ],
-        "x": 404.8,
-        "y": -34.49999999999999
-    }
-]
+{
+    "imports": [
+        "import Control.Monad "
+    ],
+    "nodes": [
+        {
+            "has_input_pin": false,
+            "id": 0,
+            "main_text": "S",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 6,
+                            "text": "readLn"
+                        }
+                    ]
+                }
+            ],
+            "tag_text": "main",
+            "x": -365.00000000000006,
+            "y": -30.150000000000006
+        },
+        {
+            "has_input_pin": true,
+            "id": 1,
+            "main_text": "IO Int",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 4,
+                            "text": ">>= print"
+                        }
+                    ]
+                }
+            ],
+            "x": 404.8,
+            "y": -34.49999999999999
+        },
+        {
+            "has_input_pin": true,
+            "id": 2,
+            "main_text": "IO Int",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 5,
+                            "text": "$0"
+                        }
+                    ]
+                }
+            ],
+            "x": -77,
+            "y": -115
+        },
+        {
+            "has_input_pin": true,
+            "id": 3,
+            "main_text": "IO Int",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 5,
+                            "text": "$1"
+                        }
+                    ]
+                }
+            ],
+            "x": -80,
+            "y": 29
+        },
+        {
+            "has_input_pin": true,
+            "id": 4,
+            "main_text": "IO S",
+            "out_pins": [
+            ],
+            "x": 607.9475,
+            "y": -37.02999999999997
+        },
+        {
+            "has_input_pin": true,
+            "id": 5,
+            "main_text": "IO Int x IO Int",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 1,
+                            "text": "liftM2 (+)"
+                        }
+                    ]
+                }
+            ],
+            "x": 117,
+            "y": -30
+        },
+        {
+            "has_input_pin": true,
+            "id": 6,
+            "main_text": "IO Int",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 2,
+                            "text": "id"
+                        },
+                        {
+                            "node": 3,
+                            "text": "id"
+                        }
+                    ]
+                }
+            ],
+            "x": -246,
+            "y": -33
+        }
+    ],
+    "packages": [
+    ]
+}

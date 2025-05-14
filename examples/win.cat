@@ -1,410 +1,421 @@
-[
-    {
-        "has_input_pin": true,
-        "id": 0,
-        "main_text": "StateVar [GLUT.DisplayMode]",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 11,
-                        "text": "$= [GLUT.DoubleBuffered, GLUT.WithDepthBuffer, GLUT.RGBAMode]"
-                    }
-                ]
-            }
-        ],
-        "x": -15.975709375000235,
-        "y": -272.36093468749976
-    },
-    {
-        "has_input_pin": true,
-        "id": 1,
-        "main_text": "StateVar Position ",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 19,
-                        "text": "$= GLUT.Position 100 100"
-                    }
-                ]
-            }
-        ],
-        "x": 35.23043478260877,
-        "y": 119.96130434782611
-    },
-    {
-        "has_input_pin": true,
-        "id": 2,
-        "main_text": "IO S",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 6,
-                        "text": "$2"
-                    }
-                ]
-            }
-        ],
-        "x": 515.7125,
-        "y": 9.677500000000002
-    },
-    {
-        "has_input_pin": true,
-        "id": 3,
-        "main_text": "IO S",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 6,
-                        "text": "$4"
-                    }
-                ]
-            }
-        ],
-        "x": 646.4354967544069,
-        "y": 220.59262824559295
-    },
-    {
-        "has_input_pin": true,
-        "id": 4,
-        "main_text": "IO S",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 6,
-                        "text": "$5"
-                    }
-                ]
-            }
-        ],
-        "x": 655.4971249999994,
-        "y": 386.3022499999998
-    },
-    {
-        "has_input_pin": true,
-        "id": 5,
-        "main_text": "IO GLUT.Window",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 18,
-                        "text": "void"
-                    }
-                ]
-            }
-        ],
-        "tag_text": "windowAct",
-        "x": 30.867149999999953,
-        "y": -119.45365531249985
-    },
-    {
-        "has_input_pin": true,
-        "id": 6,
-        "main_text": "[IO S]",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 16,
-                        "text": "sequence_"
-                    }
-                ]
-            }
-        ],
-        "x": 1010.9256124999997,
-        "y": -278.0919937499998
-    },
-    {
-        "has_input_pin": true,
-        "id": 7,
-        "main_text": "IO S",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 6,
-                        "text": "$0"
-                    }
-                ]
-            }
-        ],
-        "x": 735.8108521951639,
-        "y": -439.17183679502534
-    },
-    {
-        "has_input_pin": true,
-        "id": 8,
-        "main_text": "SettableStateVar GLUT.DisplayCallback",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 3,
-                        "text": "$= display"
-                    }
-                ]
-            }
-        ],
-        "x": 23.94904249198649,
-        "y": 219.22215829703305
-    },
-    {
-        "has_input_pin": true,
-        "id": 9,
-        "main_text": "IO S",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 14,
-                        "text": "$1"
-                    }
-                ]
-            }
-        ],
-        "x": 2002.3939437499994,
-        "y": -542.6515062499999
-    },
-    {
-        "has_input_pin": true,
-        "id": 10,
-        "main_text": "IO (Str x [Str]) x IO S",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 7,
-                        "text": ">>"
-                    }
-                ]
-            }
-        ],
-        "x": 352.2802427401233,
-        "y": -632.7102472256207
-    },
-    {
-        "has_input_pin": true,
-        "id": 11,
-        "main_text": "IO S",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 10,
-                        "text": "$1"
-                    }
-                ]
-            }
-        ],
-        "tag_text": "dispOptsAct",
-        "x": 188.94177343750005,
-        "y": -481.25472718749967
-    },
-    {
-        "has_input_pin": true,
-        "id": 12,
-        "main_text": "IO S",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 4,
-                        "text": "id"
-                    }
-                ]
-            }
-        ],
-        "x": 45.880236124999996,
-        "y": 394.6111703437496
-    },
-    {
-        "has_input_pin": false,
-        "id": 13,
-        "main_text": "S",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 15,
-                        "text": "clear [ColorBuffer, DepthBuffer]"
-                    },
-                    {
-                        "node": 9,
-                        "text": "GLUT.swapBuffers"
-                    }
-                ]
-            }
-        ],
-        "tag_text": "display",
-        "x": 1640.3453427828113,
-        "y": -609.4299303562495
-    },
-    {
-        "has_input_pin": true,
-        "id": 14,
-        "main_text": "[IO S]",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 20,
-                        "text": "sequence_"
-                    }
-                ]
-            }
-        ],
-        "x": 2208.3810562500003,
-        "y": -625.7505124999999
-    },
-    {
-        "has_input_pin": true,
-        "id": 15,
-        "main_text": "IO S",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 14,
-                        "text": "$0"
-                    }
-                ]
-            }
-        ],
-        "x": 2014.594006249999,
-        "y": -715.4295187499997
-    },
-    {
-        "has_input_pin": true,
-        "id": 16,
-        "main_text": "IO S",
-        "out_pins": [
-        ],
-        "x": 1243.928450388346,
-        "y": -276.5386325511631
-    },
-    {
-        "has_input_pin": true,
-        "id": 17,
-        "main_text": "StateVar Size",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 2,
-                        "text": "$= GLUT.Size 640 480"
-                    }
-                ]
-            }
-        ],
-        "x": 33.913043478260896,
-        "y": 9.565217391304344
-    },
-    {
-        "has_input_pin": true,
-        "id": 18,
-        "main_text": "IO S",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 6,
-                        "text": "$1"
-                    }
-                ]
-            }
-        ],
-        "x": 388.69565217391306,
-        "y": -119.99999999999999
-    },
-    {
-        "has_input_pin": true,
-        "id": 19,
-        "main_text": "IO S",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 6,
-                        "text": "$3"
-                    }
-                ]
-            }
-        ],
-        "x": 518.4199999999998,
-        "y": 119.02499999999992
-    },
-    {
-        "has_input_pin": true,
-        "id": 20,
-        "main_text": "IO S",
-        "out_pins": [
-        ],
-        "x": 2448.364087381852,
-        "y": -623.1372245864839
-    },
-    {
-        "has_input_pin": true,
-        "id": 21,
-        "main_text": "IO (Str x [Str])",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 10,
-                        "text": "$0"
-                    }
-                ]
-            }
-        ],
-        "tag_text": "initAct",
-        "x": -127.38241624999992,
-        "y": -598.6561003124998
-    },
-    {
-        "has_input_pin": false,
-        "id": 22,
-        "main_text": "S",
-        "out_pins": [
-            {
-                "connections": [
-                    {
-                        "node": 21,
-                        "text": "GLUT.getArgsAndInitialize"
-                    },
-                    {
-                        "node": 0,
-                        "text": "GLUT.initialDisplayMode"
-                    },
-                    {
-                        "node": 5,
-                        "text": "GLUT.createWindow \"Just Window\""
-                    },
-                    {
-                        "node": 17,
-                        "text": "GLUT.windowSize"
-                    },
-                    {
-                        "node": 1,
-                        "text": "GLUT.windowPosition"
-                    },
-                    {
-                        "node": 8,
-                        "text": "GLUT.displayCallback"
-                    },
-                    {
-                        "node": 12,
-                        "text": "GLUT.mainLoop"
-                    }
-                ]
-            }
-        ],
-        "tag_text": "main",
-        "x": -341,
-        "y": -197
-    }
-]
+{
+    "imports": [
+        "import Control.Monad ",
+        "import Graphics.Rendering.OpenGL ",
+        "import qualified Graphics.UI.GLUT as GLUT "
+    ],
+    "nodes": [
+        {
+            "has_input_pin": true,
+            "id": 0,
+            "main_text": "IO (Str x [Str])",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 10,
+                            "text": "$0"
+                        }
+                    ]
+                }
+            ],
+            "tag_text": "initAct",
+            "x": -127.38241624999992,
+            "y": -598.6561003124998
+        },
+        {
+            "has_input_pin": true,
+            "id": 1,
+            "main_text": "StateVar Size",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 18,
+                            "text": "$= GLUT.Size 640 480"
+                        }
+                    ]
+                }
+            ],
+            "x": 33.913043478260896,
+            "y": 9.565217391304344
+        },
+        {
+            "has_input_pin": true,
+            "id": 2,
+            "main_text": "IO S",
+            "out_pins": [
+            ],
+            "x": 1243.928450388346,
+            "y": -276.5386325511631
+        },
+        {
+            "has_input_pin": true,
+            "id": 3,
+            "main_text": "IO S",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 6,
+                            "text": "$0"
+                        }
+                    ]
+                }
+            ],
+            "x": 2014.594006249999,
+            "y": -715.4295187499997
+        },
+        {
+            "has_input_pin": true,
+            "id": 4,
+            "main_text": "IO S",
+            "out_pins": [
+            ],
+            "x": 2448.364087381852,
+            "y": -623.1372245864839
+        },
+        {
+            "has_input_pin": true,
+            "id": 5,
+            "main_text": "IO S",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 13,
+                            "text": "$1"
+                        }
+                    ]
+                }
+            ],
+            "x": 388.69565217391306,
+            "y": -119.99999999999999
+        },
+        {
+            "has_input_pin": true,
+            "id": 6,
+            "main_text": "[IO S]",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 4,
+                            "text": "sequence_"
+                        }
+                    ]
+                }
+            ],
+            "x": 2208.3810562500003,
+            "y": -625.7505124999999
+        },
+        {
+            "has_input_pin": false,
+            "id": 7,
+            "main_text": "S",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 3,
+                            "text": "clear [ColorBuffer, DepthBuffer]"
+                        },
+                        {
+                            "node": 15,
+                            "text": "GLUT.swapBuffers"
+                        }
+                    ]
+                }
+            ],
+            "tag_text": "display",
+            "x": 1640.3453427828113,
+            "y": -609.4299303562495
+        },
+        {
+            "has_input_pin": true,
+            "id": 8,
+            "main_text": "IO S",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 16,
+                            "text": "id"
+                        }
+                    ]
+                }
+            ],
+            "x": 45.880236124999996,
+            "y": 394.6111703437496
+        },
+        {
+            "has_input_pin": true,
+            "id": 9,
+            "main_text": "IO S",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 10,
+                            "text": "$1"
+                        }
+                    ]
+                }
+            ],
+            "tag_text": "dispOptsAct",
+            "x": 188.94177343750005,
+            "y": -481.25472718749967
+        },
+        {
+            "has_input_pin": true,
+            "id": 10,
+            "main_text": "IO (Str x [Str]) x IO S",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 12,
+                            "text": ">>"
+                        }
+                    ]
+                }
+            ],
+            "x": 352.2802427401233,
+            "y": -632.7102472256207
+        },
+        {
+            "has_input_pin": false,
+            "id": 11,
+            "main_text": "S",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 0,
+                            "text": "GLUT.getArgsAndInitialize"
+                        },
+                        {
+                            "node": 22,
+                            "text": "GLUT.initialDisplayMode"
+                        },
+                        {
+                            "node": 14,
+                            "text": "GLUT.createWindow \"Just Window\""
+                        },
+                        {
+                            "node": 1,
+                            "text": "GLUT.windowSize"
+                        },
+                        {
+                            "node": 19,
+                            "text": "GLUT.windowPosition"
+                        },
+                        {
+                            "node": 21,
+                            "text": "GLUT.displayCallback"
+                        },
+                        {
+                            "node": 8,
+                            "text": "GLUT.mainLoop"
+                        }
+                    ]
+                }
+            ],
+            "tag_text": "main",
+            "x": -341,
+            "y": -197
+        },
+        {
+            "has_input_pin": true,
+            "id": 12,
+            "main_text": "IO S",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 13,
+                            "text": "$0"
+                        }
+                    ]
+                }
+            ],
+            "x": 735.8108521951639,
+            "y": -439.17183679502534
+        },
+        {
+            "has_input_pin": true,
+            "id": 13,
+            "main_text": "[IO S]",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 2,
+                            "text": "sequence_"
+                        }
+                    ]
+                }
+            ],
+            "x": 1010.9256124999997,
+            "y": -278.0919937499998
+        },
+        {
+            "has_input_pin": true,
+            "id": 14,
+            "main_text": "IO GLUT.Window",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 5,
+                            "text": "void"
+                        }
+                    ]
+                }
+            ],
+            "tag_text": "windowAct",
+            "x": 30.867149999999953,
+            "y": -119.45365531249985
+        },
+        {
+            "has_input_pin": true,
+            "id": 15,
+            "main_text": "IO S",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 6,
+                            "text": "$1"
+                        }
+                    ]
+                }
+            ],
+            "x": 2002.3939437499994,
+            "y": -542.6515062499999
+        },
+        {
+            "has_input_pin": true,
+            "id": 16,
+            "main_text": "IO S",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 13,
+                            "text": "$5"
+                        }
+                    ]
+                }
+            ],
+            "x": 655.4971249999994,
+            "y": 386.3022499999998
+        },
+        {
+            "has_input_pin": true,
+            "id": 17,
+            "main_text": "IO S",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 13,
+                            "text": "$4"
+                        }
+                    ]
+                }
+            ],
+            "x": 646.4354967544069,
+            "y": 220.59262824559295
+        },
+        {
+            "has_input_pin": true,
+            "id": 18,
+            "main_text": "IO S",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 13,
+                            "text": "$2"
+                        }
+                    ]
+                }
+            ],
+            "x": 515.7125,
+            "y": 9.677500000000002
+        },
+        {
+            "has_input_pin": true,
+            "id": 19,
+            "main_text": "StateVar Position ",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 20,
+                            "text": "$= GLUT.Position 100 100"
+                        }
+                    ]
+                }
+            ],
+            "x": 35.23043478260877,
+            "y": 119.96130434782611
+        },
+        {
+            "has_input_pin": true,
+            "id": 20,
+            "main_text": "IO S",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 13,
+                            "text": "$3"
+                        }
+                    ]
+                }
+            ],
+            "x": 518.4199999999998,
+            "y": 119.02499999999992
+        },
+        {
+            "has_input_pin": true,
+            "id": 21,
+            "main_text": "SettableStateVar GLUT.DisplayCallback",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 17,
+                            "text": "$= display"
+                        }
+                    ]
+                }
+            ],
+            "x": 23.94904249198649,
+            "y": 219.22215829703305
+        },
+        {
+            "has_input_pin": true,
+            "id": 22,
+            "main_text": "StateVar [GLUT.DisplayMode]",
+            "out_pins": [
+                {
+                    "connections": [
+                        {
+                            "node": 9,
+                            "text": "$= [GLUT.DoubleBuffered, GLUT.WithDepthBuffer, GLUT.RGBAMode]"
+                        }
+                    ]
+                }
+            ],
+            "x": -15.975709375000235,
+            "y": -272.36093468749976
+        }
+    ],
+    "packages": [
+        "OpenGL",
+        "GLUT"
+    ]
+}

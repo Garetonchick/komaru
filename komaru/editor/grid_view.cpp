@@ -19,6 +19,7 @@
 #include <QJsonObject>
 #include <QFile>
 #include <QFileDialog>
+#include <QListWidget>
 #include <qtermwidget6/qtermwidget.h>
 
 namespace komaru::editor {
@@ -33,9 +34,12 @@ std::string ConvString(const QString& qs) {
     return s;
 }
 
-GridView::GridView(QGraphicsScene* scene, QTermWidget* terminal, QWidget* parent)
+GridView::GridView(QGraphicsScene* scene, QTermWidget* terminal, QListWidget* packages_list,
+                   QListWidget* imports_list, QWidget* parent)
     : QGraphicsView(scene, parent),
-      terminal_(terminal) {
+      terminal_(terminal),
+      packages_list_(packages_list),
+      imports_list_(imports_list) {
     setRenderHint(QPainter::Antialiasing);
     setDragMode(QGraphicsView::NoDrag);
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
@@ -299,7 +303,23 @@ QJsonDocument GridView::ToJson() {
         json_nodes.append(json_node);
     }
 
-    json.setArray(json_nodes);
+    QJsonArray json_package_list;
+    QJsonArray json_import_list;
+
+    for (const auto& package : GetPackages()) {
+        json_package_list.append(QString::fromStdString(package));
+    }
+
+    for (const auto& import : GetImports()) {
+        json_import_list.append(QString::fromStdString(import.ToString()));
+    }
+
+    QJsonObject main_json_obj;
+    main_json_obj.insert("nodes", json_nodes);
+    main_json_obj.insert("packages", json_package_list);
+    main_json_obj.insert("imports", json_import_list);
+
+    json.setObject(main_json_obj);
 
     return json;
 }
@@ -311,10 +331,23 @@ void GridView::FromJson(const QJsonDocument& json) {
     }
 
     nodes_.clear();
+    packages_list_->clear();
+    imports_list_->clear();
 
-    if (!json.isArray()) {
-        std::println("error parsing json expected array of nodes");
+    if (!json.isObject()) {
+        std::println("error parsing json: expected json object as root item");
         return;
+    }
+
+    QJsonObject main_json_obj = json.object();
+    QJsonArray json_packages_list = main_json_obj["packages"].toArray();
+    QJsonArray json_imports_list = main_json_obj["imports"].toArray();
+
+    for (auto json_item : json_packages_list) {
+        packages_list_->addItem(json_item.toString());
+    }
+    for (auto json_item : json_imports_list) {
+        imports_list_->addItem(json_item.toString());
     }
 
     struct ConnectionInfo {
@@ -323,7 +356,7 @@ void GridView::FromJson(const QJsonDocument& json) {
         QString text;
     };
 
-    QJsonArray json_nodes = json.array();
+    QJsonArray json_nodes = main_json_obj["nodes"].toArray();
     std::vector<Node*> id2node(json_nodes.size(), nullptr);
     std::vector<ConnectionInfo> conn_infos;
 
@@ -398,53 +431,94 @@ void GridView::FromJson(const QJsonDocument& json) {
     }
 }
 
+std::vector<std::string> GridView::GetPackages() {
+    std::vector<std::string> packages;
+    for (int i = 0; i < packages_list_->count(); ++i) {
+        auto* item = packages_list_->item(i);
+
+        packages.emplace_back(ConvString(item->text()));
+    }
+
+    return packages;
+}
+
+std::vector<translate::hs::HaskellImport> GridView::GetImports() {
+    std::vector<translate::hs::HaskellImport> imports;
+
+    for (int i = 0; i < imports_list_->count(); ++i) {
+        auto* item = imports_list_->item(i);
+        std::string text = ConvString(item->text());
+
+        auto maybe_import = translate::hs::ParseHaskellImport(text);
+        if (!maybe_import) {
+            throw std::runtime_error(std::format("failed to parse import \"{}\"", text));
+        }
+        imports.emplace_back(maybe_import.value());
+    }
+
+    return imports;
+}
+
 void GridView::OnRunAction() {
     auto raw_program = ConvertNodeGraphToRawCatProgram();
-    std::vector<std::string> packages = {"GLUT", "OpenGL"};
-    std::vector<translate::hs::HaskellImport> imports = {
-        {
-            .module_name = "Graphics.Rendering.OpenGL",
-            .ref_name = "",
-            .symbols = {},
-        },
-        {
-            .module_name = "Graphics.UI.GLUT",
-            .ref_name = "GLUT",
-            .symbols = {},
-        },
-        {.module_name = "Control.Monad", .ref_name = "", .symbols = {}}};
+    std::vector<std::string> packages;
+    std::vector<translate::hs::HaskellImport> imports;
 
-    translate::hs::HaskellSymbolsRegistry symbols_registry(packages, imports);
-    auto maybe_cat_program = translate::Cook(raw_program, symbols_registry);
-
-    if (!maybe_cat_program) {
-        std::println("cooking error: {}", maybe_cat_program.error().Error());
+    try {
+        packages = GetPackages();
+        imports = GetImports();
+    } catch (std::exception& e) {
+        std::println("modules error: {}", e.what());
         return;
     }
 
-    auto cat_program = std::move(maybe_cat_program.value());
-    auto translator = translate::hs::HaskellTranslator(packages, imports);
-    auto maybe_program = translator.Translate(cat_program);
-
-    if (!maybe_program) {
-        std::println("translation error: {}", maybe_program.error().Error());
-        return;
+    std::print("Packages:");
+    for (auto& package : packages) {
+        std::print(" \"{}\",", package);
     }
+    std::println("");
 
-    auto& program = maybe_program.value();
-
-    auto build_res = translate::BuildProgram(*program);
-
-    if (build_res.command_res.Fail()) {
-        std::println("build error: STDOUT: {}\nSTDERR: {}\n", build_res.command_res.Stdout(),
-                     build_res.command_res.Stderr());
-        return;
+    std::print("Imports:");
+    for (auto& import : imports) {
+        std::print(" \"{}\",", import.ToString());
     }
+    std::println("");
 
-    terminal_->sendText(QString::fromStdString(build_res.program_path + "\n"));
-    terminal_->show();
-    terminal_->update();
-    terminal_->setFocus();
+    try {
+        translate::hs::HaskellSymbolsRegistry symbols_registry(packages, imports);
+        auto maybe_cat_program = translate::Cook(raw_program, symbols_registry);
+
+        if (!maybe_cat_program) {
+            std::println("cooking error: {}", maybe_cat_program.error().Error());
+            return;
+        }
+
+        auto cat_program = std::move(maybe_cat_program.value());
+        auto translator = translate::hs::HaskellTranslator(packages, imports);
+        auto maybe_program = translator.Translate(cat_program);
+
+        if (!maybe_program) {
+            std::println("translation error: {}", maybe_program.error().Error());
+            return;
+        }
+
+        auto& program = maybe_program.value();
+
+        auto build_res = translate::BuildProgram(*program);
+
+        if (build_res.command_res.Fail()) {
+            std::println("build error: STDOUT: {}\nSTDERR: {}\n", build_res.command_res.Stdout(),
+                         build_res.command_res.Stderr());
+            return;
+        }
+
+        terminal_->sendText(QString::fromStdString(build_res.program_path + "\n"));
+        terminal_->show();
+        terminal_->update();
+        terminal_->setFocus();
+    } catch (std::exception& e) {
+        std::println("Got exception: {}", e.what());
+    }
 }
 
 void GridView::OnSaveAction() {

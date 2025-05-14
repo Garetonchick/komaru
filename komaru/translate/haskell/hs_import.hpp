@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 
 namespace komaru::translate::hs {
 
@@ -12,5 +13,7 @@ struct HaskellImport {
 
     std::string ToString() const;
 };
+
+std::optional<HaskellImport> ParseHaskellImport(std::string s);
 
 }  // namespace komaru::translate::hs
