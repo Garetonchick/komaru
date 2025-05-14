@@ -2,7 +2,16 @@
 
 #include <komaru/util/std_extensions.hpp>
 
+#include <cassert>
+
 namespace komaru::lang {
+
+static void MergeNameMappings(std::map<std::string, lang::Type>& a,
+                              const std::map<std::string, lang::Type>& b) {
+    for (auto [name, type] : b) {
+        a[name] = type;
+    }
+}
 
 std::string AnyPattern::ToString(Style style) const {
     switch (style) {
@@ -13,6 +22,11 @@ std::string AnyPattern::ToString(Style style) const {
         case Style::Debug:
             return "Any";
     }
+}
+
+std::map<std::string, lang::Type> AnyPattern::GetNamesMapping(
+    const translate::hs::HaskellSymbolsRegistry&, lang::Type) const {
+    return {};
 }
 
 LiteralPattern::LiteralPattern(Literal literal)
@@ -27,6 +41,11 @@ std::string LiteralPattern::ToString(Style) const {
     return literal_.ToString();
 }
 
+std::map<std::string, lang::Type> LiteralPattern::GetNamesMapping(
+    const translate::hs::HaskellSymbolsRegistry&, lang::Type) const {
+    return {};
+}
+
 NamePattern::NamePattern(std::string name)
     : name_(std::move(name)) {
 }
@@ -37,6 +56,11 @@ const std::string& NamePattern::GetName() const {
 
 std::string NamePattern::ToString(Style) const {
     return name_;
+}
+
+std::map<std::string, lang::Type> NamePattern::GetNamesMapping(
+    const translate::hs::HaskellSymbolsRegistry&, lang::Type type) const {
+    return {{name_, type}};
 }
 
 ConstructorPattern::ConstructorPattern(std::string name, std::vector<Pattern> patterns)
@@ -62,6 +86,22 @@ std::string ConstructorPattern::ToString(Style style) const {
     return res;
 }
 
+std::map<std::string, lang::Type> ConstructorPattern::GetNamesMapping(
+    const translate::hs::HaskellSymbolsRegistry& registry, lang::Type) const {
+    auto maybe_cons_type = registry.FindFunction(name_);
+    assert(maybe_cons_type.has_value());
+    auto cons_type = maybe_cons_type.value();
+    auto types = cons_type.FlattenFunction();
+    assert(patterns_.size() + 1 == types.size());
+
+    std::map<std::string, lang::Type> res;
+
+    for (size_t i = 0; i < patterns_.size(); ++i) {
+        MergeNameMappings(res, patterns_[i].GetNamesMapping(registry, types[i]));
+    }
+    return res;
+}
+
 TuplePattern::TuplePattern(std::vector<Pattern> patterns)
     : patterns_(std::move(patterns)) {
 }
@@ -82,6 +122,20 @@ std::string TuplePattern::ToString(Style style) const {
 
     s += ")";
     return s;
+}
+
+std::map<std::string, lang::Type> TuplePattern::GetNamesMapping(
+    const translate::hs::HaskellSymbolsRegistry& registry, lang::Type type) const {
+    assert(type.Holds<TupleType>());
+    std::map<std::string, lang::Type> res;
+    auto comps = type.GetComponents();
+    assert(comps.size() == patterns_.size());
+
+    for (size_t i = 0; i < patterns_.size(); ++i) {
+        MergeNameMappings(res, patterns_[i].GetNamesMapping(registry, comps[i]));
+    }
+
+    return res;
 }
 
 Pattern Pattern::FromLiteral(Literal literal) {
@@ -131,6 +185,13 @@ Pattern Pattern::String(std::string str) {
 std::string Pattern::ToString(Style style) const {
     return Visit([style](const auto& pattern) {
         return pattern.ToString(style);
+    });
+}
+
+std::map<std::string, lang::Type> Pattern::GetNamesMapping(
+    const translate::hs::HaskellSymbolsRegistry& registry, lang::Type type) const {
+    return Visit([&](const auto& pattern) {
+        return pattern.GetNamesMapping(registry, type);
     });
 }
 

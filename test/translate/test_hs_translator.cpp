@@ -73,7 +73,8 @@ TEST(HaskellTranslator, Fibonacci) {
 
 TEST(HaskellTranslator, IO101) {
     auto cat_program = MakeIO101Program();
-    auto translator = hs::HaskellTranslator();
+    auto translator = hs::HaskellTranslator(
+        {}, {hs::HaskellImport{.module_name = "Control.Monad", .ref_name = "", .symbols = {}}});
     auto maybe_program = translator.Translate(cat_program);
 
     ASSERT_TRUE(maybe_program.has_value()) << maybe_program.error().Error();

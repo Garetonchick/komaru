@@ -79,13 +79,27 @@ lang::MorphismPtr MorphismParser::ParseExprInCurrentScope() {
     }
 
     auto cur_expr = ParseSubExpr();
+    std::map<size_t, lang::MorphismPtr> mapping;
+    size_t arg_idx = 0;
 
     while (CanStartSubExpr(Peek().type)) {
-        if (cur_expr->GetParamNum() == 0) {
-            throw std::runtime_error("too many arguments to a function call");
+        if (Peek().type == MorphismTokenType::Identifier && Peek().raw == "_") {
+            Consume();
+            ++arg_idx;
+            continue;
         }
+
         auto nxt_expr = ParseSubExpr();
-        cur_expr = lang::Morphism::Binded(cur_expr, {{0, nxt_expr}});
+        mapping[arg_idx] = nxt_expr;
+        ++arg_idx;
+    }
+
+    if (arg_idx > cur_expr->GetParamNum()) {
+        throw std::runtime_error("too many arguments to a function call");
+    }
+
+    if (!mapping.empty()) {
+        cur_expr = lang::Morphism::Binded(cur_expr, mapping);
     }
 
     if (Peek().type == MorphismTokenType::Operator) {

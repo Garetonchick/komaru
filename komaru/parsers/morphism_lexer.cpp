@@ -42,7 +42,7 @@ std::string ToString(const MorphismToken& token) {
 namespace {
 
 bool CanStartIdentifier(char c) {
-    return std::isalpha(c);
+    return std::isalpha(c) || c == '_';
 }
 
 bool CanBeInIdentifier(char c) {
@@ -51,7 +51,8 @@ bool CanBeInIdentifier(char c) {
 
 bool CanBeInOperator(char c) {
     return c == '+' || c == '-' || c == '*' || c == '/' || c == '%' || c == '=' || c == '>' ||
-           c == '<' || c == '&' || c == '|' || c == '^' || c == '~' || c == '.' || c == '$';
+           c == '<' || c == '&' || c == '|' || c == '^' || c == '~' || c == '.' || c == '$' ||
+           c == '!';
 }
 
 }  // namespace

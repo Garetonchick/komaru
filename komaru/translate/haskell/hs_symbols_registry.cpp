@@ -45,6 +45,11 @@ void HaskellSymbolsRegistry::ResetGlobalFunctions() {
 }
 
 std::optional<lang::Type> HaskellSymbolsRegistry::FindFunction(const std::string& name) const {
+    if (name == "(!)") {
+        return lang::Type::FunctionChain(
+            {lang::Type::Var("a"), lang::Type::Var("b"), lang::Type::Var("b")});
+    }
+
     auto it = local_symbols_.find(name);
     if (it != local_symbols_.end()) {
         return it->second;

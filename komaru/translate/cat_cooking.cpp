@@ -44,6 +44,7 @@ private:
 
     void BuildGraphs();
     bool HasOrientedCycles() const;
+    void AddSymbolsForPattern(const lang::Pattern& pattern, lang::Type type);
 
 private:
     const RawCatProgram& raw_program_;
@@ -202,6 +203,7 @@ std::optional<CookingError> Cooker::AddFunctionsToRegistry(const std::vector<siz
 }
 
 std::optional<CookingError> Cooker::CookFunction(size_t root_id) {
+    symbols_registry_.ResetLocalFunctions();
     auto& nodes = raw_program_.GetNodes();
     std::vector<size_t> node2views(graph_.size(), 0);
     std::queue<size_t> normal_q;
@@ -248,6 +250,10 @@ std::optional<CookingError> Cooker::CookNodeAndIncomingArrows(size_t node_id) {
     CookedNode& cnode = builder_.NewNode(node2type_[node_id], nodes[node_id].name.value_or(""));
     node2cooked_[node_id] = &cnode;
 
+    if (!cnode.GetName().empty() && !rgraph_[node_id].empty()) {
+        symbols_registry_.AddLocalFunction(cnode.GetName(), cnode.GetType());
+    }
+
     for (auto [parent_id, conn_id] : rgraph_[node_id]) {
         CookedNode* parent_node = node2cooked_[parent_id];
         auto& conn = conns[conn_id];
@@ -271,11 +277,17 @@ std::optional<CookingError> Cooker::CookNodeAndIncomingArrows(size_t node_id) {
             return maybe_brancher.error();
         }
 
+        auto& brancher = maybe_brancher.value();
+
+        if (std::holds_alternative<lang::Pattern>(brancher)) {
+            AddSymbolsForPattern(std::get<lang::Pattern>(brancher), cnode.GetType());
+        }
+
         std::visit(
             [&cnode](auto brancher) {
                 cnode.AddOutPin(std::move(brancher));
             },
-            std::move(maybe_brancher.value()));
+            std::move(brancher));
     }
 
     return std::nullopt;
@@ -366,6 +378,13 @@ bool Cooker::HasOrientedCycles() const {
     }
 
     return false;
+}
+
+void Cooker::AddSymbolsForPattern(const lang::Pattern& pattern, lang::Type node_type) {
+    auto mapping = pattern.GetNamesMapping(symbols_registry_, node_type);
+    for (auto&& [name, type] : mapping) {
+        symbols_registry_.AddLocalFunction(name, type);
+    }
 }
 
 CookingResult<lang::CatProgram> Cook(const RawCatProgram& raw_program,

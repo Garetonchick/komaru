@@ -3,6 +3,7 @@
 #include <komaru/util/derive_variant.hpp>
 #include <komaru/lang/morphism.hpp>
 #include <komaru/lang/style.hpp>
+#include <komaru/translate/haskell/hs_symbols_registry.hpp>
 
 namespace komaru::lang {
 
@@ -19,6 +20,8 @@ class TuplePattern;
 // dummy pattern indicating the '*'
 struct AnyPattern {
     std::string ToString(Style style = Style::Komaru) const;
+    std::map<std::string, lang::Type> GetNamesMapping(
+        const translate::hs::HaskellSymbolsRegistry& registry, lang::Type type) const;
 };
 
 class LiteralPattern {
@@ -27,6 +30,8 @@ public:
 
     const Literal& GetLiteral() const;
     std::string ToString(Style style = Style::Komaru) const;
+    std::map<std::string, lang::Type> GetNamesMapping(
+        const translate::hs::HaskellSymbolsRegistry& registry, lang::Type type) const;
 
 private:
     Literal literal_;
@@ -38,6 +43,8 @@ public:
 
     const std::string& GetName() const;
     std::string ToString(Style style = Style::Komaru) const;
+    std::map<std::string, lang::Type> GetNamesMapping(
+        const translate::hs::HaskellSymbolsRegistry& registry, lang::Type type) const;
 
 private:
     std::string name_;
@@ -50,6 +57,8 @@ public:
     const std::string& GetName() const;
     const std::vector<Pattern>& GetPatterns() const;
     std::string ToString(Style style = Style::Komaru) const;
+    std::map<std::string, lang::Type> GetNamesMapping(
+        const translate::hs::HaskellSymbolsRegistry& registry, lang::Type type) const;
 
 private:
     std::string name_;
@@ -62,6 +71,8 @@ public:
 
     const std::vector<Pattern>& GetPatterns() const;
     std::string ToString(Style style = Style::Komaru) const;
+    std::map<std::string, lang::Type> GetNamesMapping(
+        const translate::hs::HaskellSymbolsRegistry& registry, lang::Type type) const;
 
 private:
     std::vector<Pattern> patterns_;
@@ -86,6 +97,8 @@ public:
     static Pattern String(std::string str);
 
     std::string ToString(Style style = Style::Komaru) const;
+    std::map<std::string, lang::Type> GetNamesMapping(
+        const translate::hs::HaskellSymbolsRegistry& registry, lang::Type type) const;
 
     // For CRTP
     const Variant* GetVariantPointer() const;
