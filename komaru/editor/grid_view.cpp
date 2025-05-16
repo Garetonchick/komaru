@@ -473,18 +473,6 @@ void GridView::OnRunAction() {
         return;
     }
 
-    std::print("Packages:");
-    for (auto& package : packages) {
-        std::print(" \"{}\",", package);
-    }
-    std::println("");
-
-    std::print("Imports:");
-    for (auto& import : imports) {
-        std::print(" \"{}\",", import.ToString());
-    }
-    std::println("");
-
     try {
         translate::hs::HaskellSymbolsRegistry symbols_registry(packages, imports);
         auto maybe_cat_program = translate::Cook(raw_program, symbols_registry);
@@ -504,8 +492,6 @@ void GridView::OnRunAction() {
         }
 
         auto& program = maybe_program.value();
-
-        util::WriteFile("gen.hs", program->GetSourceCode());
 
         auto build_res = translate::BuildProgram(*program);
 

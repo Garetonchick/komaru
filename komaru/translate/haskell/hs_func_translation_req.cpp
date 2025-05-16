@@ -251,8 +251,6 @@ std::optional<TranslationError> HaskellFuncTranslationRequest::AddDefinitionsFor
 
 std::optional<TranslationError> HaskellFuncTranslationRequest::AddDefinitionsForIntersectionNode(
     const CPNode* node, const common::Cond& node_cond, const std::string& local_name) {
-    std::println("adding definitions for intersection node \"{}\", type \"{}\"", local_name,
-                 node->GetType().ToString());
     std::vector<std::string> names(node->IncomingArrows().size());
     std::vector<lang::Type> types(node->IncomingArrows().size());
 

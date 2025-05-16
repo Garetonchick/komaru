@@ -57,46 +57,36 @@ private:
 };
 
 CookingResult<lang::CatProgram> Cooker::Cook() {
-    std::println("Start cooking");
     BuildGraphs();
-    std::println("Graphs built");
 
     if (HasOrientedCycles()) {
         return MakeCookingError("program can't have oriented cycles");
     }
 
-    std::println("Cooking node types");
     auto maybe_err = CookNodeTypes();
     if (maybe_err.has_value()) {
         return std::unexpected(maybe_err.value());
     }
-    std::println("Cooked node types");
 
-    std::println("Discovering functions");
     auto maybe_func_roots = DiscoverFunctions();
-    std::println("Discovered functions");
     if (!maybe_func_roots) {
         return std::unexpected(maybe_func_roots.error());
     }
 
     std::vector<size_t> func_roots = std::move(maybe_func_roots.value());
-    std::println("Adding {} functions to registry", func_roots.size());
+
     maybe_err = AddFunctionsToRegistry(func_roots);
     if (maybe_err.has_value()) {
         return std::unexpected(maybe_err.value());
     }
-    std::println("Added {} functions to registry", func_roots.size());
+
     node2cooked_.resize(graph_.size(), nullptr);
 
     for (size_t root_id : func_roots) {
-        std::println("Cooking function {}",
-                     raw_program_.GetNodes()[root_id].name.value_or("unknown"));
         auto maybe_err = CookFunction(root_id);
         if (maybe_err.has_value()) {
             return std::unexpected(maybe_err.value());
         }
-        std::println("Cooked function {}",
-                     raw_program_.GetNodes()[root_id].name.value_or("unknown"));
     }
 
     return builder_.Extract();
@@ -106,9 +96,7 @@ std::optional<CookingError> Cooker::CookNodeTypes() {
     node2type_.reserve(raw_program_.GetNodes().size());
 
     for (const auto& node : raw_program_.GetNodes()) {
-        std::println("Parsing node type: {}", node.type);
         auto maybe_type = parsers::CatTypeParser(node.type, symbols_registry_).Parse();
-        std::println("Parsed node type: {}", node.type);
         if (!maybe_type) {
             return CookingError::From(maybe_type.error());
         }
